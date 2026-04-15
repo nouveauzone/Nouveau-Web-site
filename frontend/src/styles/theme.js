@@ -1,0 +1,17 @@
+export const THEME = {
+  crimson: "#B76E79",
+  crimsonDark: "#9f5b65",
+  crimsonLight: "#cb8f97",
+  gold: "#D4AF37",
+  goldLight: "#e4c76d",
+  goldDark: "#b8962e",
+  bg: "#FAF7F2",
+  bgDark: "#f3ede5",
+  accent: "#EADBD2",
+  bgCard: "#ffffff",
+  text: "#1A1A1A",
+  textMuted: "#555555",
+  textLight: "#8d8177",
+  border: "#EADBD2",
+  borderDark: "#ddcbc2",
+};
