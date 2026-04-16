@@ -76,11 +76,14 @@ function CategoryDonut({ products }) {
         <text x={cx} y={cy+12} textAnchor="middle" style={{ fontFamily:"'Poppins',sans-serif", fontSize:"9px", fill:THEME.textLight }}>products</text>
       </svg>
       <div>
-        {[["Indian Ethnic",ethnic,THEME.crimson],[" Premium Western",western,THEME.gold]].map(([l,n,c]) => (
-          <div key={l} style={{ display:"flex", alignItems:"center", gap:"8px", marginBottom:"8px" }}>
-            <div style={{ width:"10px", height:"10px", borderRadius:"50%", background:c, flexShrink:0 }} />
-            <span style={{ fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textMuted }}>{l}</span>
-            <span style={{ fontFamily:"'Poppins',sans-serif", fontSize:"12px", fontWeight:700, color:THEME.text, marginLeft:"auto" }}>{n}</span>
+        {[
+          { label: "Indian Ethnic", count: ethnic, color: THEME.crimson },
+          { label: " Premium Western", count: western, color: THEME.gold },
+        ].map((item) => (
+          <div key={item.label} style={{ display:"flex", alignItems:"center", gap:"8px", marginBottom:"8px" }}>
+            <div style={{ width:"10px", height:"10px", borderRadius:"50%", background:item.color, flexShrink:0 }} />
+            <span style={{ fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textMuted }}>{item.label}</span>
+            <span style={{ fontFamily:"'Poppins',sans-serif", fontSize:"12px", fontWeight:700, color:THEME.text, marginLeft:"auto" }}>{item.count}</span>
           </div>
         ))}
       </div>
@@ -253,15 +256,29 @@ export default function AdminPage({ setPage }) {
             <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"3px", color:THEME.crimson, marginTop:"2px" }}>NOUVEAU™ MANAGEMENT</p>
           </div>
         </div>
-        [["email","Email"],["pass","Password"]].map(([k,l]) => (
-          <div key={k} style={{ marginBottom:"16px" }}>
-            <label style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"2px", color:THEME.crimson, display:"block", marginBottom:"7px", fontWeight:700 }}>{l.toUpperCase()}</label>
-            <input type={k==="pass"?"password":"email"} value={creds[k]}
-              onChange={e=>setCreds(c=>({...c,[k]:e.target.value}))}
-              onKeyDown={e=>e.key==="Enter"&&handleAdminLogin()}
-              style={{ width:"100%", background:THEME.bg, border:`1.5px solid ${THEME.border}`, color:THEME.text, padding:isMobile?"14px 14px":"13px 16px", fontSize:"16px", outline:"none", fontFamily:"'Poppins',sans-serif", borderRadius:"10px" }} />
-          </div>
-        ))}
+        <div style={{ marginBottom:"16px" }}>
+          <label style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"2px", color:THEME.crimson, display:"block", marginBottom:"7px", fontWeight:700 }}>EMAIL</label>
+          <input
+            type="email"
+            value={creds.email}
+            onChange={e=>setCreds(c=>({...c, email:e.target.value}))}
+            onKeyDown={e=>e.key==="Enter"&&handleAdminLogin()}
+            autoComplete="email"
+            inputMode="email"
+            style={{ width:"100%", background:THEME.bg, border:`1.5px solid ${THEME.border}`, color:THEME.text, padding:isMobile?"14px 14px":"13px 16px", fontSize:"16px", outline:"none", fontFamily:"'Poppins',sans-serif", borderRadius:"10px" }}
+          />
+        </div>
+        <div style={{ marginBottom:"16px" }}>
+          <label style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"2px", color:THEME.crimson, display:"block", marginBottom:"7px", fontWeight:700 }}>PASSWORD</label>
+          <input
+            type="password"
+            value={creds.pass}
+            onChange={e=>setCreds(c=>({...c, pass:e.target.value}))}
+            onKeyDown={e=>e.key==="Enter"&&handleAdminLogin()}
+            autoComplete="current-password"
+            style={{ width:"100%", background:THEME.bg, border:`1.5px solid ${THEME.border}`, color:THEME.text, padding:isMobile?"14px 14px":"13px 16px", fontSize:"16px", outline:"none", fontFamily:"'Poppins',sans-serif", borderRadius:"10px" }}
+          />
+        </div>
         <BtnPrimary onClick={handleAdminLogin} style={{ width:"100%", borderRadius:"12px", justifyContent:"center", marginTop:"8px", minHeight:"48px" }}>Access Dashboard →</BtnPrimary>
       </div>
     </div>
@@ -555,10 +572,17 @@ export default function AdminPage({ setPage }) {
                 </div>
 
                 <div style={{ display:"grid", gridTemplateColumns:twoCol, gap:"14px" }}>
-                  {[["title","Product Title","text",true],["price","Selling Price (₹)","number",false],["originalPrice","Original / MRP (₹)","number",false],["stock","Stock Quantity","number",false],["discount","Discount %","number",false],["subcategory","Subcategory (Kurta, Dress…)","text",false]].map(([k,lbl,type,full]) => (
-                    <div key={k} style={{ gridColumn:full?"1/-1":"auto" }}>
-                      <label style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"2px", color:THEME.crimson, display:"block", marginBottom:"6px", fontWeight:700 }}>{lbl.toUpperCase()}</label>
-                      <input type={type} value={productForm[k]} onChange={e=>setProductForm(f=>({...f,[k]:e.target.value}))} style={iStyle} />
+                  {[
+                    { field: "title", label: "Product Title", inputType: "text", fullWidth: true },
+                    { field: "price", label: "Selling Price (₹)", inputType: "number", fullWidth: false },
+                    { field: "originalPrice", label: "Original / MRP (₹)", inputType: "number", fullWidth: false },
+                    { field: "stock", label: "Stock Quantity", inputType: "number", fullWidth: false },
+                    { field: "discount", label: "Discount %", inputType: "number", fullWidth: false },
+                    { field: "subcategory", label: "Subcategory (Kurta, Dress…)", inputType: "text", fullWidth: false },
+                  ].map((item) => (
+                    <div key={item.field} style={{ gridColumn:item.fullWidth?"1/-1":"auto" }}>
+                      <label style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"2px", color:THEME.crimson, display:"block", marginBottom:"6px", fontWeight:700 }}>{item.label.toUpperCase()}</label>
+                      <input type={item.inputType} value={productForm[item.field]} onChange={e=>setProductForm(f=>({...f,[item.field]:e.target.value}))} style={iStyle} />
                     </div>
                   ))}
                   <div>
@@ -631,10 +655,17 @@ export default function AdminPage({ setPage }) {
                   )}
                   <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textLight, marginBottom:"20px" }}>{getOrderDate(selectedOrder)}</p>
                   <div style={{ display:"grid", gridTemplateColumns:isMobile?"1fr":"1fr 1fr", gap:"10px", marginBottom:"20px" }}>
-                    {[["Customer",getOrderCustomer(selectedOrder)],["Amount","₹"+getOrderAmount(selectedOrder)],["Payment",selectedOrder.paymentMethod||"—"],["Items",selectedOrder.items?.length||selectedOrder.qty||"—"],["City",getOrderCity(selectedOrder)],["Status",getOrderStatus(selectedOrder)]].map(([l,v]) => (
-                      <div key={l} style={{ background:THEME.bg, borderRadius:"8px", padding:"12px 14px" }}>
-                        <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"9px", letterSpacing:"2px", color:THEME.textLight, marginBottom:"3px" }}>{l.toUpperCase()}</p>
-                        <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"13px", color:THEME.text, fontWeight:600 }}>{v}</p>
+                    {[
+                      { label: "Customer", value: getOrderCustomer(selectedOrder) },
+                      { label: "Amount", value: "₹" + getOrderAmount(selectedOrder) },
+                      { label: "Payment", value: selectedOrder.paymentMethod || "—" },
+                      { label: "Items", value: selectedOrder.items?.length || selectedOrder.qty || "—" },
+                      { label: "City", value: getOrderCity(selectedOrder) },
+                      { label: "Status", value: getOrderStatus(selectedOrder) },
+                    ].map((item) => (
+                      <div key={item.label} style={{ background:THEME.bg, borderRadius:"8px", padding:"12px 14px" }}>
+                        <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"9px", letterSpacing:"2px", color:THEME.textLight, marginBottom:"3px" }}>{item.label.toUpperCase()}</p>
+                        <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"13px", color:THEME.text, fontWeight:600 }}>{item.value}</p>
                       </div>
                     ))}
                     {(selectedOrder.shippingAddress||selectedOrder.address) && (
@@ -765,10 +796,17 @@ export default function AdminPage({ setPage }) {
                     </div>
                   </div>
                   <div style={{ display:"grid", gridTemplateColumns:isMobile?"1fr":"1fr 1fr", gap:"10px" }}>
-                    {[["Email",selectedUser.email],["Phone",selectedUser.phone||"—"],["City",selectedUser.addresses?.[0]?.city||selectedUser.city||"—"],["State",selectedUser.addresses?.[0]?.state||selectedUser.state||"—"],["Member Since",selectedUser.createdAt?new Date(selectedUser.createdAt).toLocaleDateString("en-IN",{month:"short",year:"numeric"}):selectedUser.joined||"—"],["Role",selectedUser.role?.toUpperCase()||"USER"]].map(([l,v]) => (
-                      <div key={l} style={{ background:THEME.bg, borderRadius:"8px", padding:"12px 14px" }}>
-                        <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"9px", letterSpacing:"2px", color:THEME.textLight, marginBottom:"3px" }}>{l.toUpperCase()}</p>
-                        <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"13px", color:THEME.text, fontWeight:600, wordBreak:"break-all" }}>{v}</p>
+                    {[
+                      { label: "Email", value: selectedUser.email },
+                      { label: "Phone", value: selectedUser.phone || "—" },
+                      { label: "City", value: selectedUser.addresses?.[0]?.city || selectedUser.city || "—" },
+                      { label: "State", value: selectedUser.addresses?.[0]?.state || selectedUser.state || "—" },
+                      { label: "Member Since", value: selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString("en-IN",{month:"short",year:"numeric"}) : selectedUser.joined || "—" },
+                      { label: "Role", value: selectedUser.role?.toUpperCase() || "USER" },
+                    ].map((item) => (
+                      <div key={item.label} style={{ background:THEME.bg, borderRadius:"8px", padding:"12px 14px" }}>
+                        <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"9px", letterSpacing:"2px", color:THEME.textLight, marginBottom:"3px" }}>{item.label.toUpperCase()}</p>
+                        <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"13px", color:THEME.text, fontWeight:600, wordBreak:"break-all" }}>{item.value}</p>
                       </div>
                     ))}
                     {selectedUser.addresses?.length > 0 && (
