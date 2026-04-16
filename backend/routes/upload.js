@@ -6,6 +6,7 @@ const { protect, admin } = require("../middleware/auth");
 const path = require("path");
 const fs   = require("fs");
 const router = express.Router();
+const BASE_URL = process.env.BASE_URL || "http://13.233.97.174:5000";
 
 // ── If Cloudinary is configured, use it; else save locally ──────────────────
 const useCloudinary = process.env.CLOUDINARY_NAME && process.env.CLOUDINARY_NAME !== "your_cloud_name";
@@ -41,11 +42,10 @@ router.post("/", protect, admin, upload.array("images", 5), (req, res) => {
   try {
     if (!req.files || !req.files.length) return res.status(400).json({ message:"No files uploaded" });
     const urls = req.files.map(f => useCloudinary ? f.path : `/uploads/${f.filename}`);
-    const baseUrl = `${req.protocol}://${req.get("host")}`;
     const normalized = urls.map((url) => {
       if (typeof url !== "string") return url;
       if (url.startsWith("http://") || url.startsWith("https://")) return url;
-      if (url.startsWith("/uploads/")) return `${baseUrl}${url}`;
+      if (url.startsWith("/uploads/")) return `${BASE_URL}${url}`;
       return url;
     });
     res.json({ urls: normalized, message:"Upload successful" });
