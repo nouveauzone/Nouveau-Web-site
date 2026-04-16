@@ -1,51 +1,41 @@
 const mongoose = require("mongoose");
-const dotenv = require("dotenv");
-dotenv.config();
+const Product = require("../models/Product");
+require("dotenv").config();
 
 const products = [
   {
-    title: "Premium Indo-Western Set — Black",
-    price: 3300,
-    originalPrice: 3300,
-    category: "Indian Premium Western Wear",
-    subcategory: "Co-Ord Set",
-    gender: "Women",
-    images: ["/product1.jpeg"],
-    sizes: ["L", "XL"],
-    rating: 0,
-    reviews: 0,
+    title: "Red Kurti",
+    description: "Beautiful ethnic wear",
+    price: 1999,
+    originalPrice: 1999,
+    category: "Indian Ethnic Wear",
+    images: ["ethnic1.jpg"],
     stock: 10,
-    description: "Elegant Embroidery with classy finish, perfect for party & Festive season. Made with premium Korean material. A stunning black Indo-Western set that blends traditional embroidery with modern silhouette.",
-    isNew: true,
-    discount: 0,
-    isFeatured: true,
+    gender: "Women"
   },
   {
-    title: "Premium Indo-Western Set — White",
-    price: 3300,
-    originalPrice: 3300,
+    title: "Western Dress",
+    description: "Stylish western wear",
+    price: 2499,
+    originalPrice: 2499,
     category: "Indian Premium Western Wear",
-    subcategory: "Co-Ord Set",
-    gender: "Women",
-    images: ["/product2.jpeg"],
-    sizes: ["L", "XL"],
-    rating: 0,
-    reviews: 0,
-    stock: 10,
-    description: "Elegant embroidery with classy finish, perfect for festive & party season. Made with premium Korean material. A beautiful white Indo-Western set that radiates grace and elegance.",
-    isNew: true,
-    discount: 0,
-    isFeatured: true,
-  },
+    images: ["western1.jpg"],
+    stock: 5,
+    gender: "Women"
+  }
 ];
 
-async function seed() {
-  await mongoose.connect(process.env.MONGO_URI || "mongodb://localhost:27017/nouveau");
-  const Product = require("../models/Product");
-  await Product.deleteMany({});
-  await Product.insertMany(products);
-  console.log("✅ 2 products seeded!");
-  process.exit(0);
-}
+mongoose.connect(process.env.MONGO_URI)
+  .then(async () => {
+    console.log("MongoDB Connected");
 
-seed().catch(err => { console.error(err); process.exit(1); });
+    await Product.deleteMany(); // optional
+    await Product.insertMany(products); // CORRECT
+
+    console.log("Data inserted successfully");
+    process.exit();
+  })
+  .catch(err => {
+    console.error(err);
+    process.exit(1);
+  });
