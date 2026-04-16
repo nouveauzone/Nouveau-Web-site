@@ -14,7 +14,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    # 🔵 Build frontend
+    # 🔵 Build Frontend
     - name: Install & Build Frontend
       run: |
         cd frontend
@@ -23,36 +23,36 @@ jobs:
       env:
         REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL }}
 
-    # 🔍 Verify build
+    # 🔍 Debug build (optional)
     - name: Check build output
       run: ls -la frontend/build
 
-    # 🔵 Deploy frontend to S3
+    # 🔵 Deploy to S3 (FIXED CACHE ISSUE)
     - name: Deploy to S3
       run: |
-        aws s3 sync frontend/build s3://nouveau-1099 --delete --exclude "index.html" --cache-control "public,max-age=31536000,immutable"
-        aws s3 cp frontend/build/index.html s3://nouveau-1099/index.html --cache-control "no-cache,no-store,must-revalidate" --content-type "text/html"
+        aws s3 sync frontend/build s3://nouveau-1099 --delete
+
+        # index.html should NEVER be cached
+        aws s3 cp frontend/build/index.html s3://nouveau-1099/index.html \
+        --cache-control "no-cache,no-store,must-revalidate" \
+        --content-type "text/html"
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_DEFAULT_REGION: ap-south-1
 
-    # 🔵 Invalidate CloudFront
-    - name: Invalidate CloudFront
+    # 🔥 Invalidate CloudFront (VERY IMPORTANT)
+    - name: Invalidate CloudFront Cache
       run: |
-        if [ -n "${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}" ]; then
-          aws cloudfront create-invalidation \
-            --distribution-id "${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}" \
-            --paths "/*"
-        else
-          echo "CLOUDFRONT_DISTRIBUTION_ID not set; skipping invalidation"
-        fi
+        aws cloudfront create-invalidation \
+        --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+        --paths "/*"
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_DEFAULT_REGION: ap-south-1
 
-    # 🟢 Deploy backend to EC2 (FINAL STABLE VERSION)
+    # 🟢 Deploy Backend to EC2 (PM2 FIXED)
     - name: Deploy Backend to EC2
       uses: appleboy/ssh-action@v1.0.0
       with:
@@ -60,25 +60,25 @@ jobs:
         username: ubuntu
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
-          echo "🚀 Starting Backend Deployment..."
-
           cd /home/ubuntu/Nouveau-Web-site
 
           # Pull latest code
           git pull origin main
 
           cd backend
-
-          # Install dependencies
           npm install
 
-          # ✅ FINAL FIX: Safe reload (no port conflict, no restart loop)
-          pm2 reload ecosystem.config.js || pm2 start ecosystem.config.js
+          # Kill port 5000 (fix EADDRINUSE permanently)
+          sudo fuser -k 5000/tcp || true
+
+          # Stop old PM2 processes safely
+          pm2 delete backend || true
+
+          # Start fresh instance
+          pm2 start server.js --name backend
 
           # Save PM2 state
           pm2 save
-
-          echo "✅ Backend Deployed Successfully"
 
     # ✅ Done
     - name: Deployment Complete
