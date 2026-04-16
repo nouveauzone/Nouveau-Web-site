@@ -3,27 +3,38 @@ name: Deploy to AWS
 on:
   push:
     branches:
-      - main   # change if needed
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-    # 1. Checkout repo
+    # -------------------------
+    # ✅ Checkout Code
+    # -------------------------
     - name: Checkout code
       uses: actions/checkout@v3
 
-    # -----------------------------
-    # 🔵 FRONTEND → S3 DEPLOY
-    # -----------------------------
-    - name: Install dependencies (frontend)
+    # -------------------------
+    # 🔍 Debug (optional but useful)
+    # -------------------------
+    - name: Show project structure
+      run: ls -la
+
+    # -------------------------
+    # 🔵 FRONTEND → BUILD
+    # -------------------------
+    - name: Install & Build Frontend
       run: |
-        cd client
+        cd frontend
         npm install
         npm run build
 
-    - name: Deploy to S3
+    # -------------------------
+    # 🔵 FRONTEND → S3 DEPLOY
+    # -------------------------
+    - name: Deploy Frontend to S3
       uses: jakejarvis/s3-sync-action@master
       with:
         args: --delete
@@ -32,19 +43,26 @@ jobs:
         AWS_REGION: ${{ secrets.AWS_REGION }}
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        SOURCE_DIR: client/dist   # for Vite
+        SOURCE_DIR: frontend/dist
 
-    # -----------------------------
+    # -------------------------
     # 🟢 BACKEND → EC2 DEPLOY
-    # -----------------------------
-    - name: Deploy to EC2 via SSH
+    # -------------------------
+    - name: Deploy Backend to EC2
       uses: appleboy/ssh-action@v1.0.0
       with:
         host: ${{ secrets.EC2_HOST }}
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
-          cd /home/ubuntu/your-project-folder
+          cd /home/ubuntu/Nouveau-Web-site
           git pull origin main
+          cd backend
           npm install
           pm2 restart all
+
+    # -------------------------
+    # ✅ DONE
+    # -------------------------
+    - name: Deployment Complete
+      run: echo "🚀 Deployment Successful!"
