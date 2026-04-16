@@ -19,18 +19,7 @@ app.set("trust proxy", 1);
 
 // ── Middleware ──────────────────────────────────────────────────────────────
 app.use(cors({
-  origin: (origin, cb) => {
-    const allowedOrigins = (process.env.CLIENT_URLS || process.env.CLIENT_URL || "http://localhost:3000")
-      .split(",")
-      .map((o) => o.trim())
-      .filter(Boolean);
-
-    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
-    return cb(new Error("CORS origin blocked"));
-  },
-  credentials: true,
-  methods: ["GET","POST","PUT","DELETE","PATCH","OPTIONS"],
-  allowedHeaders: ["Content-Type","Authorization"],
+  origin: "*", // for now (later restrict)
 }));
 app.use(helmet({
   // Frontend runs on a different origin (localhost:3000) in dev.
