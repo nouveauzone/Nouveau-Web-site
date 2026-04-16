@@ -14,7 +14,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    # 🔵 Build frontend (CRA → build folder)
+    # 🔵 Build frontend
     - name: Install & Build Frontend
       run: |
         cd frontend
@@ -23,11 +23,11 @@ jobs:
       env:
         REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL }}
 
-    # 🔍 Verify build output
+    # 🔍 Verify build
     - name: Check build output
       run: ls -la frontend/build
 
-    # 🔵 Deploy to S3 with safe caching strategy
+    # 🔵 Deploy frontend to S3
     - name: Deploy to S3
       run: |
         aws s3 sync frontend/build s3://nouveau-1099 --delete --exclude "index.html" --cache-control "public,max-age=31536000,immutable"
@@ -37,11 +37,13 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_DEFAULT_REGION: ap-south-1
 
-    # 🔵 Invalidate CloudFront cache so new index/chunks are served immediately
+    # 🔵 Invalidate CloudFront
     - name: Invalidate CloudFront
       run: |
         if [ -n "${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}" ]; then
-          aws cloudfront create-invalidation --distribution-id "${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}" --paths "/*"
+          aws cloudfront create-invalidation \
+            --distribution-id "${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}" \
+            --paths "/*"
         else
           echo "CLOUDFRONT_DISTRIBUTION_ID not set; skipping invalidation"
         fi
@@ -50,7 +52,7 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_DEFAULT_REGION: ap-south-1
 
-    # 🟢 Deploy backend to EC2
+    # 🟢 Deploy backend to EC2 (FIXED)
     - name: Deploy Backend to EC2
       uses: appleboy/ssh-action@v1.0.0
       with:
@@ -58,11 +60,31 @@ jobs:
         username: ubuntu
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
+          echo "🚀 Starting Backend Deployment..."
+
           cd /home/ubuntu/Nouveau-Web-site
+
+          # Pull latest code
           git pull origin main
+
           cd backend
+
+          # Install dependencies
           npm install
-          pm2 restart all
+
+          # 🔥 CRITICAL FIX: Kill any process on port 5000
+          sudo fuser -k 5000/tcp || true
+
+          # 🔥 Remove old PM2 process
+          pm2 delete backend || true
+
+          # 🔥 Start fresh backend
+          pm2 start server.js --name backend
+
+          # Save PM2 state
+          pm2 save
+
+          echo "✅ Backend Deployed Successfully"
 
     # ✅ Done
     - name: Deployment Complete
