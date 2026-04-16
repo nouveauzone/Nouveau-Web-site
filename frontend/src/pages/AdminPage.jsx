@@ -5,7 +5,7 @@ import { THEME } from "../styles/theme";
 import { PRODUCTS as INITIAL_PRODUCTS } from "../data/products";
 import NouveauLogo from "../components/Logo";
 import { BtnPrimary } from "../components/Buttons";
-import API from "../config/api";
+import API from "../services/apiService";
 
 const STATUS_COLORS = { Placed:{bg:"#fff3cd",text:"#856404"}, Processing:{bg:"#cce5ff",text:"#004085"}, Shipped:{bg:"#d4edda",text:"#155724"}, "Out for Delivery":{bg:"#ffe8cc",text:"#7a4100"}, Delivered:{bg:"#d1ecf1",text:"#0c5460"}, Cancelled:{bg:"#f8d7da",text:"#721c24"} };
 function StatusBadge({ status }) {

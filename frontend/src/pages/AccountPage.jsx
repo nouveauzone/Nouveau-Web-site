@@ -6,7 +6,7 @@ import { CartContext } from "../context/CartContext";
 import { AppDataContext, ToastContext } from "../context/Providers";
 import { THEME } from "../styles/theme";
 import { BtnPrimary, BtnOutline } from "../components/Buttons";
-import API from "../config/api";
+import API from "../services/apiService";
 
 const STATUS_STYLE = {
   pending:    { bg:"#fff3cd", color:"#856404" },

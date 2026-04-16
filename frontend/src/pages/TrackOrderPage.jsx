@@ -2,13 +2,10 @@ import { useState, useContext, useEffect } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { THEME } from "../styles/theme";
 import Footer from "../components/Footer";
+import API from "../config/api";
 
 // Use same API base as rest of app - no axios needed
-const API_BASE =
-  process.env.REACT_APP_API_URL ||
-  (typeof window !== "undefined" && window.location.protocol === "https:"
-    ? "https://13.233.97.174:5000/api"
-    : "http://13.233.97.174:5000/api");
+const API_BASE = API;
 
 const getAuthHeader = () => {
   try {
@@ -234,7 +231,7 @@ export default function TrackOrderPage({ setPage }) {
 
   const fetchMyOrders = async () => {
     try {
-      const res  = await fetch(`${API_BASE}/orders/my`, { headers: { ...getAuthHeader() } });
+      const res  = await fetch(`${API_BASE}/api/orders/my`, { headers: { ...getAuthHeader() } });
       const data = await res.json();
       if (Array.isArray(data)) { setMyOrders(data); if (data.length>0) setActiveTab("myorders"); }
     } catch (e) { console.log("my orders error:", e.message); }
@@ -246,7 +243,7 @@ export default function TrackOrderPage({ setPage }) {
     setLoading(true); setError(""); setOrder(null);
     try {
       // Public endpoint — no auth header needed
-      const res  = await fetch(`${API_BASE}/orders/track/${encodeURIComponent(tid)}`);
+      const res  = await fetch(`${API_BASE}/api/orders/track/${encodeURIComponent(tid)}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Order not found");
       setOrder(data);

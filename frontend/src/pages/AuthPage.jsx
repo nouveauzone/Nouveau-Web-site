@@ -1,7 +1,7 @@
 import { useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { THEME } from "../styles/theme";
-import API from "../config/api";
+import API from "../services/apiService";
 import Footer from "../components/Footer";
 
 const GOLD    = "#C9A227";

@@ -8,7 +8,7 @@ import Icons from "../components/Icons";
 import OrnamentDivider from "../components/OrnamentDivider";
 import { BtnOutline, BtnPrimary } from "../components/Buttons";
 import Footer from "../components/Footer";
-import API from "../config/api";
+import API from "../services/apiService";
 
 export default function HomePage({ setPage, setSelectedProduct }) {
   const [PRODUCTS, setPRODUCTS] = useState([]);

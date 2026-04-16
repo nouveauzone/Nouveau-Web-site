@@ -5,7 +5,7 @@ import { THEME } from "../styles/theme";
 import ProductCard from "../components/ProductCard";
 import NouveauLogo from "../components/Logo";
 import Footer from "../components/Footer";
-import API from "../config/api";
+import API from "../services/apiService";
 import { resolveImageUrl } from "../utils/imageUrl";
 
 const normalizeProduct = (product) => ({
