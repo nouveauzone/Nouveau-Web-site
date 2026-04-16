@@ -82,7 +82,7 @@ export default function Hero({ setPage }) {
           width: "100%",
           maxWidth: "1400px",
           margin: "0 auto",
-          padding: "0 40px",
+          padding: "0 clamp(16px, 5vw, 40px)",
         }}
       >
         <div
@@ -93,7 +93,7 @@ export default function Hero({ setPage }) {
             background: "rgba(255,255,255,0.52)",
             border: `1px solid ${THEME.border}`,
             borderRadius: "20px",
-            padding: "30px 38px 28px",
+            padding: "clamp(20px, 5vw, 38px)",
             boxShadow: "0 18px 44px rgba(26,26,26,0.10)",
             backdropFilter: "blur(12px)",
             marginLeft: "0",
@@ -141,11 +141,11 @@ export default function Hero({ setPage }) {
             ))}
           </div>
 
-          <div className="hero-btn-row" style={{ marginTop: "28px", display: "flex", gap: "12px" }}>
+          <div className="hero-btn-row" style={{ marginTop: "28px", display: "flex", gap: "12px", flexWrap: "wrap" }}>
             <button
               onClick={() => setPage("Shop")}
               style={{
-                padding: "12px 26px",
+                padding: "clamp(10px, 2vw, 12px) clamp(18px, 3vw, 26px)",
                 background: `linear-gradient(135deg, ${THEME.gold}, ${THEME.goldDark})`,
                 color: "#fff",
                 fontWeight: 600,
@@ -154,6 +154,9 @@ export default function Hero({ setPage }) {
                 transition: "all 0.3s ease",
                 boxShadow: "0 10px 22px rgba(212,175,55,0.28)",
                 fontFamily: "'Poppins', sans-serif",
+                minHeight: "44px",
+                cursor: "pointer",
+                fontSize: "clamp(10px, 1.5vw, 12px)",
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = "translateY(-2px)";
@@ -168,13 +171,16 @@ export default function Hero({ setPage }) {
             <button
               onClick={() => setPage("Shop")}
               style={{
-                padding: "12px 26px",
+                padding: "clamp(10px, 2vw, 12px) clamp(18px, 3vw, 26px)",
                 border: "1px solid #b76e79",
                 background: "transparent",
                 color: "#1a1a1a",
                 borderRadius: "999px",
                 transition: "all 0.3s ease",
                 fontFamily: "'Poppins', sans-serif",
+                minHeight: "44px",
+                cursor: "pointer",
+                fontSize: "clamp(10px, 1.5vw, 12px)",
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = "translateY(-2px)";

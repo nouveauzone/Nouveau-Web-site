@@ -47,7 +47,7 @@ export default function ProductCard({ product, setPage, setSelectedProduct, comp
   };
 
   const actionBtnBase = {
-    padding: compact ? "10px 10px" : "11px 12px",
+    padding: compact ? "12px 10px" : "14px 12px",
     fontSize: "10px",
     letterSpacing: "1.4px",
     cursor: "pointer",
@@ -55,6 +55,10 @@ export default function ProductCard({ product, setPage, setSelectedProduct, comp
     fontWeight: 700,
     borderRadius: "9px",
     textTransform: "uppercase",
+    minHeight: "44px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
   };
 
   return (
@@ -102,14 +106,16 @@ export default function ProductCard({ product, setPage, setSelectedProduct, comp
               border: `1px solid ${wished ? THEME.crimson : "rgba(255,255,255,0.94)"}`,
               cursor: "pointer",
               color: wished ? "#fff" : THEME.crimson,
-              width: "34px",
-              height: "34px",
+              width: "44px",
+              height: "44px",
               borderRadius: "9px",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               transition: "all 0.25s ease",
               boxShadow: "0 6px 14px rgba(0,0,0,0.12)",
+              minHeight: "44px",
+              minWidth: "44px",
             }}>
             <Icons.Heart filled={wished} />
           </button>
@@ -161,7 +167,14 @@ export default function ProductCard({ product, setPage, setSelectedProduct, comp
       </div>
 
       <div style={{ padding: compact ? "0 14px 14px" : "0 18px 16px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1.15fr", gap: "10px" }}>
+        <style>{`
+          @media (max-width: 640px) {
+            .product-btn-grid {
+              grid-template-columns: 1fr !important;
+            }
+          }
+        `}</style>
+        <div className="product-btn-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1.15fr", gap: "10px" }}>
           <button
             onClick={goToProduct}
             style={{
@@ -170,7 +183,7 @@ export default function ProductCard({ product, setPage, setSelectedProduct, comp
               color: THEME.text,
               border: `1px solid ${THEME.border}`,
             }}>
-            View Product
+            View
           </button>
           <button
             onClick={addToCart}

@@ -71,6 +71,8 @@ export default function Navbar({ page, setPage }) {
           justify-content: center;
           transition: color 0.25s;
           position: relative;
+          min-height: 44px;
+          min-width: 44px;
         }
         .icon-btn-nav:hover {
           color: ${CRIMSON};
@@ -113,7 +115,7 @@ export default function Navbar({ page, setPage }) {
           style={{
             maxWidth: "1400px",
             margin: "0 auto",
-            padding: "0 32px",
+            padding: "0 clamp(16px, 5vw, 40px)",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
@@ -122,12 +124,12 @@ export default function Navbar({ page, setPage }) {
         >
           <div
             onClick={() => setPage("Home")}
-            style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "10px" }}
+            style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "10px", minWidth: "120px" }}
           >
             <div style={{ width: "40px", height: "52px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
               <img src="/nouveau-logo.png" alt="Nouveau" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
             </div>
-            <div>
+            <div style={{ display: "none", "@media (min-width: 769px)": { display: "block" } }}>
               <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: "21px", letterSpacing: "3px", lineHeight: 1, fontWeight: 700, color: CRIMSON }}>nouveau™</div>
               <div style={{ fontFamily: "'Poppins',sans-serif", fontSize: "7px", letterSpacing: "4px", color: THEME.textLight, marginTop: "2px", textTransform: "uppercase" }}>Own Your Aura</div>
             </div>
@@ -142,21 +144,21 @@ export default function Navbar({ page, setPage }) {
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: "2px" }}>
-            <button className="icon-btn-nav" onClick={() => setSearchOpen((value) => !value)}>
+            <button className="icon-btn-nav" onClick={() => setSearchOpen((value) => !value)} aria-label="Search">
               <Icons.Search />
             </button>
-            <button className="icon-btn-nav" onClick={() => setPage(isAuthenticated ? "Account" : "Auth")}>
+            <button className="icon-btn-nav" onClick={() => setPage(isAuthenticated ? "Account" : "Auth")} aria-label="Account">
               <Icons.User />
             </button>
-            <button className="icon-btn-nav" onClick={() => setPage("Wishlist")} style={{ position: "relative" }}>
+            <button className="icon-btn-nav" onClick={() => setPage("Wishlist")} style={{ position: "relative" }} aria-label="Wishlist">
               <Icons.Heart />
               {wishlist.length > 0 && <span className="nav-badge">{wishlist.length}</span>}
             </button>
-            <button className="icon-btn-nav" onClick={() => setPage("Cart")} style={{ position: "relative" }}>
+            <button className="icon-btn-nav" onClick={() => setPage("Cart")} style={{ position: "relative" }} aria-label="Cart">
               <Icons.Cart />
               {cartCount > 0 && <span className="nav-badge">{cartCount}</span>}
             </button>
-            <button className="mobile-menu-btn icon-btn-nav" onClick={() => setMenuOpen(true)}>
+            <button className="mobile-menu-btn icon-btn-nav" onClick={() => setMenuOpen(true)} aria-label="Menu">
               <Icons.Menu />
             </button>
           </div>
@@ -164,23 +166,23 @@ export default function Navbar({ page, setPage }) {
 
         {searchOpen && (
           <div style={{ background: "#fff", borderTop: `1px solid ${THEME.border}`, boxShadow: "0 8px 32px rgba(0,0,0,0.1)" }}>
-            <div style={{ maxWidth: "700px", margin: "0 auto", padding: "20px 32px", display: "flex", gap: "12px" }}>
+            <div style={{ maxWidth: "700px", margin: "0 auto", padding: "clamp(12px, 3vw, 20px) clamp(16px, 5vw, 32px)", display: "flex", gap: "12px", flexWrap: "wrap" }}>
               <input
                 autoFocus
                 value={searchQ}
                 onChange={(e) => setSearchQ(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && (setPage("Shop"), setSearchOpen(false))}
-                placeholder="Search kurtas, sarees, lehengas..."
-                style={{ flex: 1, background: THEME.bgDark, border: `1.5px solid ${THEME.border}`, color: THEME.text, padding: "13px 18px", fontSize: "14px", borderRadius: "12px" }}
+                placeholder="Search kurtas, sarees..."
+                style={{ flex: 1, minWidth: "200px", background: THEME.bgDark, border: `1.5px solid ${THEME.border}`, color: THEME.text, padding: "13px 18px", fontSize: "14px", borderRadius: "12px", minHeight: "44px" }}
                 onFocus={(e) => (e.target.style.borderColor = GOLD)}
                 onBlur={(e) => (e.target.style.borderColor = THEME.border)}
               />
-              <button onClick={() => { setPage("Shop"); setSearchOpen(false); }} style={{ background: CRIMSON, color: "#fff", border: "none", padding: "13px 24px", borderRadius: "12px", fontFamily: "'Poppins',sans-serif", fontSize: "10px", letterSpacing: "2px", fontWeight: 700 }}>
+              <button onClick={() => { setPage("Shop"); setSearchOpen(false); }} style={{ background: CRIMSON, color: "#fff", border: "none", padding: "13px 24px", borderRadius: "12px", fontFamily: "'Poppins',sans-serif", fontSize: "10px", letterSpacing: "2px", fontWeight: 700, minHeight: "44px", cursor: "pointer" }}>
                 SEARCH
               </button>
-              <button onClick={() => setSearchOpen(false)} style={{ background: "none", border: "none", color: THEME.textMuted, fontSize: "20px", padding: "0 8px" }}>✕</button>
+              <button onClick={() => setSearchOpen(false)} style={{ background: "none", border: "none", color: THEME.textMuted, fontSize: "20px", padding: "0 8px", cursor: "pointer", minHeight: "44px", minWidth: "44px" }}>✕</button>
             </div>
-            <div style={{ maxWidth: "700px", margin: "0 auto", padding: "0 32px 16px", display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
+            <div style={{ maxWidth: "700px", margin: "0 auto", padding: "0 clamp(16px, 5vw, 32px) 16px", display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
               <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: "9px", letterSpacing: "3px", color: THEME.textLight, textTransform: "uppercase" }}>Trending:</span>
               {["Lehenga", "Silk Saree", "Kurta", "Anarkali", "Blazer", "Co-Ord Set"].map((tag) => (
                 <button
@@ -222,11 +224,14 @@ export default function Navbar({ page, setPage }) {
           gap: "28px",
           transform: menuOpen ? "translateX(0)" : "translateX(-100%)",
           transition: "transform 0.4s ease",
+          overflowY: "auto",
+          paddingTop: "72px",
         }}
       >
         <button
-          style={{ position: "absolute", top: "24px", right: "24px", background: "none", border: "none", color: THEME.textMuted, cursor: "pointer", fontSize: "24px" }}
+          style={{ position: "absolute", top: "24px", right: "24px", background: "none", border: "none", color: THEME.textMuted, cursor: "pointer", fontSize: "24px", minHeight: "44px", minWidth: "44px" }}
           onClick={() => setMenuOpen(false)}
+          aria-label="Close menu"
         >
           ✕
         </button>
@@ -237,29 +242,41 @@ export default function Navbar({ page, setPage }) {
         </div>
 
         {mobileLinks.map((label) => (
-          <span
+          <button
             key={label}
             onClick={() => {
               setPage(label);
               setMenuOpen(false);
             }}
-            style={{ color: THEME.text, fontSize: "20px", letterSpacing: "5px", textTransform: "uppercase", fontFamily: "'Poppins',sans-serif", fontWeight: 300, cursor: "pointer" }}
+            style={{ 
+              color: THEME.text, 
+              fontSize: "20px", 
+              letterSpacing: "5px", 
+              textTransform: "uppercase", 
+              fontFamily: "'Poppins',sans-serif", 
+              fontWeight: 300, 
+              cursor: "pointer", 
+              background: "none", 
+              border: "none",
+              padding: "12px 0",
+              minHeight: "44px",
+              transition: "color 0.2s"
+            }}
             onMouseEnter={(e) => (e.target.style.color = CRIMSON)}
             onMouseLeave={(e) => (e.target.style.color = THEME.text)}
           >
             {label}
-          </span>
+          </button>
         ))}
-
-        <button
-          onClick={() => {
-            setPage(isAuthenticated ? "Account" : "Auth");
-            setMenuOpen(false);
-          }}
-          style={{ marginTop: "8px", padding: "13px 36px", background: CRIMSON, color: "#fff", border: "none", borderRadius: "99px", fontFamily: "'Poppins',sans-serif", fontSize: "11px", letterSpacing: "2px", fontWeight: 700 }}
-        >
-          {isAuthenticated ? "MY ACCOUNT" : "LOGIN / SIGN UP"}
-        </button>
+        
+        <div style={{ marginTop: "32px", paddingBottom: "32px" }}>
+          <button 
+            onClick={() => { setPage("Auth"); setMenuOpen(false); }}
+            style={{ padding: "12px 32px", background: CRIMSON, color: "#fff", border: "none", borderRadius: "99px", fontFamily: "'Poppins',sans-serif", fontSize: "12px", letterSpacing: "2px", fontWeight: 700, cursor: "pointer", minHeight: "44px" }}
+          >
+            SIGN IN
+          </button>
+        </div>
       </div>
     </>
   );

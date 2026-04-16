@@ -15,3 +15,25 @@ export const THEME = {
   border: "#EADBD2",
   borderDark: "#ddcbc2",
 };
+
+// Responsive utilities
+export const BREAKPOINTS = {
+  mobile: "320px",
+  mobileLg: "480px",
+  tablet: "768px",
+  tabletLg: "1024px",
+  desktop: "1280px",
+};
+
+export const RESPONSIVE_PADDING = {
+  mobile: "16px",
+  mobileLg: "20px",
+  tablet: "32px",
+  desktop: "40px",
+};
+
+export const RESPONSIVE_GRID = {
+  mobile: "repeat(2, 1fr)",
+  tablet: "repeat(3, 1fr)",
+  desktop: "repeat(4, 1fr)",
+};

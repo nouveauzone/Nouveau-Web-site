@@ -65,7 +65,7 @@ export default function HomePage({ setPage, setSelectedProduct }) {
       </div>
 
       {/* ── TWO CATEGORY SHOWCASE ── */}
-      <div style={{ padding:"80px 40px", background:THEME.bgCard }}>
+      <div style={{ padding:"clamp(40px, 10vw, 80px) clamp(16px, 5vw, 40px)", background:THEME.bgCard }}>
         <div style={{ maxWidth:"1400px", margin:"0 auto" }}>
           <div style={{ textAlign:"center", marginBottom:"48px" }}>
             <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"6px", color:THEME.crimson, textTransform:"uppercase", marginBottom:"12px" }}>Our Collections</p>
@@ -124,7 +124,7 @@ export default function HomePage({ setPage, setSelectedProduct }) {
       </div>
 
       {/* ── NEW ARRIVALS ── */}
-      <div style={{ padding:"80px 40px", maxWidth:"1400px", margin:"0 auto" }}>
+      <div style={{ padding:"clamp(40px, 10vw, 80px) clamp(16px, 5vw, 40px)", maxWidth:"1400px", margin:"0 auto" }}>
         <div style={{ textAlign:"center", marginBottom:"48px" }}>
           <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"6px", color:THEME.crimson, textTransform:"uppercase", marginBottom:"12px" }}>Curated Selection</p>
           <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:"clamp(28px,4vw,44px)", fontWeight:700 }}>New Arrivals</h2>
@@ -138,7 +138,7 @@ export default function HomePage({ setPage, setSelectedProduct }) {
         ) : isError ? (
           <div style={{ textAlign:"center", padding:"40px", color:THEME.crimson }}>Failed to load products. Please try again later.</div>
         ) : (
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))", gap:"24px" }}>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(clamp(160px, 40vw, 300px), 1fr))", gap:"clamp(16px, 4vw, 24px)" }}>
             {newArrivals.map((p, i) => (
               <ProductCard key={`${p._id || p.title || "arrival"}-${i}`} product={p} setPage={setPage} setSelectedProduct={setSelectedProduct} />
             ))}
@@ -150,7 +150,7 @@ export default function HomePage({ setPage, setSelectedProduct }) {
       </div>
 
       {/* ── STORY SECTION ── */}
-      <div style={{ maxWidth:"1400px", margin:"0 auto", padding:"80px 40px" }}>
+      <div style={{ maxWidth:"1400px", margin:"0 auto", padding:"clamp(40px, 10vw, 80px) clamp(16px, 5vw, 40px)" }}>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"80px", alignItems:"center" }} className="grid-2col">
           <div>
             <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"6px", color:THEME.crimson, textTransform:"uppercase", marginBottom:"16px" }}>Our Philosophy</p>
@@ -185,7 +185,7 @@ export default function HomePage({ setPage, setSelectedProduct }) {
       </div>
 
       {/* ── TRENDING NOW ── */}
-      <div style={{ background:THEME.bgDark, padding:"80px 40px" }}>
+      <div style={{ background:THEME.bgDark, padding:"clamp(40px, 10vw, 80px) clamp(16px, 5vw, 40px)" }}>
         <div style={{ maxWidth:"1400px", margin:"0 auto" }}>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end", marginBottom:"44px", flexWrap:"wrap", gap:"16px" }}>
             <div>
@@ -194,7 +194,7 @@ export default function HomePage({ setPage, setSelectedProduct }) {
             </div>
             <BtnOutline onClick={() => setPage("Shop")} color={THEME.crimson} style={{ borderRadius:"99px" }}>View All <Icons.Arrow /></BtnOutline>
           </div>
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(230px,1fr))", gap:"20px" }}>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(clamp(150px, 35vw, 250px), 1fr))", gap:"clamp(14px, 3vw, 20px)" }}>
             {trending.map((p, i) => (
               <ProductCard key={`${p._id || p.title || "trending"}-${i}`} product={p} setPage={setPage} setSelectedProduct={setSelectedProduct} compact />
             ))}
@@ -203,10 +203,19 @@ export default function HomePage({ setPage, setSelectedProduct }) {
       </div>
 
       {/* ── STATS ── */}
-      <div style={{ background:`linear-gradient(135deg, #3d1a20, #5c2630)`, padding:"72px 20px" }}>
-        <div style={{ maxWidth:"1200px", margin:"0 auto", display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:"2px" }} className="stats-grid">
+      <div style={{ background:`linear-gradient(135deg, #3d1a20, #5c2630)`, padding:"clamp(40px, 8vw, 72px) clamp(16px, 5vw, 32px)" }}>
+        <style>{`
+          .stats-grid-responsive { grid-template-columns: repeat(4, 1fr); }
+          @media (max-width: 768px) {
+            .stats-grid-responsive { grid-template-columns: repeat(2, 1fr) !important; }
+          }
+          @media (max-width: 480px) {
+            .stats-grid-responsive { grid-template-columns: 1fr !important; }
+          }
+        `}</style>
+        <div style={{ maxWidth:"1200px", margin:"0 auto", display:"grid", gap:"2px" }} className="stats-grid-responsive">
           {[["50,000+","Happy Customers"],["500+","Premium Styles"],["4.9/5","Average Rating"],["100%","Authentic Fabric"]].map(([n,l]) => (
-            <div key={l} style={{ textAlign:"center", padding:"24px 8px", borderRight:"1px solid rgba(255,255,255,0.12)" }}>
+            <div key={l} style={{ textAlign:"center", padding:"clamp(16px, 3vw, 24px) clamp(6px, 2vw, 12px)", borderRight:"1px solid rgba(255,255,255,0.12)" }}>
               <div style={{ fontFamily:"'Playfair Display',serif", fontSize:"clamp(22px,5vw,46px)", color:THEME.gold, fontWeight:900, lineHeight:1 }}>{n}</div>
               <div style={{ fontFamily:"'Poppins',sans-serif", fontSize:"clamp(8px,1.5vw,10px)", letterSpacing:"2px", color:"rgba(255,255,255,0.65)", textTransform:"uppercase", marginTop:"10px" }}>{l}</div>
             </div>
