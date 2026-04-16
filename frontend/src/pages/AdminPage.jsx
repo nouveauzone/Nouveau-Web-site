@@ -131,8 +131,16 @@ export default function AdminPage({ setPage }) {
   const toast = useContext(ToastContext);
 
   const isAdminAuthenticated = isAuthenticated && user?.role === "admin";
+  const [isMobile, setIsMobile] = useState(() => typeof window !== "undefined" ? window.innerWidth < 768 : false);
   const [creds, setCreds] = useState({ email:"", pass:"" });
   const [tab, setTab] = useState("dashboard");
+
+  useEffect(() => {
+    const updateViewport = () => setIsMobile(window.innerWidth < 768);
+    updateViewport();
+    window.addEventListener("resize", updateViewport);
+    return () => window.removeEventListener("resize", updateViewport);
+  }, []);
 
   // ── Load products from localStorage first, fallback to INITIAL_PRODUCTS ──
   const [products, setProducts] = useState(() => {
@@ -236,26 +244,25 @@ export default function AdminPage({ setPage }) {
 
   // ── Login ─────────────────────────────────────────────────────────────────
   if (!isAdminAuthenticated) return (
-    <div style={{ background:`linear-gradient(135deg,${THEME.crimson},${THEME.crimsonDark})`, minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center" }}>
-      <div style={{ width:"420px", padding:"52px", background:"#fff", borderRadius:"20px", boxShadow:"0 24px 80px rgba(0,0,0,0.2)" }}>
+    <div style={{ background:`linear-gradient(135deg,${THEME.crimson},${THEME.crimsonDark})`, minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", padding:isMobile?"16px":"0" }}>
+      <div style={{ width:"min(100%, 420px)", padding:isMobile?"28px 20px":"52px", background:"#fff", borderRadius:isMobile?"18px":"20px", boxShadow:"0 24px 80px rgba(0,0,0,0.2)" }}>
         <div style={{ display:"flex", alignItems:"center", gap:"12px", marginBottom:"28px" }}>
           <NouveauLogo size={44} bg={true} />
           <div>
-            <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:"24px", color:THEME.text, margin:0 }}>Admin Panel</h1>
+            <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:isMobile?"22px":"24px", color:THEME.text, margin:0 }}>Admin Panel</h1>
             <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"3px", color:THEME.crimson, marginTop:"2px" }}>NOUVEAU™ MANAGEMENT</p>
           </div>
         </div>
-        {[["email","Email","admin@nouveau.com"],["pass","Password","Admin@123"]].map(([k,l,ph]) => (
+        [["email","Email"],["pass","Password"]].map(([k,l]) => (
           <div key={k} style={{ marginBottom:"16px" }}>
             <label style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"2px", color:THEME.crimson, display:"block", marginBottom:"7px", fontWeight:700 }}>{l.toUpperCase()}</label>
-            <input type={k==="pass"?"password":"email"} placeholder={ph} value={creds[k]}
+            <input type={k==="pass"?"password":"email"} value={creds[k]}
               onChange={e=>setCreds(c=>({...c,[k]:e.target.value}))}
               onKeyDown={e=>e.key==="Enter"&&handleAdminLogin()}
-              style={{ width:"100%", background:THEME.bg, border:`1.5px solid ${THEME.border}`, color:THEME.text, padding:"13px 16px", fontSize:"14px", outline:"none", fontFamily:"'Poppins',sans-serif", borderRadius:"10px" }} />
+              style={{ width:"100%", background:THEME.bg, border:`1.5px solid ${THEME.border}`, color:THEME.text, padding:isMobile?"14px 14px":"13px 16px", fontSize:"16px", outline:"none", fontFamily:"'Poppins',sans-serif", borderRadius:"10px" }} />
           </div>
         ))}
-        <BtnPrimary onClick={handleAdminLogin} style={{ width:"100%", borderRadius:"12px", justifyContent:"center", marginTop:"8px" }}>Access Dashboard →</BtnPrimary>
-        <p style={{ color:THEME.textLight, fontSize:"11px", textAlign:"center", marginTop:"14px", fontFamily:"'Poppins',sans-serif" }}>Use: <strong>admin@nouveau.com</strong> / <strong>Admin@123</strong></p>
+        <BtnPrimary onClick={handleAdminLogin} style={{ width:"100%", borderRadius:"12px", justifyContent:"center", marginTop:"8px", minHeight:"48px" }}>Access Dashboard →</BtnPrimary>
       </div>
     </div>
   );
@@ -382,6 +389,11 @@ export default function AdminPage({ setPage }) {
 
   const iStyle = { width:"100%", background:THEME.bg, border:`1px solid ${THEME.border}`, color:THEME.text, padding:"11px 14px", fontSize:"13px", outline:"none", fontFamily:"'Poppins',sans-serif", borderRadius:"8px" };
   const navItems = [["dashboard","Dashboard","📊"],["products","Products","📦"],["orders","Orders","📋"],["users","Users","👩"]];
+  const pagePadding = isMobile ? "16px" : "36px 44px";
+  const sectionPadding = isMobile ? "18px" : "24px";
+  const twoCol = isMobile ? "1fr" : "1fr 1fr";
+  const dashboardSplit = isMobile ? "1fr" : "2fr 1fr";
+  const fourCol = isMobile ? "1fr" : "repeat(4, 1fr)";
 
   const getOrderCustomer = (o) => o.customer || o.user?.name || o.shippingAddress?.name || "—";
   const getOrderCity = (o) => o.city || o.shippingAddress?.city || "—";
@@ -394,29 +406,31 @@ export default function AdminPage({ setPage }) {
   };
 
   return (
-    <div style={{ background:THEME.bgDark, minHeight:"100vh", display:"flex" }}>
+    <div style={{ background:THEME.bgDark, minHeight:"100vh", display:"flex", flexDirection:isMobile?"column":"row" }}>
       {/* ── SIDEBAR ────────────────────────────────────────────────────────── */}
-      <aside style={{ width:"220px", background:THEME.bgCard, borderRight:`1px solid ${THEME.border}`, padding:"24px 0", flexShrink:0, position:"sticky", top:0, height:"100vh", overflowY:"auto", display:"flex", flexDirection:"column" }}>
-        <div style={{ padding:"0 20px 20px", borderBottom:`1px solid ${THEME.border}`, marginBottom:"12px" }}>
+      <aside style={{ width:isMobile?"100%":"220px", background:THEME.bgCard, borderRight:isMobile?"none":`1px solid ${THEME.border}`, borderBottom:isMobile?`1px solid ${THEME.border}`:"none", padding:isMobile?"14px 16px":"24px 0", flexShrink:0, position:isMobile?"relative":"sticky", top:0, height:isMobile?"auto":"100vh", overflowY:"visible", overflowX:isMobile?"auto":"auto", display:"flex", flexDirection:"column" }}>
+        <div style={{ padding:isMobile?"0 0 14px":"0 20px 20px", borderBottom:`1px solid ${THEME.border}`, marginBottom:"12px" }}>
           <NouveauLogo size={34} />
           <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"9px", letterSpacing:"3px", color:THEME.crimson, marginTop:"8px", fontWeight:700 }}>NOUVEAU™ ADMIN</p>
         </div>
-        {navItems.map(([id,label,icon]) => (
-          <button key={id} onClick={() => setTab(id)}
-            style={{ display:"flex", alignItems:"center", gap:"10px", width:"100%", padding:"13px 20px", background:tab===id?`${THEME.crimson}10`:"none", border:"none", borderLeft:tab===id?`3px solid ${THEME.crimson}`:"3px solid transparent", color:tab===id?THEME.crimson:THEME.textMuted, cursor:"pointer", fontSize:"12px", letterSpacing:"1px", fontFamily:"'Poppins',sans-serif", textAlign:"left", transition:"all 0.2s", fontWeight:tab===id?700:400 }}>
-            <span style={{ fontSize:"15px" }}>{icon}</span> {label}
-            {id==="orders" && allOrders.filter(o=>getOrderStatus(o)==="pending").length > 0 && (
-              <span style={{ marginLeft:"auto", background:THEME.crimson, color:"#fff", borderRadius:"99px", width:"18px", height:"18px", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"10px", fontWeight:700 }}>{allOrders.filter(o=>getOrderStatus(o)==="pending").length}</span>
-            )}
-          </button>
-        ))}
-        <div style={{ marginTop:"auto", padding:"16px 20px", borderTop:`1px solid ${THEME.border}` }}>
+        <div style={{ display:isMobile?"flex":"block", gap:isMobile?"10px":"0", overflowX:isMobile?"auto":"visible" }}>
+          {navItems.map(([id,label,icon]) => (
+            <button key={id} onClick={() => setTab(id)}
+              style={{ display:"flex", alignItems:"center", gap:"10px", width:isMobile?"auto":"100%", minWidth:isMobile?"120px":"auto", padding:isMobile?"11px 14px":"13px 20px", background:tab===id?`${THEME.crimson}10`:"none", border:isMobile?`1px solid ${tab===id?THEME.crimson:THEME.border}`:"none", borderLeft:isMobile?"none":(tab===id?`3px solid ${THEME.crimson}`:"3px solid transparent"), borderRadius:isMobile?"999px":"0", color:tab===id?THEME.crimson:THEME.textMuted, cursor:"pointer", fontSize:"12px", letterSpacing:"1px", fontFamily:"'Poppins',sans-serif", textAlign:"left", transition:"all 0.2s", fontWeight:tab===id?700:400, flexShrink:0 }}>
+              <span style={{ fontSize:"15px" }}>{icon}</span> {label}
+              {id==="orders" && allOrders.filter(o=>getOrderStatus(o)==="pending").length > 0 && (
+                <span style={{ marginLeft:"auto", background:THEME.crimson, color:"#fff", borderRadius:"99px", width:"18px", height:"18px", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"10px", fontWeight:700 }}>{allOrders.filter(o=>getOrderStatus(o)==="pending").length}</span>
+              )}
+            </button>
+          ))}
+        </div>
+        <div style={{ marginTop:isMobile?"12px":"auto", padding:isMobile?"12px 0 0":"16px 20px", borderTop:`1px solid ${THEME.border}` }}>
           <button onClick={() => setPage&&setPage("Home")} style={{ background:"none", border:"none", color:THEME.textLight, cursor:"pointer", fontFamily:"'Poppins',sans-serif", fontSize:"12px", display:"flex", alignItems:"center", gap:"6px" }}>← Back to Store</button>
         </div>
       </aside>
 
       {/* ── MAIN ───────────────────────────────────────────────────────────── */}
-      <div style={{ flex:1, padding:"36px 44px", overflowY:"auto", maxHeight:"100vh" }}>
+      <div style={{ flex:1, padding:pagePadding, overflowY:"auto", maxHeight:isMobile?"none":"100vh" }}>
 
         {/* ══ DASHBOARD ══════════════════════════════════════════════════════ */}
         {tab==="dashboard" && (
@@ -427,7 +441,7 @@ export default function AdminPage({ setPage }) {
             </div>
 
             {/* Stat cards */}
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:"14px", marginBottom:"28px" }}>
+            <div style={{ display:"grid", gridTemplateColumns:fourCol, gap:"14px", marginBottom:"28px" }}>
               {[
                 ["₹"+totalRevenue.toLocaleString("en-IN"),"Total Revenue",THEME.crimson,"📈"],
                 [allOrders.length,"Total Orders",THEME.gold,"📦"],
@@ -442,9 +456,9 @@ export default function AdminPage({ setPage }) {
               ))}
             </div>
 
-            <div style={{ display:"grid", gridTemplateColumns:"2fr 1fr", gap:"20px", marginBottom:"20px" }}>
+            <div style={{ display:"grid", gridTemplateColumns:dashboardSplit, gap:"20px", marginBottom:"20px" }}>
               {/* Sales chart */}
-              <div style={{ background:THEME.bgCard, border:`1px solid ${THEME.border}`, borderRadius:"14px", padding:"24px" }}>
+              <div style={{ background:THEME.bgCard, border:`1px solid ${THEME.border}`, borderRadius:"14px", padding:sectionPadding }}>
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"20px" }}>
                   <h3 style={{ fontFamily:"'Poppins',sans-serif", fontSize:"11px", letterSpacing:"3px", color:THEME.crimson, fontWeight:700 }}>REVENUE — LAST 7 DAYS</h3>
                   <span style={{ fontFamily:"'Poppins',sans-serif", fontSize:"11px", color:THEME.textLight }}>₹{totalRevenue.toLocaleString("en-IN")} total</span>
@@ -452,15 +466,15 @@ export default function AdminPage({ setPage }) {
                 <SalesChart orders={allOrders} />
               </div>
               {/* Category donut */}
-              <div style={{ background:THEME.bgCard, border:`1px solid ${THEME.border}`, borderRadius:"14px", padding:"24px" }}>
+              <div style={{ background:THEME.bgCard, border:`1px solid ${THEME.border}`, borderRadius:"14px", padding:sectionPadding }}>
                 <h3 style={{ fontFamily:"'Poppins',sans-serif", fontSize:"11px", letterSpacing:"3px", color:THEME.crimson, fontWeight:700, marginBottom:"20px" }}>PRODUCTS BY CATEGORY</h3>
                 <CategoryDonut products={products} />
               </div>
             </div>
 
             {/* Status breakdown */}
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"20px", marginBottom:"20px" }}>
-              <div style={{ background:THEME.bgCard, border:`1px solid ${THEME.border}`, borderRadius:"14px", padding:"24px" }}>
+            <div style={{ display:"grid", gridTemplateColumns:twoCol, gap:"20px", marginBottom:"20px" }}>
+              <div style={{ background:THEME.bgCard, border:`1px solid ${THEME.border}`, borderRadius:"14px", padding:sectionPadding }}>
                 <h3 style={{ fontFamily:"'Poppins',sans-serif", fontSize:"11px", letterSpacing:"3px", color:THEME.crimson, fontWeight:700, marginBottom:"20px" }}>ORDER STATUS</h3>
                 {["Placed","Processing","Shipped","Out for Delivery","Delivered","Cancelled"].map(st => {
                   const count = allOrders.filter(o=>getOrderStatus(o)===st).length;
@@ -480,7 +494,7 @@ export default function AdminPage({ setPage }) {
                 })}
               </div>
               {/* Recent orders mini */}
-              <div style={{ background:THEME.bgCard, border:`1px solid ${THEME.border}`, borderRadius:"14px", padding:"24px" }}>
+              <div style={{ background:THEME.bgCard, border:`1px solid ${THEME.border}`, borderRadius:"14px", padding:sectionPadding }}>
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"16px" }}>
                   <h3 style={{ fontFamily:"'Poppins',sans-serif", fontSize:"11px", letterSpacing:"3px", color:THEME.crimson, fontWeight:700 }}>RECENT ORDERS</h3>
                   <button onClick={()=>setTab("orders")} style={{ background:"none", border:"none", color:THEME.crimson, cursor:"pointer", fontSize:"11px", fontFamily:"'Poppins',sans-serif", fontWeight:700 }}>View all →</button>
@@ -502,18 +516,18 @@ export default function AdminPage({ setPage }) {
         {/* ══ PRODUCTS ═══════════════════════════════════════════════════════ */}
         {tab==="products" && (
           <div>
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"20px", flexWrap:"wrap", gap:"12px" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:isMobile?"flex-start":"center", marginBottom:"20px", flexWrap:"wrap", gap:"12px", flexDirection:isMobile?"column":"row" }}>
               <div>
                 <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:"30px", marginBottom:"2px" }}>Products</h1>
                 <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textLight }}>{products.length} total</p>
               </div>
-              <BtnPrimary onClick={openAdd} style={{ borderRadius:"10px", fontSize:"12px" }}>+ Add Product</BtnPrimary>
+              <BtnPrimary onClick={openAdd} style={{ borderRadius:"10px", fontSize:"12px", width:isMobile?"100%":"auto" }}>+ Add Product</BtnPrimary>
             </div>
-            <input placeholder="🔍 Search products..." value={productSearch} onChange={e=>setProductSearch(e.target.value)} style={{ ...iStyle, marginBottom:"18px", padding:"12px 16px", fontSize:"14px" }} />
+            <input placeholder="🔍 Search products..." value={productSearch} onChange={e=>setProductSearch(e.target.value)} style={{ ...iStyle, marginBottom:"18px", padding:"12px 16px", fontSize:"16px" }} />
 
             {/* Add/Edit form */}
             {showAddForm && (
-              <div style={{ background:THEME.bgCard, border:`1.5px solid ${THEME.crimson}40`, borderRadius:"14px", padding:"28px", marginBottom:"24px" }}>
+              <div style={{ background:THEME.bgCard, border:`1.5px solid ${THEME.crimson}40`, borderRadius:"14px", padding:isMobile?"18px":"28px", marginBottom:"24px" }}>
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"20px" }}>
                   <h3 style={{ fontFamily:"'Playfair Display',serif", fontSize:"20px" }}>{editingId?"Edit Product":"Add New Product"}</h3>
                   <button onClick={()=>setShowAddForm(false)} style={{ background:"none", border:"none", cursor:"pointer", color:THEME.textLight, fontSize:"20px" }}>×</button>
@@ -540,7 +554,7 @@ export default function AdminPage({ setPage }) {
                   </div>
                 </div>
 
-                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"14px" }}>
+                <div style={{ display:"grid", gridTemplateColumns:twoCol, gap:"14px" }}>
                   {[["title","Product Title","text",true],["price","Selling Price (₹)","number",false],["originalPrice","Original / MRP (₹)","number",false],["stock","Stock Quantity","number",false],["discount","Discount %","number",false],["subcategory","Subcategory (Kurta, Dress…)","text",false]].map(([k,lbl,type,full]) => (
                     <div key={k} style={{ gridColumn:full?"1/-1":"auto" }}>
                       <label style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"2px", color:THEME.crimson, display:"block", marginBottom:"6px", fontWeight:700 }}>{lbl.toUpperCase()}</label>
@@ -567,15 +581,15 @@ export default function AdminPage({ setPage }) {
                     <label htmlFor="isnew" style={{ fontFamily:"'Poppins',sans-serif", fontSize:"13px", color:THEME.text, cursor:"pointer" }}>Mark as New Arrival</label>
                   </div>
                 </div>
-                <div style={{ display:"flex", gap:"10px", marginTop:"20px" }}>
-                  <BtnPrimary onClick={saveProduct} style={{ borderRadius:"10px" }}>{editingId?"Update Product ✅":"Add Product 🆕"}</BtnPrimary>
-                  <button onClick={()=>setShowAddForm(false)} style={{ background:"none", border:`1px solid ${THEME.border}`, color:THEME.textMuted, padding:"13px 20px", borderRadius:"10px", cursor:"pointer", fontFamily:"'Poppins',sans-serif", fontSize:"12px" }}>Cancel</button>
+                <div style={{ display:"flex", gap:"10px", marginTop:"20px", flexDirection:isMobile?"column":"row" }}>
+                  <BtnPrimary onClick={saveProduct} style={{ borderRadius:"10px", width:isMobile?"100%":"auto" }}>{editingId?"Update Product ✅":"Add Product 🆕"}</BtnPrimary>
+                  <button onClick={()=>setShowAddForm(false)} style={{ background:"none", border:`1px solid ${THEME.border}`, color:THEME.textMuted, padding:"13px 20px", borderRadius:"10px", cursor:"pointer", fontFamily:"'Poppins',sans-serif", fontSize:"12px", width:isMobile?"100%":"auto" }}>Cancel</button>
                 </div>
               </div>
             )}
 
             {filteredProducts.map((p, idx) => (
-              <div key={`${p._id || p.title || "product"}-${idx}`} style={{ display:"flex", gap:"14px", background:THEME.bgCard, padding:"14px 18px", marginBottom:"10px", alignItems:"center", border:`1px solid ${THEME.border}`, borderRadius:"12px", flexWrap:"wrap" }}>
+              <div key={`${p._id || p.title || "product"}-${idx}`} style={{ display:"flex", gap:"14px", background:THEME.bgCard, padding:isMobile?"14px":"14px 18px", marginBottom:"10px", alignItems:isMobile?"flex-start":"center", border:`1px solid ${THEME.border}`, borderRadius:"12px", flexWrap:"wrap", flexDirection:isMobile?"column":"row" }}>
                 <img src={p.images?.[0]||"/product1.jpeg"} alt={p.title} style={{ width:"60px", height:"76px", objectFit:"cover", borderRadius:"8px", flexShrink:0 }} onError={e=>e.target.src="/product1.jpeg"} />
                 <div style={{ flex:1, minWidth:"140px" }}>
                   <div style={{ display:"flex", alignItems:"center", gap:"8px", flexWrap:"wrap" }}>
@@ -585,14 +599,14 @@ export default function AdminPage({ setPage }) {
                   <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"11px", color:THEME.textLight, marginTop:"3px" }}>{p.category} · {p.subcategory||"—"} · Stock: {p.stock}</p>
                   <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"11px", color:THEME.textLight, marginTop:"2px" }}>Sizes: {p.sizes?.join(", ")}</p>
                 </div>
-                <div style={{ textAlign:"right", minWidth:"80px" }}>
+                <div style={{ textAlign:isMobile?"left":"right", minWidth:"80px" }}>
                   <p style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, fontSize:"15px", color:THEME.crimson }}>₹{p.price?.toLocaleString("en-IN")}</p>
                   <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"11px", color:THEME.textLight, textDecoration:"line-through" }}>₹{p.originalPrice?.toLocaleString("en-IN")}</p>
                   {p.discount>0 && <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"11px", color:"#2d6a4f", fontWeight:600 }}>-{p.discount}%</p>}
                 </div>
-                <div style={{ display:"flex", gap:"8px", flexShrink:0 }}>
-                  <button onClick={()=>openEdit(p)} style={{ background:`${THEME.gold}15`, border:`1px solid ${THEME.gold}40`, color:THEME.goldDark, padding:"7px 14px", borderRadius:"8px", cursor:"pointer", fontSize:"12px", fontFamily:"'Poppins',sans-serif", fontWeight:600 }}>✏️ Edit</button>
-                  <button onClick={()=>handleDeleteProduct(p._id)} style={{ background:`${THEME.crimson}10`, border:`1px solid ${THEME.crimson}30`, color:THEME.crimson, padding:"7px 14px", borderRadius:"8px", cursor:"pointer", fontSize:"12px", fontFamily:"'Poppins',sans-serif", fontWeight:600 }}>🗑️</button>
+                <div style={{ display:"flex", gap:"8px", flexShrink:0, width:isMobile?"100%":"auto", flexWrap:"wrap" }}>
+                  <button onClick={()=>openEdit(p)} style={{ background:`${THEME.gold}15`, border:`1px solid ${THEME.gold}40`, color:THEME.goldDark, padding:"7px 14px", borderRadius:"8px", cursor:"pointer", fontSize:"12px", fontFamily:"'Poppins',sans-serif", fontWeight:600, flex:1, minWidth:isMobile?"120px":"auto" }}>✏️ Edit</button>
+                  <button onClick={()=>handleDeleteProduct(p._id)} style={{ background:`${THEME.crimson}10`, border:`1px solid ${THEME.crimson}30`, color:THEME.crimson, padding:"7px 14px", borderRadius:"8px", cursor:"pointer", fontSize:"12px", fontFamily:"'Poppins',sans-serif", fontWeight:600, flex:1, minWidth:isMobile?"120px":"auto" }}>🗑️</button>
                 </div>
               </div>
             ))}
@@ -603,8 +617,8 @@ export default function AdminPage({ setPage }) {
         {tab==="orders" && (
           <div>
             {selectedOrder && (
-              <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.5)", zIndex:200, display:"flex", alignItems:"center", justifyContent:"center", padding:"20px" }}>
-                <div style={{ background:"#fff", borderRadius:"20px", padding:"32px", maxWidth:"580px", width:"100%", maxHeight:"85vh", overflowY:"auto", position:"relative" }}>
+              <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.5)", zIndex:200, display:"flex", alignItems:isMobile?"flex-end":"center", justifyContent:"center", padding:isMobile?"0":"20px" }}>
+                <div style={{ background:"#fff", borderRadius:isMobile?"20px 20px 0 0":"20px", padding:isMobile?"22px 18px 24px":"32px", maxWidth:isMobile?"100%":"580px", width:"100%", maxHeight:isMobile?"90vh":"85vh", overflowY:"auto", position:"relative" }}>
                   <button onClick={()=>setSelectedOrder(null)} style={{ position:"absolute", top:"18px", right:"18px", background:"none", border:"none", cursor:"pointer", fontSize:"22px", color:THEME.textLight }}>×</button>
                   <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"3px", color:THEME.crimson, fontWeight:700, marginBottom:"4px" }}>ORDER DETAILS</p>
                   <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:"20px", marginBottom:"4px" }}>{selectedOrder._id}</h2>
@@ -616,7 +630,7 @@ export default function AdminPage({ setPage }) {
                     </div>
                   )}
                   <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textLight, marginBottom:"20px" }}>{getOrderDate(selectedOrder)}</p>
-                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"10px", marginBottom:"20px" }}>
+                  <div style={{ display:"grid", gridTemplateColumns:isMobile?"1fr":"1fr 1fr", gap:"10px", marginBottom:"20px" }}>
                     {[["Customer",getOrderCustomer(selectedOrder)],["Amount","₹"+getOrderAmount(selectedOrder)],["Payment",selectedOrder.paymentMethod||"—"],["Items",selectedOrder.items?.length||selectedOrder.qty||"—"],["City",getOrderCity(selectedOrder)],["Status",getOrderStatus(selectedOrder)]].map(([l,v]) => (
                       <div key={l} style={{ background:THEME.bg, borderRadius:"8px", padding:"12px 14px" }}>
                         <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"9px", letterSpacing:"2px", color:THEME.textLight, marginBottom:"3px" }}>{l.toUpperCase()}</p>
@@ -689,9 +703,9 @@ export default function AdminPage({ setPage }) {
               <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:"30px", marginBottom:"2px" }}>Orders</h1>
               <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textLight }}>{filteredOrders.length} orders</p>
             </div>
-            <div style={{ display:"flex", gap:"10px", marginBottom:"18px", flexWrap:"wrap" }}>
-              <input placeholder="🔍 Search order ID, customer, city…" value={orderSearch} onChange={e=>setOrderSearch(e.target.value)} style={{ ...iStyle, flex:1, minWidth:"200px" }} />
-              <select value={orderFilter} onChange={e=>setOrderFilter(e.target.value)} style={{ ...iStyle, width:"auto" }}>
+            <div style={{ display:"flex", gap:"10px", marginBottom:"18px", flexWrap:"wrap", flexDirection:isMobile?"column":"row" }}>
+              <input placeholder="🔍 Search order ID, customer, city…" value={orderSearch} onChange={e=>setOrderSearch(e.target.value)} style={{ ...iStyle, flex:1, minWidth:isMobile?"0":"200px", fontSize:"16px" }} />
+              <select value={orderFilter} onChange={e=>setOrderFilter(e.target.value)} style={{ ...iStyle, width:isMobile?"100%":"auto" }}>
                 <option value="all">All Statuses</option>
                 {["Placed","Processing","Shipped","Out for Delivery","Delivered","Cancelled"].map(s=><option key={s} value={s}>{s.charAt(0).toUpperCase()+s.slice(1)}</option>)}
               </select>
@@ -740,8 +754,8 @@ export default function AdminPage({ setPage }) {
         {tab==="users" && (
           <div>
             {selectedUser && (
-              <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.5)", zIndex:200, display:"flex", alignItems:"center", justifyContent:"center", padding:"20px" }}>
-                <div style={{ background:"#fff", borderRadius:"20px", padding:"32px", maxWidth:"460px", width:"100%", position:"relative" }}>
+              <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.5)", zIndex:200, display:"flex", alignItems:isMobile?"flex-end":"center", justifyContent:"center", padding:isMobile?"0":"20px" }}>
+                <div style={{ background:"#fff", borderRadius:isMobile?"20px 20px 0 0":"20px", padding:isMobile?"22px 18px 24px":"32px", maxWidth:isMobile?"100%":"460px", width:"100%", position:"relative", maxHeight:isMobile?"90vh":"auto", overflowY:"auto" }}>
                   <button onClick={()=>setSelectedUser(null)} style={{ position:"absolute", top:"18px", right:"18px", background:"none", border:"none", cursor:"pointer", fontSize:"22px", color:THEME.textLight }}>×</button>
                   <div style={{ display:"flex", alignItems:"center", gap:"14px", marginBottom:"20px" }}>
                     <div style={{ width:"52px", height:"52px", borderRadius:"50%", background:`linear-gradient(135deg,${THEME.crimson},${THEME.gold})`, display:"flex", alignItems:"center", justifyContent:"center", color:"#fff", fontSize:"20px", fontWeight:700, fontFamily:"'Playfair Display',serif", flexShrink:0 }}>{selectedUser.name?.charAt(0)}</div>
@@ -750,7 +764,7 @@ export default function AdminPage({ setPage }) {
                       <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"11px", color:THEME.textLight }}>{selectedUser._id}</p>
                     </div>
                   </div>
-                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"10px" }}>
+                  <div style={{ display:"grid", gridTemplateColumns:isMobile?"1fr":"1fr 1fr", gap:"10px" }}>
                     {[["Email",selectedUser.email],["Phone",selectedUser.phone||"—"],["City",selectedUser.addresses?.[0]?.city||selectedUser.city||"—"],["State",selectedUser.addresses?.[0]?.state||selectedUser.state||"—"],["Member Since",selectedUser.createdAt?new Date(selectedUser.createdAt).toLocaleDateString("en-IN",{month:"short",year:"numeric"}):selectedUser.joined||"—"],["Role",selectedUser.role?.toUpperCase()||"USER"]].map(([l,v]) => (
                       <div key={l} style={{ background:THEME.bg, borderRadius:"8px", padding:"12px 14px" }}>
                         <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"9px", letterSpacing:"2px", color:THEME.textLight, marginBottom:"3px" }}>{l.toUpperCase()}</p>
@@ -774,7 +788,7 @@ export default function AdminPage({ setPage }) {
               <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:"30px", marginBottom:"2px" }}>Users</h1>
               <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textLight }}>{filteredUsers.length} registered customers</p>
             </div>
-            <input placeholder="🔍 Search by name, email…" value={userSearch} onChange={e=>setUserSearch(e.target.value)} style={{ ...iStyle, marginBottom:"18px", padding:"12px 16px", fontSize:"14px" }} />
+            <input placeholder="🔍 Search by name, email…" value={userSearch} onChange={e=>setUserSearch(e.target.value)} style={{ ...iStyle, marginBottom:"18px", padding:"12px 16px", fontSize:"16px" }} />
             <div style={{ background:THEME.bgCard, border:`1px solid ${THEME.border}`, borderRadius:"14px", overflow:"hidden" }}>
               <div style={{ overflowX:"auto" }}>
                 <table style={{ width:"100%", borderCollapse:"collapse" }}>
