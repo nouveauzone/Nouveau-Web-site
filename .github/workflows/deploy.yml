@@ -52,7 +52,7 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_DEFAULT_REGION: ap-south-1
 
-    # 🟢 Deploy backend to EC2 (PERMANENT FIX)
+    # 🟢 Deploy backend to EC2 (FINAL STABLE VERSION)
     - name: Deploy Backend to EC2
       uses: appleboy/ssh-action@v1.0.0
       with:
@@ -72,14 +72,10 @@ jobs:
           # Install dependencies
           npm install
 
-          # 🔥 HARD RESET (only once per deploy)
-          pm2 kill || true
-          sudo fuser -k 5000/tcp || true
+          # ✅ FINAL FIX: Safe reload (no port conflict, no restart loop)
+          pm2 reload ecosystem.config.js || pm2 start ecosystem.config.js
 
-          # 🔥 START WITH ECOSYSTEM (NO DUPLICATES EVER)
-          pm2 start ecosystem.config.js
-
-          # Save PM2 process
+          # Save PM2 state
           pm2 save
 
           echo "✅ Backend Deployed Successfully"
