@@ -52,7 +52,7 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_DEFAULT_REGION: ap-south-1
 
-    # 🟢 Deploy backend to EC2 (FIXED)
+    # 🟢 Deploy backend to EC2 (FINAL FIXED)
     - name: Deploy Backend to EC2
       uses: appleboy/ssh-action@v1.0.0
       with:
@@ -72,14 +72,8 @@ jobs:
           # Install dependencies
           npm install
 
-          # 🔥 CRITICAL FIX: Kill any process on port 5000
-          sudo fuser -k 5000/tcp || true
-
-          # 🔥 Remove old PM2 process
-          pm2 delete backend || true
-
-          # 🔥 Start fresh backend
-          pm2 start server.js --name backend
+          # 🔥 BEST FIX: zero-downtime restart (no port conflict)
+          pm2 reload backend || pm2 start server.js --name backend
 
           # Save PM2 state
           pm2 save
