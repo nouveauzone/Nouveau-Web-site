@@ -21,20 +21,20 @@ jobs:
         npm install
         CI=false npm run build
 
-    # 🔍 Debug build (IMPORTANT)
+    # 🔍 Verify build folder
     - name: Check build output
-      run: ls -la frontend/dist
+      run: ls -la frontend/build
 
-    # 🔵 Upload to S3 (UPDATED METHOD)
+    # 🔵 Deploy to S3
     - name: Deploy to S3
       run: |
-        aws s3 sync frontend/dist s3://nouveau-1099 --delete --acl public-read
+        aws s3 sync frontend/build s3://nouveau-1099 --delete --acl public-read
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_DEFAULT_REGION: ap-south-1
 
-    # 🟢 Deploy backend to EC2
+    # 🟢 Deploy backend
     - name: Deploy Backend
       uses: appleboy/ssh-action@v1.0.0
       with:
