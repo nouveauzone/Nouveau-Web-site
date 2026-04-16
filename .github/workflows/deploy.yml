@@ -10,32 +10,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # ✅ Checkout
+    # ✅ Checkout code
     - name: Checkout code
       uses: actions/checkout@v3
 
-    # 🔵 Build frontend
+    # 🔵 Build frontend (CRA → build folder)
     - name: Install & Build Frontend
       run: |
         cd frontend
         npm install
         CI=false npm run build
 
-    # 🔍 Verify build folder
+    # 🔍 Verify build output
     - name: Check build output
       run: ls -la frontend/build
 
-    # 🔵 Deploy to S3
+    # 🔵 Deploy to S3 (FIXED - no ACL)
     - name: Deploy to S3
       run: |
-        aws s3 sync frontend/build s3://nouveau-1099 --delete --acl public-read
+        aws s3 sync frontend/build s3://nouveau-1099 --delete
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_DEFAULT_REGION: ap-south-1
 
-    # 🟢 Deploy backend
-    - name: Deploy Backend
+    # 🟢 Deploy backend to EC2
+    - name: Deploy Backend to EC2
       uses: appleboy/ssh-action@v1.0.0
       with:
         host: ${{ secrets.EC2_HOST }}
@@ -49,5 +49,5 @@ jobs:
           pm2 restart all
 
     # ✅ Done
-    - name: Done
+    - name: Deployment Complete
       run: echo "🚀 Deployment Successful"
