@@ -1,4 +1,4 @@
-const API_ROOT = (process.env.REACT_APP_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "");
+const API_ROOT = (process.env.REACT_APP_API_URL || "http://13.233.97.174:5000/api").replace(/\/api\/?$/, "");
 
 export function resolveImageUrl(src, fallback = "/ethnic1.jpeg") {
   if (!src || typeof src !== "string") return fallback;

@@ -1,4 +1,5 @@
-const BASE = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+const API_URL = process.env.REACT_APP_API_URL || "http://13.233.97.174:5000/api";
+const BASE = API_URL;
 
 const getAuthHeader = () => {
   try {

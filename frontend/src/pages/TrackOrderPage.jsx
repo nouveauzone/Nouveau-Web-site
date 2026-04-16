@@ -4,7 +4,7 @@ import { THEME } from "../styles/theme";
 import Footer from "../components/Footer";
 
 // Use same API base as rest of app - no axios needed
-const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+const API_BASE = process.env.REACT_APP_API_URL || "http://13.233.97.174:5000/api";
 
 const getAuthHeader = () => {
   try {
