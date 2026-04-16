@@ -1,0 +1,823 @@
+import { useState, useContext, useEffect, useRef } from "react";
+import { AuthContext } from "../context/AuthContext";
+import { AppDataContext, ToastContext } from "../context/Providers";
+import { THEME } from "../styles/theme";
+import { PRODUCTS as INITIAL_PRODUCTS } from "../data/products";
+import NouveauLogo from "../components/Logo";
+import { BtnPrimary } from "../components/Buttons";
+import { API } from "../config/api";
+
+const STATUS_COLORS = { Placed:{bg:"#fff3cd",text:"#856404"}, Processing:{bg:"#cce5ff",text:"#004085"}, Shipped:{bg:"#d4edda",text:"#155724"}, "Out for Delivery":{bg:"#ffe8cc",text:"#7a4100"}, Delivered:{bg:"#d1ecf1",text:"#0c5460"}, Cancelled:{bg:"#f8d7da",text:"#721c24"} };
+function StatusBadge({ status }) {
+  const c = STATUS_COLORS[status]||{bg:"#eee",text:"#333"};
+  return <span style={{ background:c.bg, color:c.text, padding:"4px 12px", borderRadius:"99px", fontSize:"10px", fontFamily:"'Poppins',sans-serif", fontWeight:700, letterSpacing:"1px", textTransform:"uppercase", whiteSpace:"nowrap" }}>{status}</span>;
+}
+
+function SalesChart({ orders }) {
+  // last 7 days revenue
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - 6 + i);
+    return { label: d.toLocaleDateString("en-IN", { weekday: "short" }), date: d.toDateString() };
+  });
+
+  const data = days.map((d) => ({
+    ...d,
+    revenue: orders
+      .filter((o) => new Date(o.dateRaw || o.date || o.createdAt).toDateString() === d.date)
+      .reduce((sum, o) => sum + (o.price || o.total || 0), 0),
+    count: orders.filter((o) => new Date(o.dateRaw || o.date || o.createdAt).toDateString() === d.date).length,
+  }));
+
+  const maxRev = Math.max(...data.map((d) => d.revenue), 1);
+
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "flex-end", gap: "8px", height: "140px", marginBottom: "10px" }}>
+        {data.map((d, i) => (
+          <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
+            <div style={{ fontSize: "10px", fontFamily: "'Poppins',sans-serif", color: THEME.textLight, marginBottom: "4px" }}>
+              {d.revenue > 0 ? "₹" + Math.round(d.revenue / 1000) + "k" : ""}
+            </div>
+            <div style={{ width: "100%", background: d.revenue > 0 ? THEME.crimson : THEME.bgDark, borderRadius: "6px 6px 0 0", height: `${Math.max((d.revenue / maxRev) * 110, 4)}px`, transition: "height 0.4s ease", position: "relative" }}>
+              {d.count > 0 && <div style={{ position: "absolute", top: "-18px", left: "50%", transform: "translateX(-50%)", fontSize: "10px", color: THEME.crimson, fontWeight: 700, fontFamily: "'Poppins',sans-serif", whiteSpace: "nowrap" }}>{d.count}</div>}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={{ display: "flex", gap: "8px" }}>
+        {data.map((d, i) => (
+          <div key={i} style={{ flex: 1, textAlign: "center", fontFamily: "'Poppins',sans-serif", fontSize: "10px", color: THEME.textLight }}>{d.label}</div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Donut chart for category split ────────────────────────────────────────────
+function CategoryDonut({ products }) {
+  const ethnic  = products.filter(p=>p.category==="Indian Ethnic Wear").length;
+  const western = products.filter(p=>p.category==="Indian Premium Western Wear").length;
+  const total   = ethnic+western||1;
+  const ethnicPct  = Math.round(ethnic/total*100);
+  const westernPct = 100-ethnicPct;
+  const r=42, cx=60, cy=60, circ=2*Math.PI*r;
+  const ethnicDash  = circ*(ethnicPct/100);
+  const westernDash = circ*(westernPct/100);
+  return (
+    <div style={{ display:"flex", alignItems:"center", gap:"24px" }}>
+      <svg width="120" height="120" style={{ flexShrink:0 }}>
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke={THEME.bgDark} strokeWidth="14"/>
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke={THEME.crimson} strokeWidth="14"
+          strokeDasharray={`${ethnicDash} ${circ}`} strokeDashoffset={circ*0.25} strokeLinecap="round" style={{ transition:"stroke-dasharray 0.6s ease" }} />
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke={THEME.gold} strokeWidth="14"
+          strokeDasharray={`${westernDash} ${circ}`} strokeDashoffset={circ*0.25-ethnicDash} strokeLinecap="round" style={{ transition:"stroke-dasharray 0.6s ease" }} />
+        <text x={cx} y={cy-6} textAnchor="middle" style={{ fontFamily:"'Playfair Display',serif", fontSize:"16px", fontWeight:700, fill:THEME.text }}>{total}</text>
+        <text x={cx} y={cy+12} textAnchor="middle" style={{ fontFamily:"'Poppins',sans-serif", fontSize:"9px", fill:THEME.textLight }}>products</text>
+      </svg>
+      <div>
+        {[["Indian Ethnic",ethnic,THEME.crimson],[" Premium Western",western,THEME.gold]].map(([l,n,c]) => (
+          <div key={l} style={{ display:"flex", alignItems:"center", gap:"8px", marginBottom:"8px" }}>
+            <div style={{ width:"10px", height:"10px", borderRadius:"50%", background:c, flexShrink:0 }} />
+            <span style={{ fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textMuted }}>{l}</span>
+            <span style={{ fontFamily:"'Poppins',sans-serif", fontSize:"12px", fontWeight:700, color:THEME.text, marginLeft:"auto" }}>{n}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const EMPTY_PRODUCT = { title:"", price:"", originalPrice:"", category:"Indian Ethnic Wear", subcategory:"", sizes:["S","M","L","XL"], stock:"", discount:"0", description:"", isNew:true, images:["/product1.jpeg"] };
+
+const BAD_TEXT_RE = /(\/static\/media|\.(jpeg|jpg|png|webp|svg)$|\.[a-f0-9]{8,}$|^https?:\/\/|\\)/i;
+
+const cleanText = (value, fallback = "") => {
+  const raw = typeof value === "string" ? value.trim() : "";
+  if (!raw || BAD_TEXT_RE.test(raw) || raw.length > 140) return fallback;
+  return raw;
+};
+
+const cleanImages = (images) => {
+  if (!Array.isArray(images) || !images.length) return ["/product1.jpeg"];
+  const filtered = images.filter((img) => {
+    if (typeof img !== "string") return false;
+    const src = img.trim();
+    if (!src || src.includes("\\")) return false;
+    // Accept real image sources (absolute URL, root-relative, uploads path, data/blob URL).
+    if (/^(https?:\/\/|\/|uploads\/|data:image\/|blob:)/i.test(src)) return true;
+    return /\.(jpg|jpeg|png|webp|gif|svg)(\?.*)?$/i.test(src);
+  });
+  return filtered.length ? filtered : ["/product1.jpeg"];
+};
+
+const normalizeProduct = (product) => ({
+  ...product,
+  title: cleanText(product.title, "Nouveau Signature Piece"),
+  subcategory: cleanText(product.subcategory, "Women's Wear"),
+  description: cleanText(product.description, "Elegant premium womenswear crafted with attention to detail and all-day comfort."),
+  images: cleanImages(product.images),
+  category: product.category === "Indian Ethnic Wear" || product.category === "Indian Premium Western Wear" ? product.category : "Indian Ethnic Wear",
+  price: Number(product.price) || 0,
+  originalPrice: Number(product.originalPrice) || Number(product.price) || 0,
+  stock: Number(product.stock) || 0,
+  discount: Number(product.discount) || 0,
+  sizes: Array.isArray(product.sizes) && product.sizes.length ? product.sizes : ["S","M","L","XL"],
+});
+
+export default function AdminPage({ setPage }) {
+  const { dispatch: authDispatch, isAuthenticated, user } = useContext(AuthContext);
+  const { allOrders:ctxAllOrders = [], updateOrderStatus:ctxUpdateStatus, deleteOrderLocal, localUsers:ctxLocalUsers=[] } = useContext(AppDataContext)||{};
+  const toast = useContext(ToastContext);
+
+  const isAdminAuthenticated = isAuthenticated && user?.role === "admin";
+  const [creds, setCreds] = useState({ email:"", pass:"" });
+  const [tab, setTab] = useState("dashboard");
+
+  // ── Load products from localStorage first, fallback to INITIAL_PRODUCTS ──
+  const [products, setProducts] = useState(() => {
+    try {
+      const saved = localStorage.getItem('nouveau_local_products');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed.map(normalizeProduct);
+      }
+    } catch {}
+    return INITIAL_PRODUCTS.map(normalizeProduct);
+  });
+
+  // ── Save products to localStorage whenever they change ───────────────────
+  useEffect(() => {
+    localStorage.setItem('nouveau_local_products', JSON.stringify(products));
+  }, [products]);
+  const [orders, setOrders]               = useState([]);
+  const [users, setUsers]                 = useState([]);
+  const [loadingData, setLoadingData]     = useState(false);
+
+  const [showAddForm, setShowAddForm]     = useState(false);
+  const [editingId, setEditingId]         = useState(null);
+  const [productForm, setProductForm]     = useState(EMPTY_PRODUCT);
+  const [productSearch, setProductSearch] = useState("");
+  const [uploadingImg, setUploadingImg]   = useState(false);
+  const imgInputRef = useRef();
+
+  const [orderSearch, setOrderSearch]     = useState("");
+  const [orderFilter, setOrderFilter]     = useState("all");
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [userSearch, setUserSearch]       = useState("");
+  const [selectedUser, setSelectedUser]   = useState(null);
+
+  // ── Load real data from backend ──────────────────────────────────────────
+  const loadData = async () => {
+    setLoadingData(true);
+    // Always show local context orders immediately (works without backend)
+    setOrders(ctxAllOrders || []);
+
+    // Also try to load from backend (if available)
+    try {
+      const [ordRes, usrRes, prodRes] = await Promise.allSettled([
+        API.getAllOrders({ limit:100 }),
+        API.getAllUsers({ limit:100 }),
+        API.getProducts({ limit:100 }),
+      ]);
+      if (ordRes.status==="fulfilled" && ordRes.value?.orders?.length) {
+        const backendOrders = ordRes.value.orders;
+        const backendIds = new Set(backendOrders.map(o=>o._id));
+        const localOnly = (ctxAllOrders||[]).filter(o=>!backendIds.has(o._id));
+        setOrders([...backendOrders, ...localOnly]);
+      }
+      if (usrRes.status==="fulfilled" && usrRes.value?.users?.length) {
+        setUsers(usrRes.value.users);
+      } else {
+        setUsers([]);
+      }
+      if (prodRes.status==="fulfilled" && prodRes.value?.products?.length) {
+        setProducts(prodRes.value.products.map(normalizeProduct));
+      }
+    } catch { /* backend not available - using local data */ }
+    setLoadingData(false);
+  };
+
+  useEffect(() => { if (isAdminAuthenticated) loadData(); }, [isAdminAuthenticated]);
+
+  const handleAdminLogin = async () => {
+    try {
+      const res = await API.login({ email: creds.email, password: creds.pass });
+      if (res.role !== "admin") {
+        toast("Admin access required", "error");
+        return;
+      }
+
+      // Persist auth immediately so first admin API calls include token.
+      const authPayload = {
+        user: {
+          _id: res._id,
+          name: res.name,
+          email: res.email,
+          role: res.role,
+          phone: res.phone || "",
+          addresses: res.addresses || [],
+        },
+        token: res.token,
+        isAuthenticated: true,
+      };
+      try { localStorage.setItem("nouveau_auth", JSON.stringify(authPayload)); } catch {}
+
+      authDispatch({
+        type: "LOGIN",
+        payload: authPayload.user,
+        token: res.token,
+      });
+      toast("Admin login successful");
+    } catch (err) {
+      toast(err.message || "Admin login failed", "error");
+    }
+  };
+
+  // ── Login ─────────────────────────────────────────────────────────────────
+  if (!isAdminAuthenticated) return (
+    <div style={{ background:`linear-gradient(135deg,${THEME.crimson},${THEME.crimsonDark})`, minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center" }}>
+      <div style={{ width:"420px", padding:"52px", background:"#fff", borderRadius:"20px", boxShadow:"0 24px 80px rgba(0,0,0,0.2)" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:"12px", marginBottom:"28px" }}>
+          <NouveauLogo size={44} bg={true} />
+          <div>
+            <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:"24px", color:THEME.text, margin:0 }}>Admin Panel</h1>
+            <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"3px", color:THEME.crimson, marginTop:"2px" }}>NOUVEAU™ MANAGEMENT</p>
+          </div>
+        </div>
+        {[["email","Email","admin@nouveau.com"],["pass","Password","Admin@123"]].map(([k,l,ph]) => (
+          <div key={k} style={{ marginBottom:"16px" }}>
+            <label style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"2px", color:THEME.crimson, display:"block", marginBottom:"7px", fontWeight:700 }}>{l.toUpperCase()}</label>
+            <input type={k==="pass"?"password":"email"} placeholder={ph} value={creds[k]}
+              onChange={e=>setCreds(c=>({...c,[k]:e.target.value}))}
+              onKeyDown={e=>e.key==="Enter"&&handleAdminLogin()}
+              style={{ width:"100%", background:THEME.bg, border:`1.5px solid ${THEME.border}`, color:THEME.text, padding:"13px 16px", fontSize:"14px", outline:"none", fontFamily:"'Poppins',sans-serif", borderRadius:"10px" }} />
+          </div>
+        ))}
+        <BtnPrimary onClick={handleAdminLogin} style={{ width:"100%", borderRadius:"12px", justifyContent:"center", marginTop:"8px" }}>Access Dashboard →</BtnPrimary>
+        <p style={{ color:THEME.textLight, fontSize:"11px", textAlign:"center", marginTop:"14px", fontFamily:"'Poppins',sans-serif" }}>Use: <strong>admin@nouveau.com</strong> / <strong>Admin@123</strong></p>
+      </div>
+    </div>
+  );
+
+  // ── Computed stats ────────────────────────────────────────────────────────
+  // Merge: local state orders + context orders (avoid duplicates)
+  const allOrders = (() => {
+    const base = orders.length ? orders : [];
+    const baseIds = new Set(base.map(o=>o._id));
+    const extra = (ctxAllOrders||[]).filter(o=>!baseIds.has(o._id));
+    return [...base, ...extra];
+  })();
+  const totalRevenue = allOrders.reduce((s,o)=>s+(o.price||o.total||0),0);
+  const filteredOrders = allOrders.filter(o => {
+    const q = orderSearch.toLowerCase();
+    const matchQ = !q || (o._id||"").toLowerCase().includes(q) || (o.trackingId||"").toLowerCase().includes(q) || (o.customer||o.user?.name||"").toLowerCase().includes(q) || (o.city||o.shippingAddress?.city||"").toLowerCase().includes(q);
+    return matchQ && (orderFilter==="all" || (o.orderStatus||o.status)===orderFilter);
+  });
+  const filteredProducts = products.filter(p => !productSearch || p.title.toLowerCase().includes(productSearch.toLowerCase()) || p.category.toLowerCase().includes(productSearch.toLowerCase()));
+  const filteredUsers = users.filter(u => !userSearch || u.name?.toLowerCase().includes(userSearch.toLowerCase()) || u.email?.toLowerCase().includes(userSearch.toLowerCase()));
+
+  // ── Product helpers ───────────────────────────────────────────────────────
+  const openEdit = (p) => { const safe = normalizeProduct(p); setProductForm({...safe, price:String(safe.price), originalPrice:String(safe.originalPrice), stock:String(safe.stock), discount:String(safe.discount||0), sizes:safe.sizes||["S","M","L","XL"]}); setEditingId(p._id); setShowAddForm(true); };
+  const openAdd  = () => { setProductForm(EMPTY_PRODUCT); setEditingId(null); setShowAddForm(true); };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingImg(true);
+    try {
+      const fd = new FormData(); fd.append("images", file);
+      const res = await API.uploadImages(fd);
+      setProductForm(f=>({...f, images:[res.urls?.[0]||f.images[0]]}));
+      toast("Image uploaded! 🖼️");
+    } catch (err) { toast(err.message || "Upload failed — using default image", "error"); }
+    setUploadingImg(false);
+  };
+
+  const saveProduct = async () => {
+    if (!productForm.title||!productForm.price) { toast("Title and price are required","error"); return; }
+    const isEdit = Boolean(editingId);
+    const tempId = "tmp_" + Date.now();
+    const safeForm = normalizeProduct(productForm);
+    const cleaned = {
+      ...safeForm,
+      price: Number(safeForm.price),
+      originalPrice: Number(safeForm.originalPrice) || Number(safeForm.price),
+      stock: Number(safeForm.stock) || 0,
+      discount: Number(safeForm.discount) || 0,
+      gender: "Women",
+      images: safeForm.images?.length ? safeForm.images : ["/product1.jpeg"],
+      _id: editingId || tempId,
+      rating: safeForm.rating || 4.5,
+      reviews: safeForm.reviews || 0,
+    };
+
+    // Remove UI-only fields before hitting backend.
+    const toBackendPayload = ({ _id, rating, reviews, avgRating, numReviews, ...rest }) => rest;
+    // Update frontend state immediately (works without backend)
+    if (isEdit) {
+      setProducts(prev => prev.map(p => p._id===editingId ? cleaned : p));
+    } else {
+      setProducts(prev => [cleaned, ...prev]);
+    }
+    // Try backend in background (don't block UI)
+    try {
+      if (isEdit) {
+        await API.updateProduct(editingId, toBackendPayload(cleaned));
+      } else {
+        // Do not send local temp _id to backend; MongoDB will generate a valid ObjectId.
+        const created = await API.createProduct(toBackendPayload(cleaned));
+        if (created?._id) {
+          setProducts(prev => prev.map(p => p._id===tempId ? created : p));
+        }
+      }
+    } catch { /* backend not connected - frontend update already done */ }
+    toast(editingId ? "Product update ho gaya! ✅" : "Product add ho gaya! 🆕");
+    setShowAddForm(false); setEditingId(null);
+  };
+
+  const handleDeleteProduct = async (id) => {
+    if (!window.confirm("Kya aap is product ko delete karna chahte hain?")) return;
+    // Delete from frontend immediately
+    setProducts(prev => prev.filter(p => p._id !== id));
+    toast("Product delete ho gaya 🗑️");
+    // Try backend in background
+    try { await API.deleteProduct(id); } catch { /* backend not connected - frontend delete done */ }
+  };
+
+  const handleUpdateOrderStatus = async (orderId, status) => {
+    try {
+      const updated = await API.updateOrderStatus(orderId, status);
+      if (updated?._id) {
+        setOrders(prev=>prev.map(o=>o._id===orderId ? updated : o));
+        if (selectedOrder?._id===orderId) setSelectedOrder(updated);
+        if (ctxUpdateStatus) ctxUpdateStatus(orderId, status);
+        toast(`✅ Status updated → ${status}`);
+        return;
+      }
+    } catch {}
+    const newHistory = { status, message: `Status updated to ${status}`, updatedAt: new Date().toISOString() };
+    setOrders(prev=>prev.map(o=>o._id===orderId?{...o,orderStatus:status,status,statusHistory:[...(o.statusHistory||[]),newHistory]}:o));
+    if (ctxUpdateStatus) ctxUpdateStatus(orderId, status);
+    if (selectedOrder?._id===orderId) setSelectedOrder(o=>({...o,orderStatus:status,status,statusHistory:[...(o.statusHistory||[]),newHistory]}));
+    toast(`Order status → ${status}`);
+  };
+
+  const handleDeleteOrder = async (id) => {
+    if (!window.confirm("Kya aap is order ko delete karna chahte hain?")) return;
+    setOrders(prev => prev.filter(o => o._id !== id));
+    if (deleteOrderLocal) deleteOrderLocal(id);
+    if (selectedOrder?._id===id) setSelectedOrder(null);
+    toast("Order delete ho gaya 🗑️");
+    try { await API.deleteOrder(id); } catch { /* backend not connected */ }
+  };
+
+  const handleDeleteUser = async (id) => {
+    if (!window.confirm("Kya aap is user ko remove karna chahte hain?")) return;
+    setUsers(prev => prev.filter(u => u._id !== id));
+    if (selectedUser?._id===id) setSelectedUser(null);
+    toast("User remove ho gaya");
+    try { await API.deleteUser(id); } catch { /* backend not connected */ }
+  };
+
+  const iStyle = { width:"100%", background:THEME.bg, border:`1px solid ${THEME.border}`, color:THEME.text, padding:"11px 14px", fontSize:"13px", outline:"none", fontFamily:"'Poppins',sans-serif", borderRadius:"8px" };
+  const navItems = [["dashboard","Dashboard","📊"],["products","Products","📦"],["orders","Orders","📋"],["users","Users","👩"]];
+
+  const getOrderCustomer = (o) => o.customer || o.user?.name || o.shippingAddress?.name || "—";
+  const getOrderCity = (o) => o.city || o.shippingAddress?.city || "—";
+  const getOrderStatus = (o) => o.orderStatus || o.status || "Placed";
+  const getOrderAmount = (o) => (o.price || o.total || 0).toLocaleString("en-IN");
+  const getOrderDate = (o) => {
+    const d = o.dateRaw || o.date || o.createdAt;
+    if (!d) return "—";
+    return new Date(d).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"});
+  };
+
+  return (
+    <div style={{ background:THEME.bgDark, minHeight:"100vh", display:"flex" }}>
+      {/* ── SIDEBAR ────────────────────────────────────────────────────────── */}
+      <aside style={{ width:"220px", background:THEME.bgCard, borderRight:`1px solid ${THEME.border}`, padding:"24px 0", flexShrink:0, position:"sticky", top:0, height:"100vh", overflowY:"auto", display:"flex", flexDirection:"column" }}>
+        <div style={{ padding:"0 20px 20px", borderBottom:`1px solid ${THEME.border}`, marginBottom:"12px" }}>
+          <NouveauLogo size={34} />
+          <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"9px", letterSpacing:"3px", color:THEME.crimson, marginTop:"8px", fontWeight:700 }}>NOUVEAU™ ADMIN</p>
+        </div>
+        {navItems.map(([id,label,icon]) => (
+          <button key={id} onClick={() => setTab(id)}
+            style={{ display:"flex", alignItems:"center", gap:"10px", width:"100%", padding:"13px 20px", background:tab===id?`${THEME.crimson}10`:"none", border:"none", borderLeft:tab===id?`3px solid ${THEME.crimson}`:"3px solid transparent", color:tab===id?THEME.crimson:THEME.textMuted, cursor:"pointer", fontSize:"12px", letterSpacing:"1px", fontFamily:"'Poppins',sans-serif", textAlign:"left", transition:"all 0.2s", fontWeight:tab===id?700:400 }}>
+            <span style={{ fontSize:"15px" }}>{icon}</span> {label}
+            {id==="orders" && allOrders.filter(o=>getOrderStatus(o)==="pending").length > 0 && (
+              <span style={{ marginLeft:"auto", background:THEME.crimson, color:"#fff", borderRadius:"99px", width:"18px", height:"18px", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"10px", fontWeight:700 }}>{allOrders.filter(o=>getOrderStatus(o)==="pending").length}</span>
+            )}
+          </button>
+        ))}
+        <div style={{ marginTop:"auto", padding:"16px 20px", borderTop:`1px solid ${THEME.border}` }}>
+          <button onClick={() => setPage&&setPage("Home")} style={{ background:"none", border:"none", color:THEME.textLight, cursor:"pointer", fontFamily:"'Poppins',sans-serif", fontSize:"12px", display:"flex", alignItems:"center", gap:"6px" }}>← Back to Store</button>
+        </div>
+      </aside>
+
+      {/* ── MAIN ───────────────────────────────────────────────────────────── */}
+      <div style={{ flex:1, padding:"36px 44px", overflowY:"auto", maxHeight:"100vh" }}>
+
+        {/* ══ DASHBOARD ══════════════════════════════════════════════════════ */}
+        {tab==="dashboard" && (
+          <div>
+            <div style={{ marginBottom:"28px" }}>
+              <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:"30px", marginBottom:"4px" }}>Dashboard</h1>
+              <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textLight }}>{new Date().toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</p>
+            </div>
+
+            {/* Stat cards */}
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:"14px", marginBottom:"28px" }}>
+              {[
+                ["₹"+totalRevenue.toLocaleString("en-IN"),"Total Revenue",THEME.crimson,"📈"],
+                [allOrders.length,"Total Orders",THEME.gold,"📦"],
+                [products.length,"Products",THEME.crimsonDark,"🛍️"],
+                [users.length,"Customers","#2d6a4f","👩"],
+              ].map(([val,label,color,icon]) => (
+                <div key={label} style={{ background:THEME.bgCard, padding:"22px 20px", border:`1px solid ${THEME.border}`, borderRadius:"14px", borderTop:`3px solid ${color}` }}>
+                  <div style={{ fontSize:"20px", marginBottom:"6px" }}>{icon}</div>
+                  <div style={{ fontFamily:"'Playfair Display',serif", fontSize:"24px", color, fontWeight:900, marginBottom:"4px", lineHeight:1 }}>{val}</div>
+                  <div style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", color:THEME.textLight, letterSpacing:"1.5px", textTransform:"uppercase" }}>{label}</div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display:"grid", gridTemplateColumns:"2fr 1fr", gap:"20px", marginBottom:"20px" }}>
+              {/* Sales chart */}
+              <div style={{ background:THEME.bgCard, border:`1px solid ${THEME.border}`, borderRadius:"14px", padding:"24px" }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"20px" }}>
+                  <h3 style={{ fontFamily:"'Poppins',sans-serif", fontSize:"11px", letterSpacing:"3px", color:THEME.crimson, fontWeight:700 }}>REVENUE — LAST 7 DAYS</h3>
+                  <span style={{ fontFamily:"'Poppins',sans-serif", fontSize:"11px", color:THEME.textLight }}>₹{totalRevenue.toLocaleString("en-IN")} total</span>
+                </div>
+                <SalesChart orders={allOrders} />
+              </div>
+              {/* Category donut */}
+              <div style={{ background:THEME.bgCard, border:`1px solid ${THEME.border}`, borderRadius:"14px", padding:"24px" }}>
+                <h3 style={{ fontFamily:"'Poppins',sans-serif", fontSize:"11px", letterSpacing:"3px", color:THEME.crimson, fontWeight:700, marginBottom:"20px" }}>PRODUCTS BY CATEGORY</h3>
+                <CategoryDonut products={products} />
+              </div>
+            </div>
+
+            {/* Status breakdown */}
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"20px", marginBottom:"20px" }}>
+              <div style={{ background:THEME.bgCard, border:`1px solid ${THEME.border}`, borderRadius:"14px", padding:"24px" }}>
+                <h3 style={{ fontFamily:"'Poppins',sans-serif", fontSize:"11px", letterSpacing:"3px", color:THEME.crimson, fontWeight:700, marginBottom:"20px" }}>ORDER STATUS</h3>
+                {["Placed","Processing","Shipped","Out for Delivery","Delivered","Cancelled"].map(st => {
+                  const count = allOrders.filter(o=>getOrderStatus(o)===st).length;
+                  const pct   = allOrders.length ? Math.round(count/allOrders.length*100) : 0;
+                  const c = STATUS_COLORS[st];
+                  return (
+                    <div key={st} style={{ marginBottom:"12px" }}>
+                      <div style={{ display:"flex", justifyContent:"space-between", marginBottom:"4px" }}>
+                        <span style={{ fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.text, textTransform:"capitalize" }}>{st}</span>
+                        <span style={{ fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textMuted }}>{count}</span>
+                      </div>
+                      <div style={{ background:THEME.bgDark, borderRadius:"99px", height:"5px" }}>
+                        <div style={{ background:c.text, borderRadius:"99px", height:"5px", width:`${pct}%`, transition:"width 0.5s" }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              {/* Recent orders mini */}
+              <div style={{ background:THEME.bgCard, border:`1px solid ${THEME.border}`, borderRadius:"14px", padding:"24px" }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"16px" }}>
+                  <h3 style={{ fontFamily:"'Poppins',sans-serif", fontSize:"11px", letterSpacing:"3px", color:THEME.crimson, fontWeight:700 }}>RECENT ORDERS</h3>
+                  <button onClick={()=>setTab("orders")} style={{ background:"none", border:"none", color:THEME.crimson, cursor:"pointer", fontSize:"11px", fontFamily:"'Poppins',sans-serif", fontWeight:700 }}>View all →</button>
+                </div>
+                {allOrders.slice(0,5).map((o, idx) => (
+                  <div key={`${o._id || o.createdAt || "order"}-${idx}`} onClick={()=>{setSelectedOrder(o);setTab("orders");}} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"10px 0", borderBottom:`1px solid ${THEME.border}`, cursor:"pointer" }}>
+                    <div>
+                      <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"12px", fontWeight:700, color:THEME.crimson }}>{(o._id||"").slice(-8)}</p>
+                      <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"11px", color:THEME.textLight }}>{getOrderCustomer(o)}</p>
+                    </div>
+                    <StatusBadge status={getOrderStatus(o)} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ══ PRODUCTS ═══════════════════════════════════════════════════════ */}
+        {tab==="products" && (
+          <div>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"20px", flexWrap:"wrap", gap:"12px" }}>
+              <div>
+                <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:"30px", marginBottom:"2px" }}>Products</h1>
+                <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textLight }}>{products.length} total</p>
+              </div>
+              <BtnPrimary onClick={openAdd} style={{ borderRadius:"10px", fontSize:"12px" }}>+ Add Product</BtnPrimary>
+            </div>
+            <input placeholder="🔍 Search products..." value={productSearch} onChange={e=>setProductSearch(e.target.value)} style={{ ...iStyle, marginBottom:"18px", padding:"12px 16px", fontSize:"14px" }} />
+
+            {/* Add/Edit form */}
+            {showAddForm && (
+              <div style={{ background:THEME.bgCard, border:`1.5px solid ${THEME.crimson}40`, borderRadius:"14px", padding:"28px", marginBottom:"24px" }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"20px" }}>
+                  <h3 style={{ fontFamily:"'Playfair Display',serif", fontSize:"20px" }}>{editingId?"Edit Product":"Add New Product"}</h3>
+                  <button onClick={()=>setShowAddForm(false)} style={{ background:"none", border:"none", cursor:"pointer", color:THEME.textLight, fontSize:"20px" }}>×</button>
+                </div>
+
+                {/* Image upload */}
+                <div style={{ marginBottom:"18px" }}>
+                  <label style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"2px", color:THEME.crimson, display:"block", marginBottom:"8px", fontWeight:700 }}>PRODUCT IMAGE</label>
+                  <div style={{ display:"flex", alignItems:"center", gap:"12px" }}>
+                    <img src={productForm.images?.[0]||"/product1.jpeg"} alt="" style={{ width:"64px", height:"80px", objectFit:"cover", borderRadius:"8px", border:`1px solid ${THEME.border}` }} onError={e=>e.target.src="/product1.jpeg"} />
+                    <div>
+                      <input ref={imgInputRef} type="file" accept="image/*" onChange={handleImageUpload} style={{ display:"none" }} />
+                      <button onClick={()=>imgInputRef.current?.click()}
+                        style={{ background:THEME.crimson, color:"#fff", border:"none", padding:"10px 20px", borderRadius:"8px", cursor:"pointer", fontFamily:"'Poppins',sans-serif", fontSize:"12px", fontWeight:600, marginRight:"8px" }}>
+                        {uploadingImg?"Uploading...":"📤 Upload Image"}
+                      </button>
+                      <span style={{ fontFamily:"'Poppins',sans-serif", fontSize:"11px", color:THEME.textLight }}>or select below</span>
+                      <div style={{ marginTop:"6px" }}>
+                        <select value={productForm.images?.[0]} onChange={e=>setProductForm(f=>({...f,images:[e.target.value]}))} style={{ ...iStyle, width:"auto", fontSize:"12px" }}>
+                          {["/product1.jpeg","/product2.jpeg","/product3.jpeg"].map((img, idx)=><option key={`${img}-${idx}`} value={img}>{img}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"14px" }}>
+                  {[["title","Product Title","text",true],["price","Selling Price (₹)","number",false],["originalPrice","Original / MRP (₹)","number",false],["stock","Stock Quantity","number",false],["discount","Discount %","number",false],["subcategory","Subcategory (Kurta, Dress…)","text",false]].map(([k,lbl,type,full]) => (
+                    <div key={k} style={{ gridColumn:full?"1/-1":"auto" }}>
+                      <label style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"2px", color:THEME.crimson, display:"block", marginBottom:"6px", fontWeight:700 }}>{lbl.toUpperCase()}</label>
+                      <input type={type} value={productForm[k]} onChange={e=>setProductForm(f=>({...f,[k]:e.target.value}))} style={iStyle} />
+                    </div>
+                  ))}
+                  <div>
+                    <label style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"2px", color:THEME.crimson, display:"block", marginBottom:"6px", fontWeight:700 }}>CATEGORY</label>
+                    <select value={productForm.category} onChange={e=>setProductForm(f=>({...f,category:e.target.value}))} style={iStyle}>
+                      <option>Indian Ethnic Wear</option>
+                      <option>Indian Premium Western Wear</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"2px", color:THEME.crimson, display:"block", marginBottom:"6px", fontWeight:700 }}>SIZES (comma separated)</label>
+                    <input value={productForm.sizes?.join(",")} onChange={e=>setProductForm(f=>({...f,sizes:e.target.value.split(",").map(s=>s.trim()).filter(Boolean)}))} placeholder="XS,S,M,L,XL,XXL" style={iStyle} />
+                  </div>
+                  <div style={{ gridColumn:"1/-1" }}>
+                    <label style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"2px", color:THEME.crimson, display:"block", marginBottom:"6px", fontWeight:700 }}>DESCRIPTION</label>
+                    <textarea rows={3} value={productForm.description} onChange={e=>setProductForm(f=>({...f,description:e.target.value}))} style={{ ...iStyle, resize:"vertical" }} />
+                  </div>
+                  <div style={{ gridColumn:"1/-1", display:"flex", alignItems:"center", gap:"10px" }}>
+                    <input type="checkbox" id="isnew" checked={productForm.isNew} onChange={e=>setProductForm(f=>({...f,isNew:e.target.checked}))} style={{ accentColor:THEME.crimson, width:"16px", height:"16px" }} />
+                    <label htmlFor="isnew" style={{ fontFamily:"'Poppins',sans-serif", fontSize:"13px", color:THEME.text, cursor:"pointer" }}>Mark as New Arrival</label>
+                  </div>
+                </div>
+                <div style={{ display:"flex", gap:"10px", marginTop:"20px" }}>
+                  <BtnPrimary onClick={saveProduct} style={{ borderRadius:"10px" }}>{editingId?"Update Product ✅":"Add Product 🆕"}</BtnPrimary>
+                  <button onClick={()=>setShowAddForm(false)} style={{ background:"none", border:`1px solid ${THEME.border}`, color:THEME.textMuted, padding:"13px 20px", borderRadius:"10px", cursor:"pointer", fontFamily:"'Poppins',sans-serif", fontSize:"12px" }}>Cancel</button>
+                </div>
+              </div>
+            )}
+
+            {filteredProducts.map((p, idx) => (
+              <div key={`${p._id || p.title || "product"}-${idx}`} style={{ display:"flex", gap:"14px", background:THEME.bgCard, padding:"14px 18px", marginBottom:"10px", alignItems:"center", border:`1px solid ${THEME.border}`, borderRadius:"12px", flexWrap:"wrap" }}>
+                <img src={p.images?.[0]||"/product1.jpeg"} alt={p.title} style={{ width:"60px", height:"76px", objectFit:"cover", borderRadius:"8px", flexShrink:0 }} onError={e=>e.target.src="/product1.jpeg"} />
+                <div style={{ flex:1, minWidth:"140px" }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:"8px", flexWrap:"wrap" }}>
+                    <p style={{ fontFamily:"'Playfair Display',serif", fontSize:"15px", fontWeight:700, color:THEME.text }}>{p.title}</p>
+                    {p.isNew && <span style={{ background:`${THEME.crimson}15`, color:THEME.crimson, fontSize:"9px", letterSpacing:"2px", padding:"2px 8px", borderRadius:"99px", fontFamily:"'Poppins',sans-serif", fontWeight:700 }}>NEW</span>}
+                  </div>
+                  <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"11px", color:THEME.textLight, marginTop:"3px" }}>{p.category} · {p.subcategory||"—"} · Stock: {p.stock}</p>
+                  <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"11px", color:THEME.textLight, marginTop:"2px" }}>Sizes: {p.sizes?.join(", ")}</p>
+                </div>
+                <div style={{ textAlign:"right", minWidth:"80px" }}>
+                  <p style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, fontSize:"15px", color:THEME.crimson }}>₹{p.price?.toLocaleString("en-IN")}</p>
+                  <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"11px", color:THEME.textLight, textDecoration:"line-through" }}>₹{p.originalPrice?.toLocaleString("en-IN")}</p>
+                  {p.discount>0 && <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"11px", color:"#2d6a4f", fontWeight:600 }}>-{p.discount}%</p>}
+                </div>
+                <div style={{ display:"flex", gap:"8px", flexShrink:0 }}>
+                  <button onClick={()=>openEdit(p)} style={{ background:`${THEME.gold}15`, border:`1px solid ${THEME.gold}40`, color:THEME.goldDark, padding:"7px 14px", borderRadius:"8px", cursor:"pointer", fontSize:"12px", fontFamily:"'Poppins',sans-serif", fontWeight:600 }}>✏️ Edit</button>
+                  <button onClick={()=>handleDeleteProduct(p._id)} style={{ background:`${THEME.crimson}10`, border:`1px solid ${THEME.crimson}30`, color:THEME.crimson, padding:"7px 14px", borderRadius:"8px", cursor:"pointer", fontSize:"12px", fontFamily:"'Poppins',sans-serif", fontWeight:600 }}>🗑️</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* ══ ORDERS ═════════════════════════════════════════════════════════ */}
+        {tab==="orders" && (
+          <div>
+            {selectedOrder && (
+              <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.5)", zIndex:200, display:"flex", alignItems:"center", justifyContent:"center", padding:"20px" }}>
+                <div style={{ background:"#fff", borderRadius:"20px", padding:"32px", maxWidth:"580px", width:"100%", maxHeight:"85vh", overflowY:"auto", position:"relative" }}>
+                  <button onClick={()=>setSelectedOrder(null)} style={{ position:"absolute", top:"18px", right:"18px", background:"none", border:"none", cursor:"pointer", fontSize:"22px", color:THEME.textLight }}>×</button>
+                  <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"3px", color:THEME.crimson, fontWeight:700, marginBottom:"4px" }}>ORDER DETAILS</p>
+                  <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:"20px", marginBottom:"4px" }}>{selectedOrder._id}</h2>
+                  {selectedOrder.trackingId && (
+                    <div style={{ display:"inline-flex", alignItems:"center", gap:"8px", background:`${THEME.gold}15`, border:`1px solid ${THEME.gold}40`, borderRadius:"8px", padding:"6px 14px", marginBottom:"12px" }}>
+                      <span style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", color:THEME.textLight, letterSpacing:"1px" }}>TRACKING ID</span>
+                      <code style={{ fontFamily:"'Poppins',sans-serif", fontSize:"13px", fontWeight:700, color:"#b8962e" }}>{selectedOrder.trackingId}</code>
+                      <button onClick={()=>navigator.clipboard?.writeText(selectedOrder.trackingId)} style={{ background:"none", border:"none", cursor:"pointer", fontSize:"12px" }} title="Copy">📋</button>
+                    </div>
+                  )}
+                  <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textLight, marginBottom:"20px" }}>{getOrderDate(selectedOrder)}</p>
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"10px", marginBottom:"20px" }}>
+                    {[["Customer",getOrderCustomer(selectedOrder)],["Amount","₹"+getOrderAmount(selectedOrder)],["Payment",selectedOrder.paymentMethod||"—"],["Items",selectedOrder.items?.length||selectedOrder.qty||"—"],["City",getOrderCity(selectedOrder)],["Status",getOrderStatus(selectedOrder)]].map(([l,v]) => (
+                      <div key={l} style={{ background:THEME.bg, borderRadius:"8px", padding:"12px 14px" }}>
+                        <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"9px", letterSpacing:"2px", color:THEME.textLight, marginBottom:"3px" }}>{l.toUpperCase()}</p>
+                        <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"13px", color:THEME.text, fontWeight:600 }}>{v}</p>
+                      </div>
+                    ))}
+                    {(selectedOrder.shippingAddress||selectedOrder.address) && (
+                      <div style={{ gridColumn:"1/-1", background:THEME.bg, borderRadius:"8px", padding:"12px 14px" }}>
+                        <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"9px", letterSpacing:"2px", color:THEME.textLight, marginBottom:"3px" }}>DELIVERY ADDRESS</p>
+                        <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"13px", color:THEME.text, fontWeight:600 }}>
+                          {selectedOrder.shippingAddress?.street || selectedOrder.address || "—"}, {getOrderCity(selectedOrder)}, {selectedOrder.shippingAddress?.state||selectedOrder.state||"—"} – {selectedOrder.shippingAddress?.pincode||selectedOrder.pincode||"—"}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  {/* Items list */}
+                  {selectedOrder.items?.length > 0 && (
+                    <div style={{ marginBottom:"20px" }}>
+                      <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"2px", color:THEME.crimson, fontWeight:700, marginBottom:"10px" }}>ORDER ITEMS</p>
+                      {selectedOrder.items.map((item,i) => (
+                        <div key={i} style={{ display:"flex", gap:"10px", alignItems:"center", padding:"8px 0", borderBottom:`1px solid ${THEME.border}` }}>
+                          <img src={item.image||"/product1.jpeg"} alt={item.title} style={{ width:"44px", height:"56px", objectFit:"cover", borderRadius:"6px" }} onError={e=>e.target.src="/product1.jpeg"} />
+                          <div style={{ flex:1 }}>
+                            <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"13px", color:THEME.text, fontWeight:600 }}>{item.title}</p>
+                            <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"11px", color:THEME.textLight }}>Size: {item.size} · ×{item.qty}</p>
+                          </div>
+                          <p style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, color:THEME.crimson }}>₹{(item.price*item.qty).toLocaleString("en-IN")}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {/* Status History */}
+                  {selectedOrder.statusHistory?.length > 0 && (
+                    <div style={{ marginBottom:"20px" }}>
+                      <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"2px", color:THEME.crimson, fontWeight:700, marginBottom:"10px" }}>STATUS HISTORY</p>
+                      {[...selectedOrder.statusHistory].reverse().map((h,i)=>(
+                        <div key={i} style={{ display:"flex", gap:"10px", alignItems:"flex-start", padding:"8px 0", borderBottom:`1px solid ${THEME.border}` }}>
+                          <span style={{ fontSize:"16px" }}>{"📋⚙️🚀🛵✅❌".split("")[["Placed","Processing","Shipped","Out for Delivery","Delivered","Cancelled"].indexOf(h.status)]||"📋"}</span>
+                          <div style={{ flex:1 }}>
+                            <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"12px", fontWeight:700, color:THEME.text }}>{h.status}</p>
+                            {h.message && <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"11px", color:THEME.textMuted }}>{h.message}</p>}
+                          </div>
+                          <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", color:THEME.textLight, whiteSpace:"nowrap" }}>{h.updatedAt ? new Date(h.updatedAt).toLocaleDateString("en-IN",{day:"numeric",month:"short"}) : ""}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"2px", color:THEME.crimson, fontWeight:700, marginBottom:"10px" }}>UPDATE STATUS</p>
+                  <select
+                    value={getOrderStatus(selectedOrder)}
+                    onChange={e=>handleUpdateOrderStatus(selectedOrder._id, e.target.value)}
+                    style={{ width:"100%", background:THEME.bg, border:`1.5px solid ${THEME.crimson}`, color:THEME.text, padding:"11px 14px", fontSize:"13px", outline:"none", fontFamily:"'Poppins',sans-serif", borderRadius:"8px", marginBottom:"12px", cursor:"pointer" }}
+                  >
+                    {["Placed","Processing","Shipped","Out for Delivery","Delivered","Cancelled"].map(st=>(
+                      <option key={st} value={st}>{st}</option>
+                    ))}
+                  </select>
+                  <div style={{ display:"flex", gap:"8px", flexWrap:"wrap", marginBottom:"12px" }}>
+                    {["Placed","Processing","Shipped","Out for Delivery","Delivered","Cancelled"].map(st => (
+                      <button key={st} onClick={()=>handleUpdateOrderStatus(selectedOrder._id,st)}
+                        style={{ background:getOrderStatus(selectedOrder)===st?THEME.crimson:"transparent", color:getOrderStatus(selectedOrder)===st?"#fff":THEME.textMuted, border:`1.5px solid ${getOrderStatus(selectedOrder)===st?THEME.crimson:THEME.border}`, padding:"7px 12px", borderRadius:"99px", cursor:"pointer", fontFamily:"'Poppins',sans-serif", fontSize:"10px", fontWeight:600 }}>
+                        {st}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+            <div style={{ marginBottom:"20px" }}>
+              <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:"30px", marginBottom:"2px" }}>Orders</h1>
+              <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textLight }}>{filteredOrders.length} orders</p>
+            </div>
+            <div style={{ display:"flex", gap:"10px", marginBottom:"18px", flexWrap:"wrap" }}>
+              <input placeholder="🔍 Search order ID, customer, city…" value={orderSearch} onChange={e=>setOrderSearch(e.target.value)} style={{ ...iStyle, flex:1, minWidth:"200px" }} />
+              <select value={orderFilter} onChange={e=>setOrderFilter(e.target.value)} style={{ ...iStyle, width:"auto" }}>
+                <option value="all">All Statuses</option>
+                {["Placed","Processing","Shipped","Out for Delivery","Delivered","Cancelled"].map(s=><option key={s} value={s}>{s.charAt(0).toUpperCase()+s.slice(1)}</option>)}
+              </select>
+            </div>
+            <div style={{ background:THEME.bgCard, border:`1px solid ${THEME.border}`, borderRadius:"14px", overflow:"hidden" }}>
+              <div style={{ overflowX:"auto" }}>
+                <table style={{ width:"100%", borderCollapse:"collapse" }}>
+                  <thead>
+                    <tr style={{ background:THEME.bgDark }}>
+                      {["Order ID","Customer","Product","City","Amount","Date","Status","Actions"].map(h=>(
+                        <th key={h} style={{ padding:"11px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"9px", letterSpacing:"2px", textTransform:"uppercase", color:THEME.textLight, textAlign:"left", borderBottom:`1px solid ${THEME.border}`, whiteSpace:"nowrap" }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredOrders.map((o,idx) => (
+                      <tr key={`${o._id || o.createdAt || "order-row"}-${idx}`} style={{ background:idx%2===0?"transparent":THEME.bg, transition:"background 0.15s", cursor:"pointer" }}
+                        onMouseEnter={e=>e.currentTarget.style.background=`${THEME.crimson}06`}
+                        onMouseLeave={e=>e.currentTarget.style.background=idx%2===0?"transparent":THEME.bg}>
+                        <td style={{ padding:"12px 14px" }}>
+                          <button onClick={()=>setSelectedOrder(o)} style={{ background:"none", border:"none", cursor:"pointer", color:THEME.crimson, fontFamily:"'Poppins',sans-serif", fontSize:"12px", fontWeight:700, textDecoration:"underline" }}>{(o._id||"").slice(-10)}</button>
+                        </td>
+                        <td style={{ padding:"12px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.text, whiteSpace:"nowrap" }}>{getOrderCustomer(o)}</td>
+                        <td style={{ padding:"12px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textMuted, maxWidth:"160px", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{o.product||o.items?.[0]?.title||"—"}</td>
+                        <td style={{ padding:"12px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textMuted, whiteSpace:"nowrap" }}>📍{getOrderCity(o)}</td>
+                        <td style={{ padding:"12px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"13px", fontWeight:700, color:THEME.text, whiteSpace:"nowrap" }}>₹{getOrderAmount(o)}</td>
+                        <td style={{ padding:"12px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"11px", color:THEME.textLight, whiteSpace:"nowrap" }}>{getOrderDate(o)}</td>
+                        <td style={{ padding:"12px 14px" }}><StatusBadge status={getOrderStatus(o)} /></td>
+                        <td style={{ padding:"12px 14px" }}>
+                          <div style={{ display:"flex", gap:"5px" }}>
+                            <button onClick={()=>setSelectedOrder(o)} style={{ background:`${THEME.gold}15`, border:`1px solid ${THEME.gold}40`, color:THEME.goldDark, padding:"5px 10px", borderRadius:"6px", cursor:"pointer", fontSize:"11px", fontFamily:"'Poppins',sans-serif" }}>View</button>
+                            <button onClick={()=>handleDeleteOrder(o._id)} style={{ background:`${THEME.crimson}10`, border:`1px solid ${THEME.crimson}30`, color:THEME.crimson, padding:"5px 10px", borderRadius:"6px", cursor:"pointer", fontSize:"11px", fontFamily:"'Poppins',sans-serif" }}>Del</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {filteredOrders.length===0 && <div style={{ textAlign:"center", padding:"48px", color:THEME.textLight, fontFamily:"'Poppins',sans-serif" }}>No orders found</div>}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ══ USERS ══════════════════════════════════════════════════════════ */}
+        {tab==="users" && (
+          <div>
+            {selectedUser && (
+              <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.5)", zIndex:200, display:"flex", alignItems:"center", justifyContent:"center", padding:"20px" }}>
+                <div style={{ background:"#fff", borderRadius:"20px", padding:"32px", maxWidth:"460px", width:"100%", position:"relative" }}>
+                  <button onClick={()=>setSelectedUser(null)} style={{ position:"absolute", top:"18px", right:"18px", background:"none", border:"none", cursor:"pointer", fontSize:"22px", color:THEME.textLight }}>×</button>
+                  <div style={{ display:"flex", alignItems:"center", gap:"14px", marginBottom:"20px" }}>
+                    <div style={{ width:"52px", height:"52px", borderRadius:"50%", background:`linear-gradient(135deg,${THEME.crimson},${THEME.gold})`, display:"flex", alignItems:"center", justifyContent:"center", color:"#fff", fontSize:"20px", fontWeight:700, fontFamily:"'Playfair Display',serif", flexShrink:0 }}>{selectedUser.name?.charAt(0)}</div>
+                    <div>
+                      <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:"20px", marginBottom:"2px" }}>{selectedUser.name}</h2>
+                      <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"11px", color:THEME.textLight }}>{selectedUser._id}</p>
+                    </div>
+                  </div>
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"10px" }}>
+                    {[["Email",selectedUser.email],["Phone",selectedUser.phone||"—"],["City",selectedUser.addresses?.[0]?.city||selectedUser.city||"—"],["State",selectedUser.addresses?.[0]?.state||selectedUser.state||"—"],["Member Since",selectedUser.createdAt?new Date(selectedUser.createdAt).toLocaleDateString("en-IN",{month:"short",year:"numeric"}):selectedUser.joined||"—"],["Role",selectedUser.role?.toUpperCase()||"USER"]].map(([l,v]) => (
+                      <div key={l} style={{ background:THEME.bg, borderRadius:"8px", padding:"12px 14px" }}>
+                        <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"9px", letterSpacing:"2px", color:THEME.textLight, marginBottom:"3px" }}>{l.toUpperCase()}</p>
+                        <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"13px", color:THEME.text, fontWeight:600, wordBreak:"break-all" }}>{v}</p>
+                      </div>
+                    ))}
+                    {selectedUser.addresses?.length > 0 && (
+                      <div style={{ gridColumn:"1/-1", background:THEME.bg, borderRadius:"8px", padding:"12px 14px" }}>
+                        <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"9px", letterSpacing:"2px", color:THEME.textLight, marginBottom:"3px" }}>DEFAULT ADDRESS</p>
+                        <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"13px", color:THEME.text, fontWeight:600 }}>
+                          📍 {selectedUser.addresses[0].street}, {selectedUser.addresses[0].city}, {selectedUser.addresses[0].state} – {selectedUser.addresses[0].pincode}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  <button onClick={()=>handleDeleteUser(selectedUser._id)} style={{ marginTop:"16px", width:"100%", background:`${THEME.crimson}10`, border:`1px solid ${THEME.crimson}40`, color:THEME.crimson, padding:"11px", borderRadius:"10px", cursor:"pointer", fontFamily:"'Poppins',sans-serif", fontSize:"12px", fontWeight:700 }}>🗑️ Remove User</button>
+                </div>
+              </div>
+            )}
+            <div style={{ marginBottom:"20px" }}>
+              <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:"30px", marginBottom:"2px" }}>Users</h1>
+              <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textLight }}>{filteredUsers.length} registered customers</p>
+            </div>
+            <input placeholder="🔍 Search by name, email…" value={userSearch} onChange={e=>setUserSearch(e.target.value)} style={{ ...iStyle, marginBottom:"18px", padding:"12px 16px", fontSize:"14px" }} />
+            <div style={{ background:THEME.bgCard, border:`1px solid ${THEME.border}`, borderRadius:"14px", overflow:"hidden" }}>
+              <div style={{ overflowX:"auto" }}>
+                <table style={{ width:"100%", borderCollapse:"collapse" }}>
+                  <thead>
+                    <tr style={{ background:THEME.bgDark }}>
+                      {["Customer","Email","Phone","Location","Joined","Role","Actions"].map(h=>(
+                        <th key={h} style={{ padding:"11px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"9px", letterSpacing:"2px", textTransform:"uppercase", color:THEME.textLight, textAlign:"left", borderBottom:`1px solid ${THEME.border}`, whiteSpace:"nowrap" }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredUsers.map((u,idx) => (
+                      <tr key={`${u._id || u.email || "user-row"}-${idx}`} style={{ background:idx%2===0?"transparent":THEME.bg }}
+                        onMouseEnter={e=>e.currentTarget.style.background=`${THEME.crimson}06`}
+                        onMouseLeave={e=>e.currentTarget.style.background=idx%2===0?"transparent":THEME.bg}>
+                        <td style={{ padding:"13px 14px" }}>
+                          <div style={{ display:"flex", alignItems:"center", gap:"8px" }}>
+                            <div style={{ width:"30px", height:"30px", borderRadius:"50%", background:`linear-gradient(135deg,${THEME.crimson},${THEME.gold})`, display:"flex", alignItems:"center", justifyContent:"center", color:"#fff", fontSize:"12px", fontWeight:700, fontFamily:"'Playfair Display',serif", flexShrink:0 }}>{u.name?.charAt(0)}</div>
+                            <span style={{ fontFamily:"'Poppins',sans-serif", fontSize:"13px", color:THEME.text, fontWeight:600, whiteSpace:"nowrap" }}>{u.name}</span>
+                          </div>
+                        </td>
+                        <td style={{ padding:"13px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textMuted }}>{u.email}</td>
+                        <td style={{ padding:"13px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textMuted, whiteSpace:"nowrap" }}>{u.phone||"—"}</td>
+                        <td style={{ padding:"13px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textMuted, whiteSpace:"nowrap" }}>📍{u.addresses?.[0]?.city||u.city||"—"}, {u.addresses?.[0]?.state||u.state||"—"}</td>
+                        <td style={{ padding:"13px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"11px", color:THEME.textLight, whiteSpace:"nowrap" }}>{u.createdAt?new Date(u.createdAt).toLocaleDateString("en-IN",{month:"short",year:"numeric"}):u.joined||"—"}</td>
+                        <td style={{ padding:"13px 14px" }}><span style={{ background:u.role==="admin"?`${THEME.crimson}15`:`${THEME.gold}15`, color:u.role==="admin"?THEME.crimson:THEME.goldDark, padding:"3px 10px", borderRadius:"99px", fontSize:"10px", fontFamily:"'Poppins',sans-serif", fontWeight:700 }}>{u.role?.toUpperCase()||"USER"}</span></td>
+                        <td style={{ padding:"13px 14px" }}>
+                          <div style={{ display:"flex", gap:"5px" }}>
+                            <button onClick={()=>setSelectedUser(u)} style={{ background:`${THEME.gold}15`, border:`1px solid ${THEME.gold}40`, color:THEME.goldDark, padding:"5px 10px", borderRadius:"6px", cursor:"pointer", fontSize:"11px", fontFamily:"'Poppins',sans-serif" }}>View</button>
+                            <button onClick={()=>handleDeleteUser(u._id)} style={{ background:`${THEME.crimson}10`, border:`1px solid ${THEME.crimson}30`, color:THEME.crimson, padding:"5px 10px", borderRadius:"6px", cursor:"pointer", fontSize:"11px", fontFamily:"'Poppins',sans-serif" }}>Del</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {filteredUsers.length===0 && <div style={{ textAlign:"center", padding:"48px", color:THEME.textLight, fontFamily:"'Poppins',sans-serif" }}>{loadingData?"Loading...":"No users found"}</div>}
+              </div>
+            </div>
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,156 @@
+const Order   = require("../models/Order");
+const { sendOrderConfirmation, sendStatusUpdate } = require("../services/whatsappService");
+const asyncHandler = require("../utils/asyncHandler");
+const { sendOrderEmail, orderConfirmHTML, shippedEmailHTML } = require("../utils/email");
+const { calculateOrderTotals } = require("../services/pricingService");
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/orders/create  — place order (alias for POST /api/orders)
+// ─────────────────────────────────────────────────────────────────────────────
+exports.createOrder = asyncHandler(async (req, res) => {
+  const { items, shippingAddress, paymentMethod, couponCode } = req.body;
+  if (!items?.length) return res.status(400).json({ message: "No items in order" });
+
+  const totals = calculateOrderTotals(items, couponCode);
+
+  const order = await Order.create({
+    user: req.user._id,
+    items,
+    shippingAddress,
+    paymentMethod: paymentMethod || "COD",
+    couponCode:    totals.couponCode,
+    subtotal:      totals.subtotal,
+    discount:      totals.discount,
+    shippingCharge:totals.shippingCharge,
+    total:         totals.total,
+  });
+
+  // Send confirmation email (non-blocking)
+  try {
+    await sendOrderEmail({
+      to: shippingAddress.email || req.user.email,
+      subject: `Order Confirmed #${order.trackingId} — Nouveau™ 🪷`,
+      html: orderConfirmHTML(order, req.user),
+    });
+  } catch (e) { console.log("Order email error:", e.message); }
+
+  // Send WhatsApp confirmation (non-blocking)
+  const phone = shippingAddress?.phone || req.user?.phone;
+  if (phone) {
+    sendOrderConfirmation({
+      phone,
+      customerName: shippingAddress?.name || req.user?.name || "Customer",
+      trackingId:   order.trackingId,
+      orderId:      order._id,
+      total:        order.total,
+      items:        order.items || [],
+    }).catch(e => console.log("WhatsApp order confirm error:", e.message));
+  }
+
+  res.status(201).json({
+    ...order.toObject(),
+    whatsappMessage: `Your order is confirmed! 🎉\nTracking ID: ${order.trackingId}\nTrack here: ${process.env.CLIENT_URL || "http://localhost:3000"}/track/${order.trackingId}`,
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/orders/track/:trackingId  — public tracking (no auth needed)
+// ─────────────────────────────────────────────────────────────────────────────
+exports.trackOrder = asyncHandler(async (req, res) => {
+  const { trackingId } = req.params;
+  const order = await Order.findOne({ trackingId })
+    .populate("user", "name email")
+    .lean();
+
+  if (!order) return res.status(404).json({ message: `No order found with tracking ID: ${trackingId}` });
+
+  // Build WhatsApp message
+  const trackingURL = `${process.env.CLIENT_URL || "http://localhost:3000"}/track/${order.trackingId}`;
+  order.whatsappMessage = `Your order is confirmed! 🎉\nTracking ID: ${order.trackingId}\nTrack here: ${trackingURL}`;
+
+  res.json(order);
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PUT /api/orders/update/:id  — admin: update order status + push history
+// ─────────────────────────────────────────────────────────────────────────────
+exports.updateOrderStatus = asyncHandler(async (req, res) => {
+  const { status, message } = req.body;
+  const VALID = ["Placed", "Processing", "Shipped", "Out for Delivery", "Delivered", "Cancelled"];
+
+  if (!VALID.includes(status)) {
+    return res.status(400).json({ message: `Invalid status. Must be one of: ${VALID.join(", ")}` });
+  }
+
+  const order = await Order.findById(req.params.id);
+  if (!order) return res.status(404).json({ message: "Order not found" });
+
+  order.orderStatus = status;
+  order.statusHistory.push({ status, message: message || `Order status updated to ${status}` });
+  await order.save();
+
+  // Send shipped email
+  if (status === "Shipped") {
+    try {
+      await sendOrderEmail({
+        to: order.shippingAddress?.email,
+        subject: `Your Nouveau™ Order #${order.trackingId} is Shipped! 🚚`,
+        html: shippedEmailHTML(order),
+      });
+    } catch (e) { console.log("Shipped email error:", e.message); }
+  }
+
+  // Send WhatsApp status update (non-blocking)
+  const customerPhone = order.shippingAddress?.phone;
+  if (customerPhone) {
+    sendStatusUpdate(order, customerPhone)
+      .catch(e => console.log("WhatsApp status update error:", e.message));
+  }
+
+  const populated = await Order.findById(order._id).populate("user", "name email");
+  res.json(populated);
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/orders/my  — user's own orders
+// ─────────────────────────────────────────────────────────────────────────────
+exports.getMyOrders = asyncHandler(async (req, res) => {
+  const orders = await Order.find({ user: req.user._id }).sort({ createdAt: -1 });
+  res.json(orders);
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/orders/:id  — single order by _id (user or admin)
+// ─────────────────────────────────────────────────────────────────────────────
+exports.getOrderById = asyncHandler(async (req, res) => {
+  const order = await Order.findById(req.params.id).populate("user", "name email");
+  if (!order) return res.status(404).json({ message: "Order not found" });
+  if (order.user._id.toString() !== req.user._id.toString() && req.user.role !== "admin")
+    return res.status(403).json({ message: "Not authorized" });
+  res.json(order);
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/orders  — admin: all orders (paginated)
+// ─────────────────────────────────────────────────────────────────────────────
+exports.getAllOrders = asyncHandler(async (req, res) => {
+  const { status, page = 1, limit = 50 } = req.query;
+  const q = status ? { orderStatus: status } : {};
+  const [orders, total] = await Promise.all([
+    Order.find(q)
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * +limit)
+      .limit(+limit)
+      .populate("user", "name email"),
+    Order.countDocuments(q),
+  ]);
+  res.json({ orders, total });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DELETE /api/orders/:id  — admin
+// ─────────────────────────────────────────────────────────────────────────────
+exports.deleteOrder = asyncHandler(async (req, res) => {
+  await Order.findByIdAndDelete(req.params.id);
+  res.json({ message: "Order deleted" });
+});
