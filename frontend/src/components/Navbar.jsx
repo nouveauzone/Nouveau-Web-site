@@ -97,6 +97,7 @@ export default function Navbar({ page, setPage }) {
         @media (max-width: 768px) {
           .desktop-nav { display: none !important; }
           .mobile-menu-btn { display: flex !important; }
+          .wishlist-btn { display: none !important; }
         }
       `}</style>
 
@@ -150,7 +151,7 @@ export default function Navbar({ page, setPage }) {
             <button className="icon-btn-nav" onClick={() => setPage(isAuthenticated ? "Account" : "Auth")} aria-label="Account">
               <Icons.User />
             </button>
-            <button className="icon-btn-nav" onClick={() => setPage("Wishlist")} style={{ position: "relative" }} aria-label="Wishlist">
+            <button className="icon-btn-nav wishlist-btn" onClick={() => setPage("Wishlist")} style={{ position: "relative" }} aria-label="Wishlist">
               <Icons.Heart />
               {wishlist.length > 0 && <span className="nav-badge">{wishlist.length}</span>}
             </button>

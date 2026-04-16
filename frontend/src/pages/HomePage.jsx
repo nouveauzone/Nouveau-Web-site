@@ -150,7 +150,7 @@ export default function HomePage({ setPage, setSelectedProduct }) {
       </div>
 
       {/* ── STORY SECTION ── */}
-      <div style={{ maxWidth:"1400px", margin:"0 auto", padding:"clamp(40px, 10vw, 80px) clamp(16px, 5vw, 40px)" }}>
+      <div className="your-section" style={{ maxWidth:"1400px", margin:"0 auto", padding:"clamp(40px, 10vw, 80px) clamp(16px, 5vw, 40px)" }}>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"80px", alignItems:"center" }} className="grid-2col">
           <div>
             <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"6px", color:THEME.crimson, textTransform:"uppercase", marginBottom:"16px" }}>Our Philosophy</p>
@@ -167,8 +167,8 @@ export default function HomePage({ setPage, setSelectedProduct }) {
             <BtnPrimary onClick={() => setPage("About")} style={{ borderRadius:"99px" }}>Discover Our Story <Icons.Arrow /></BtnPrimary>
           </div>
 
-          <div style={{ position:"relative", display:"flex", alignItems:"center", justifyContent:"center" }}>
-            <div style={{ width:"340px", height:"420px", background:`linear-gradient(135deg, ${THEME.crimson}, ${THEME.crimsonDark})`, borderRadius:"170px 170px 0 0", display:"flex", alignItems:"center", justifyContent:"center", position:"relative", overflow:"hidden" }}>
+          <div style={{ position:"relative", display:"flex", alignItems:"center", justifyContent:"center", width:"100%" }}>
+            <div style={{ width:"min(100%, 340px)", height:"clamp(320px, 70vw, 420px)", background:`linear-gradient(135deg, ${THEME.crimson}, ${THEME.crimsonDark})`, borderRadius:"170px 170px 0 0", display:"flex", alignItems:"center", justifyContent:"center", position:"relative", overflow:"hidden" }}>
               <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at 30% 30%, rgba(212,175,55,0.3), transparent 60%)` }} />
               <NouveauLogo size={180} />
             </div>
@@ -176,7 +176,7 @@ export default function HomePage({ setPage, setSelectedProduct }) {
               <div style={{ fontFamily:"'Playfair Display',serif", fontSize:"26px", color:THEME.gold, fontWeight:900 }}>50k+</div>
               <div style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"2px", color:THEME.textLight, marginTop:"3px" }}>HAPPY CUSTOMERS</div>
             </div>
-            <div style={{ position:"absolute", top:"30px", right:"-30px", background:THEME.bgCard, padding:"18px 22px", boxShadow:"0 8px 32px rgba(0,0,0,0.08)", borderLeft:`3px solid ${THEME.crimson}`, borderRadius:"0 10px 10px 0" }}>
+            <div className="rating-box" style={{ position:"absolute", top:"30px", right:"0", maxWidth:"100%", background:THEME.bgCard, padding:"18px 22px", boxShadow:"0 8px 32px rgba(0,0,0,0.08)", borderLeft:`3px solid ${THEME.crimson}`, borderRadius:"0 10px 10px 0" }}>
               <div style={{ fontFamily:"'Playfair Display',serif", fontSize:"26px", color:THEME.crimson, fontWeight:900 }}>4.9★</div>
               <div style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"2px", color:THEME.textLight, marginTop:"3px" }}>AVERAGE RATING</div>
             </div>

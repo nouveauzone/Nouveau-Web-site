@@ -73,7 +73,7 @@ function RealUpiQR({ amount, upiId = "amderontrendzpvtltd@kotak", upiName = "Nou
         </div>
 
         {/* Nouveau logo overlay in corner */}
-        <div style={{ position:"absolute", bottom:"-10px", right:"-10px", width:"32px", height:"32px", background:THEME.crimson||"#B76E79", borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", border:"2px solid #fff", boxShadow:"0 2px 8px rgba(0,0,0,0.2)" }}>
+        <div style={{ position:"absolute", bottom:"-10px", right:"0", maxWidth:"100%", width:"32px", height:"32px", background:THEME.crimson||"#B76E79", borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", border:"2px solid #fff", boxShadow:"0 2px 8px rgba(0,0,0,0.2)" }}>
           <span style={{ color:"#fff", fontSize:"14px", fontFamily:"Georgia,serif", fontWeight:"bold" }}>N</span>
         </div>
       </div>

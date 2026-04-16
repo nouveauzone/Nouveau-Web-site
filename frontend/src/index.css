@@ -1,7 +1,16 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+	overflow-x: hidden;
+	width: 100%;
+}
 html { scroll-behavior: smooth; }
 body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
-img { max-width: 100%; display: block; }
-button { cursor: pointer; }
+img, svg { max-width: 100%; height: auto; display: block; }
+button {
+	cursor: pointer;
+	padding: 14px 24px;
+	font-size: 16px;
+	border-radius: 30px;
+}
 a { text-decoration: none; color: inherit; }
 input, textarea, select { font-family: inherit; }

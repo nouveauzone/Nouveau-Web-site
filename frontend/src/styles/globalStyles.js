@@ -3,7 +3,12 @@ import { THEME } from "./theme";
 export const GLOBAL_CSS = `
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+  html, body {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    width: 100%;
+  }
 
   body {
     background: ${THEME.bg};
@@ -36,6 +41,13 @@ export const GLOBAL_CSS = `
     .cart-sidebar { grid-template-columns: 1fr !important; }
     .footer-grid { grid-template-columns: 1fr 1fr !important; }
     .product-grid { grid-auto-flow: dense !important; }
+    .your-section { padding: 15px !important; }
+    .rating-box {
+      position: static !important;
+      margin-top: 20px !important;
+      right: auto !important;
+      max-width: 100% !important;
+    }
   }
 
   @media(max-width: 480px) {
@@ -71,11 +83,18 @@ export const GLOBAL_CSS = `
 
   /* Prevent horizontal scroll */
   main {
-    max-width: 100vw;
+    max-width: 100%;
+    width: 100%;
     overflow-x: hidden;
   }
 
-  img { max-width: 100%; height: auto; display: block; }
+  .section { width: 100%; }
+  .container { width: 100%; max-width: 100%; box-sizing: border-box; }
+
+  img, svg { max-width: 100%; height: auto; display: block; }
+
+  /* Temporary debug helper: add class debug-overflow on body while inspecting. */
+  .debug-overflow * { outline: 1px solid red; }
 
   /* Loading skeleton animation */
   @keyframes shimmer {

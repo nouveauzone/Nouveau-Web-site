@@ -92,7 +92,7 @@ export default function ShopPage({ setPage, setSelectedProduct, initialCategory 
     <div style={{ background:THEME.bg, minHeight:"100vh", color:THEME.text }}>
       {/* Header */}
       <div style={{ background:`linear-gradient(135deg,${THEME.crimson},${THEME.crimsonDark})`, padding:"72px 40px 48px", position:"relative", overflow:"hidden" }}>
-        <div style={{ position:"absolute", right:"-60px", bottom:"-60px", opacity:0.06 }}><img src="/nouveau-logo.png" alt="" style={{width:"280px",height:"360px",objectFit:"contain",filter:"brightness(10)",display:"block"}} /></div>
+        <div style={{ position:"absolute", right:"0", bottom:"-60px", maxWidth:"100%", opacity:0.06 }}><img src="/nouveau-logo.png" alt="" style={{width:"280px",height:"360px",objectFit:"contain",filter:"brightness(10)",display:"block"}} /></div>
         <div style={{ maxWidth:"1400px", margin:"0 auto", position:"relative", zIndex:1 }}>
           <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"6px", color:THEME.gold, marginBottom:"10px", textTransform:"uppercase" }}>Women's Wear</p>
           <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:"clamp(32px,5vw,56px)", fontWeight:700, color:"#fff" }}>

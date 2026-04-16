@@ -33,7 +33,8 @@ export default class AppErrorBoundary extends Component {
           <div style={{ 
             position: "absolute", 
             top: "-100px", 
-            right: "-100px", 
+            right: "0", 
+            maxWidth: "100%",
             width: "300px", 
             height: "300px", 
             borderRadius: "50%", 
