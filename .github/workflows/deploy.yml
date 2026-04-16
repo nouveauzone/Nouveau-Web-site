@@ -10,11 +10,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # ✅ Checkout code
     - name: Checkout code
       uses: actions/checkout@v3
 
-    # 🔵 Install & Build Frontend
+    # ✅ Install AWS CLI (IMPORTANT FIX)
+    - name: Install AWS CLI
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y awscli
+
+    # 🔵 Build Frontend
     - name: Install & Build Frontend
       run: |
         cd frontend
@@ -23,27 +28,27 @@ jobs:
       env:
         REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL }}
 
-    # 🔍 Verify build output
-    - name: Check build output
-      run: ls -la frontend/build
-
-    # 🔵 Deploy to S3 (with proper caching)
+    # 🔵 Deploy to S3
     - name: Deploy to S3
       run: |
-        aws s3 sync frontend/build s3://nouveau-1099 --delete \
+        aws s3 sync frontend/build s3://${{ secrets.S3_BUCKET_NAME }} --delete \
           --exclude "index.html" \
           --cache-control "public,max-age=31536000,immutable"
 
-        aws s3 cp frontend/build/index.html s3://nouveau-1099/index.html \
+        aws s3 cp frontend/build/index.html s3://${{ secrets.S3_BUCKET_NAME }}/index.html \
           --cache-control "no-cache,no-store,must-revalidate" \
           --content-type "text/html"
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_DEFAULT_REGION: ap-south-1
+        AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
 
-    # 🔥 CloudFront Cache Invalidation (FIXED)
-    - name: Invalidate CloudFront
+    # 🔥 FORCE DEBUG (VERY IMPORTANT)
+    - name: Debug CloudFront ID
+      run: echo "Distribution ID = ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}"
+
+    # 🔥 CloudFront Invalidation (FINAL FIX)
+    - name: Invalidate CloudFront Cache
       run: |
         aws cloudfront create-invalidation \
           --distribution-id "${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}" \
@@ -51,14 +56,14 @@ jobs:
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_DEFAULT_REGION: ap-south-1
+        AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
 
-    # 🟢 Deploy Backend to EC2
+    # 🟢 Deploy Backend
     - name: Deploy Backend to EC2
       uses: appleboy/ssh-action@v1.0.0
       with:
         host: ${{ secrets.EC2_HOST }}
-        username: ubuntu
+        username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
           cd /home/ubuntu/Nouveau-Web-site
@@ -67,6 +72,5 @@ jobs:
           npm install
           pm2 restart backend || pm2 start server.js --name backend
 
-    # ✅ Done
-    - name: Deployment Complete
+    - name: Done
       run: echo "🚀 Deployment Successful"
