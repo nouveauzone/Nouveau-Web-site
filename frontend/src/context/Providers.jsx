@@ -111,7 +111,7 @@ export default function Providers({ children }) {
     if (!authState.isAuthenticated || !authState.token) return;
     (async () => {
       try {
-        const { API } = await import("../config/api");
+        const API = (await import("../config/api")).default;
         const data = await API.getMyOrders();
         if (Array.isArray(data) && data.length > 0) {
           // merge: backend orders take priority, keep local-only ones
@@ -155,7 +155,7 @@ export default function Providers({ children }) {
 
     // Try backend first
     try {
-      const { API } = await import("../config/api");
+      const API = (await import("../config/api")).default;
       const orderData = {
         items: items.map(i => ({ product:i._id, title:i.title, image:i.images?.[0]||"", price:i.price, size:i.size, qty:i.qty })),
         shippingAddress: address,
@@ -257,7 +257,7 @@ export default function Providers({ children }) {
 
   const refreshMyOrders = async () => {
     try {
-      const { API } = await import("../config/api");
+      const API = (await import("../config/api")).default;
       const data = await API.getMyOrders();
       if (Array.isArray(data)) {
         setAllOrders(prev => {

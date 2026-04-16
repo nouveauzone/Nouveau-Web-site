@@ -9,7 +9,7 @@ import Icons from "../components/Icons";
 import StarRating from "../components/StarRating";
 import OrnamentDivider from "../components/OrnamentDivider";
 import { BtnOutline, BtnPrimary } from "../components/Buttons";
-import { API } from "../config/api";
+import API from "../config/api";
 import { resolveImageUrl } from "../utils/imageUrl";
 
 const BAD_TEXT_RE = /(\/static\/media|\.(jpeg|jpg|png|webp|svg)$|\.[a-f0-9]{8,}$|^https?:\/\/|\\)/i;
