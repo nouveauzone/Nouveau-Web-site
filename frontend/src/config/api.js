@@ -1,4 +1,9 @@
-const API_URL = process.env.REACT_APP_API_URL || "http://13.233.97.174:5000/api";
+const DEFAULT_API_URL =
+  typeof window !== "undefined" && window.location.protocol === "https:"
+    ? "https://13.233.97.174:5000/api"
+    : "http://13.233.97.174:5000/api";
+
+const API_URL = process.env.REACT_APP_API_URL || DEFAULT_API_URL;
 const BASE = API_URL;
 
 const getAuthHeader = () => {
