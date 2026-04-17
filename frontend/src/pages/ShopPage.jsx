@@ -95,7 +95,7 @@ export default function ShopPage({ setPage, setSelectedProduct, initialCategory 
 
   return (
     <div className="sf-shell">
-      <section className="sf-container sf-shop-header">
+      <section className="sf-container container sf-shop-header section">
         <h1 className="sf-shop-title">Shop Womenswear</h1>
         <p className="sf-shop-subtitle">Premium everyday styles with clean tailoring and modern silhouettes.</p>
 
@@ -119,7 +119,7 @@ export default function ShopPage({ setPage, setSelectedProduct, initialCategory 
         </button>
       </section>
 
-      <section className="sf-container sf-main-layout">
+      <section className="sf-container container sf-main-layout main-layout section">
         <div className="sf-sidebar-desktop">
           <Sidebar
             activeCategory={activeCategory}
@@ -129,7 +129,7 @@ export default function ShopPage({ setPage, setSelectedProduct, initialCategory 
           />
         </div>
 
-        <div>
+        <div className="products">
           <div className="sf-toolbar">
             <p className="sf-results">{visibleProducts.length} products</p>
             <select className="sf-sort" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>

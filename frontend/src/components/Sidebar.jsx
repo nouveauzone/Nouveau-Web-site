@@ -1,8 +1,8 @@
 import { CATEGORIES } from "../data/constants";
 
-export default function Sidebar({ activeCategory, setActiveCategory, priceMax, setPriceMax }) {
+export default function Sidebar({ activeCategory, setActiveCategory, priceMax, setPriceMax, className = "" }) {
   return (
-    <aside className="sf-sidebar" aria-label="Product filters">
+    <aside className={`sf-sidebar sidebar ${className}`.trim()} aria-label="Product filters">
       <div>
         <p className="sf-sidebar-title">Categories</p>
         <ul>
