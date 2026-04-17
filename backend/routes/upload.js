@@ -6,7 +6,7 @@ const { protect, admin } = require("../middleware/auth");
 const path = require("path");
 const fs   = require("fs");
 const router = express.Router();
-const BASE_URL = process.env.BASE_URL || "http://13.233.97.174:5000";
+const BASE_URL = "https://api.nouveauz.com";
 
 // ── If Cloudinary is configured, use it; else save locally ──────────────────
 const useCloudinary = process.env.CLOUDINARY_NAME && process.env.CLOUDINARY_NAME !== "your_cloud_name";
