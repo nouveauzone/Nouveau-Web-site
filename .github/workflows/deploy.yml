@@ -27,10 +27,16 @@ jobs:
 
             cd /home/ubuntu/Nouveau-Web-site-main || exit 1
 
-            # 🔥 FORCE CLEAN REPO
+            # 🔥 CLEAN + SYNC REPO
             git fetch origin
             git reset --hard origin/main
             git clean -fd
+
+            # =========================
+            # 🔥 FIX PERMISSIONS (VERY IMPORTANT)
+            # =========================
+            echo "🔐 Fixing permissions..."
+            sudo chown -R ubuntu:ubuntu /home/ubuntu/Nouveau-Web-site-main
 
             # =========================
             # 📦 BACKEND SETUP
@@ -50,12 +56,14 @@ jobs:
             echo "🎨 Frontend Build..."
             cd ../frontend
 
+            # Remove old build safely
             rm -rf build
+
             npm install
             npm run build
 
             # =========================
-            # 🔥 COPY BUILD TO NGINX
+            # 🚀 DEPLOY BUILD TO NGINX
             # =========================
             echo "📁 Updating Nginx files..."
 
@@ -66,7 +74,6 @@ jobs:
             # 🔄 RESTART NGINX
             # =========================
             echo "🔄 Restarting Nginx..."
-
             sudo systemctl restart nginx
             sudo systemctl reload nginx
 
