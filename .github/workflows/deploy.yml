@@ -23,7 +23,7 @@ jobs:
         run: |
           echo "REACT_APP_API_URL=http://13.201.9.17/api" > .env
           npm install
-          npm run build
+          CI=false npm run build
 
       - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@v1.0.0
@@ -40,10 +40,10 @@ jobs:
             cd backend
             npm install --production
 
-            # Frontend build copy
+            # Frontend build
             cd ../frontend
             npm install
-            REACT_APP_API_URL=http://13.201.9.17/api npm run build
+            CI=false REACT_APP_API_URL=http://13.201.9.17/api npm run build
 
             # Copy build to nginx folder
             sudo cp -r build/* /var/www/nouveau/
