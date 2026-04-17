@@ -16,7 +16,7 @@ const getPublicBaseUrl = () => {
   if (raw) return raw.replace(/\/+$/, "");
 
   if (process.env.NODE_ENV === "production") {
-    return "https://api.nouveauz.com";
+    return "https://nouveauz.com";
   }
 
   const port = process.env.PORT || 5000;
