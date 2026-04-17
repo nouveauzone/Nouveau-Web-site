@@ -17,9 +17,24 @@ validateEnv();
 const app = express();
 app.set("trust proxy", 1);
 
+const allowedOrigins = [
+  ...(process.env.CLIENT_URLS || "").split(","),
+  process.env.CLIENT_URL,
+  "http://localhost:3000",
+  "http://localhost:3001",
+]
+  .map((origin) => String(origin || "").trim())
+  .filter(Boolean);
+
 // ── Middleware ──────────────────────────────────────────────────────────────
 app.use(cors({
-  origin: "*", // for now (later restrict)
+  origin: (origin, callback) => {
+    // Allow non-browser requests and server-to-server calls.
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error("CORS origin not allowed"));
+  },
+  credentials: true,
 }));
 app.use(helmet({
   // Frontend runs on a different origin (localhost:3000) in dev.
