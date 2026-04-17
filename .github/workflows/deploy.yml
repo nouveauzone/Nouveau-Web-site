@@ -14,16 +14,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # 2. Setup Node (NO CACHE ERROR)
+      # 2. Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '20'
 
-      # 3. Install frontend deps (FIXED PATH)
+      # 3. Install frontend deps (SAFE MODE)
       - name: Install Frontend Dependencies
         working-directory: frontend
-        run: npm ci --no-audit --no-fund
+        run: npm install --no-audit --no-fund
 
       # 4. Build frontend
       - name: Build Frontend
@@ -54,22 +54,25 @@ jobs:
           script: |
             cd /home/ubuntu/Nouveau-Web-site-main
 
+            echo "📥 Pull latest code"
             git pull origin main
 
             sudo chown -R ubuntu:ubuntu /home/ubuntu/Nouveau-Web-site-main
 
-            # Backend
+            # Backend setup
             cd backend
+
             if [ ! -d "node_modules" ]; then
-              npm ci --production --no-audit --no-fund
+              npm install --production --no-audit --no-fund
             fi
 
             pm2 restart nouveau-backend || pm2 start server.js --name "nouveau-backend"
             pm2 save
 
-            # Frontend
+            # Frontend deploy
             sudo rm -rf /var/www/nouveau/*
             sudo cp -r /home/ubuntu/build-temp/frontend/build/* /var/www/nouveau/
+
             sudo chown -R www-data:www-data /var/www/nouveau
 
             sudo systemctl restart nginx
