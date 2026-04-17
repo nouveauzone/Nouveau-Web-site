@@ -1,6 +1,7 @@
 import API from "../config/api";
 
 const API_ROOT = (API || "").replace(/\/api\/?$/, "");
+const PUBLIC_IMAGE_ORIGIN = "https://nouveauz.com";
 const LOCALHOST_RE = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i;
 
 const toHttps = (url) => url.replace(/^http:\/\//i, "https://");
@@ -14,7 +15,7 @@ export function resolveImageUrl(src, fallback = "/ethnic1.jpeg") {
     if (LOCALHOST_RE.test(value) && API_ROOT) {
       try {
         const path = new URL(value).pathname || "";
-        return `${API_ROOT}${path}`;
+        return `${PUBLIC_IMAGE_ORIGIN}${path}`;
       } catch {
         return fallback;
       }
@@ -26,7 +27,7 @@ export function resolveImageUrl(src, fallback = "/ethnic1.jpeg") {
 
     return value;
   }
-  if (value.startsWith("/uploads/")) return `${API_ROOT}${value}`;
-  if (value.startsWith("uploads/")) return `${API_ROOT}/${value}`;
+  if (value.startsWith("/uploads/")) return `${PUBLIC_IMAGE_ORIGIN}${value}`;
+  if (value.startsWith("uploads/")) return `${PUBLIC_IMAGE_ORIGIN}/${value}`;
   return value;
 }
