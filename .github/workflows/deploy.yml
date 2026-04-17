@@ -1,4 +1,4 @@
-name: Deploy to AWS
+name: Deploy to EC2
 
 on:
   push:
@@ -10,57 +10,50 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    # ✅ Setup AWS CLI (CORRECT FIX)
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
 
-    # 🔵 Build Frontend
-    - name: Install & Build Frontend
-      run: |
-        cd frontend
-        npm install
-        CI=false npm run build
-      env:
-        REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL }}
-
-    # 🔵 Deploy to S3
-    - name: Deploy to S3
-      run: |
-        aws s3 sync frontend/build s3://${{ secrets.S3_BUCKET_NAME }} --delete \
-          --exclude "index.html" \
-          --cache-control "public,max-age=31536000,immutable"
-
-        aws s3 cp frontend/build/index.html s3://${{ secrets.S3_BUCKET_NAME }}/index.html \
-          --cache-control "no-cache,no-store,must-revalidate" \
-          --content-type "text/html"
-
-    # 🔥 CloudFront Invalidation (FIXED)
-    - name: Invalidate CloudFront Cache
-      run: |
-        aws cloudfront create-invalidation \
-          --distribution-id "${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}" \
-          --paths "/*"
-
-    # 🟢 Deploy Backend to EC2
-    - name: Deploy Backend to EC2
-      uses: appleboy/ssh-action@v1.0.0
-      with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ${{ secrets.EC2_USER }}
-        key: ${{ secrets.EC2_SSH_KEY }}
-        script: |
-          cd /home/ubuntu/Nouveau-Web-site
-          git pull origin main
-          cd backend
+      - name: Build Frontend
+        working-directory: frontend
+        run: |
+          echo "REACT_APP_API_URL=http://13.201.9.17/api" > .env
           npm install
-          pm2 restart backend || pm2 start server.js --name backend
+          npm run build
 
-    - name: Done
-      run: echo "🚀 Deployment Successful"
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_PORT }}
+          script: |
+            cd /home/ubuntu/Nouveau-Web-site-main
+            git pull origin main
+
+            # Backend dependencies
+            cd backend
+            npm install --production
+
+            # Frontend build copy
+            cd ../frontend
+            npm install
+            REACT_APP_API_URL=http://13.201.9.17/api npm run build
+
+            # Copy build to nginx folder
+            sudo cp -r build/* /var/www/nouveau/
+            sudo chown -R www-data:www-data /var/www/nouveau
+
+            # Restart backend
+            pm2 restart nouveau-backend || pm2 start server.js --name "nouveau-backend"
+            pm2 save
+
+            # Restart nginx
+            sudo systemctl restart nginx
+
+            echo "✅ Deployment complete!"
