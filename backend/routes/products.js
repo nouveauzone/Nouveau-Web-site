@@ -4,8 +4,11 @@ const Product = require("../models/Product");
 const { protect, admin } = require("../middleware/auth");
 const asyncHandler = require("../utils/asyncHandler");
 const validate = require("../middleware/validate");
+const { normalizeProductInput, normalizeProductOutput } = require("../utils/imageUrl");
 
 const router = express.Router();
+
+const toSafeProduct = (doc) => normalizeProductOutput(doc?.toObject ? doc.toObject() : doc);
 
 
 // ===============================
@@ -27,7 +30,7 @@ router.get(
       .skip((page - 1) * limit)
       .limit(Number(limit));
 
-    res.json(products);
+    res.json(products.map(toSafeProduct));
   })
 );
 
@@ -45,7 +48,7 @@ router.get(
       return res.status(404).json({ message: "Product not found" });
     }
 
-    res.json(product);
+    res.json(toSafeProduct(product));
   })
 );
 
@@ -64,8 +67,8 @@ router.post(
     validate,
   ],
   asyncHandler(async (req, res) => {
-    const product = await Product.create(req.body);
-    res.status(201).json(product);
+    const product = await Product.create(normalizeProductInput(req.body));
+    res.status(201).json(toSafeProduct(product));
   })
 );
 
@@ -79,9 +82,10 @@ router.put(
   admin,
   [param("id").isMongoId(), validate],
   asyncHandler(async (req, res) => {
+    const payload = normalizeProductInput(req.body);
     const product = await Product.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      payload,
       { new: true }
     );
 
@@ -89,7 +93,7 @@ router.put(
       return res.status(404).json({ message: "Not found" });
     }
 
-    res.json(product);
+    res.json(toSafeProduct(product));
   })
 );
 

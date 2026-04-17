@@ -79,7 +79,13 @@ app.use(express.json({ limit:"10mb" }));
 // Twilio webhook needs urlencoded body
 app.use("/api/whatsapp/webhook", express.urlencoded({ extended: false }));
 app.use(express.urlencoded({ extended:true, limit:"10mb" }));
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads"), {
+  maxAge: "7d",
+  etag: true,
+  setHeaders: (res) => {
+    res.setHeader("Cache-Control", "public, max-age=604800, stale-while-revalidate=86400");
+  },
+}));
 
 // ── DB ──────────────────────────────────────────────────────────────────────
 mongoose.connect(process.env.MONGO_URI || "mongodb://localhost:27017/nouveau")

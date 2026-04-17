@@ -5,8 +5,8 @@ const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const { protect, admin } = require("../middleware/auth");
 const path = require("path");
 const fs   = require("fs");
+const { normalizeImagePathForStorage, toPublicImageUrl } = require("../utils/imageUrl");
 const router = express.Router();
-const BASE_URL = "https://api.nouveauz.com";
 
 // ── If Cloudinary is configured, use it; else save locally ──────────────────
 const useCloudinary = process.env.CLOUDINARY_NAME && process.env.CLOUDINARY_NAME !== "your_cloud_name";
@@ -34,21 +34,14 @@ if (useCloudinary) {
   upload = multer({ storage, limits:{ fileSize:5*1024*1024 } });
 }
 
-// Serve local uploads
-const router2 = express.Router();
-
 // POST /api/upload — upload images (admin only)
 router.post("/", protect, admin, upload.array("images", 5), (req, res) => {
   try {
     if (!req.files || !req.files.length) return res.status(400).json({ message:"No files uploaded" });
-    const urls = req.files.map(f => useCloudinary ? f.path : `/uploads/${f.filename}`);
-    const normalized = urls.map((url) => {
-      if (typeof url !== "string") return url;
-      if (url.startsWith("http://") || url.startsWith("https://")) return url;
-      if (url.startsWith("/uploads/")) return `${BASE_URL}${url}`;
-      return url;
-    });
-    res.json({ urls: normalized, message:"Upload successful" });
+    const rawItems = req.files.map((f) => (useCloudinary ? f.path : `uploads/${f.filename}`));
+    const paths = rawItems.map((item) => normalizeImagePathForStorage(item)).filter(Boolean);
+    const urls = paths.map((item) => toPublicImageUrl(item)).filter(Boolean);
+    res.json({ paths, urls, message:"Upload successful" });
   } catch (err) { res.status(500).json({ message:err.message }); }
 });
 

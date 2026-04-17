@@ -5,6 +5,7 @@ import { AppDataContext } from "../context/Providers";
 import { AuthContext } from "../context/AuthContext";
 import { THEME } from "../styles/theme";
 import { BtnOutline, BtnPrimary } from "../components/Buttons";
+import { resolveImageUrl } from "../utils/imageUrl";
 
 const GOLD    = "#C9A227";
 const CRIMSON = "#B71C1C";
@@ -403,7 +404,7 @@ export default function CheckoutPage({ setPage }) {
                 {cart.map((item,i)=>(
                   <div key={i} style={{display:"flex",gap:"12px",marginBottom:"14px",paddingBottom:"14px",borderBottom:i<cart.length-1?`1px solid ${THEME.border}`:"none"}}>
                     <div style={{width:"54px",height:"68px",borderRadius:"8px",overflow:"hidden",flexShrink:0,background:THEME.bgDark}}>
-                      <img src={item.images?.[0]||"/ethnic1.jpeg"} alt={item.title} style={{width:"100%",height:"100%",objectFit:"cover"}} onError={e=>e.target.src="/ethnic1.jpeg"} />
+                      <img src={resolveImageUrl(item.images?.[0], "/ethnic1.jpeg")} alt={item.title} style={{width:"100%",height:"100%",objectFit:"cover"}} onError={e=>e.target.src="/ethnic1.jpeg"} />
                     </div>
                     <div style={{flex:1,minWidth:0}}>
                       <p style={{fontFamily:"'Poppins',sans-serif",fontSize:"12px",fontWeight:600,color:THEME.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginBottom:"3px"}}>{item.title}</p>

@@ -1,6 +1,6 @@
 import API from "../config/api";
 
-const API_FALLBACK = String(process.env.REACT_APP_API_FALLBACK_URL || "https://d2vuhogsmq1zl6.cloudfront.net")
+const API_FALLBACK = String(process.env.REACT_APP_API_FALLBACK_URL || "https://api.nouveauz.com")
 	.trim()
 	.replace(/\/+$/, "");
 

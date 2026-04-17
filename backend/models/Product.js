@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { normalizeImagePathForStorage } = require("../utils/imageUrl");
 
 const reviewSchema = new mongoose.Schema({
   user:    { type:mongoose.Schema.Types.ObjectId, ref:"User", required:true },
@@ -16,7 +17,7 @@ const productSchema = new mongoose.Schema({
   category:      { type:String, required:true, enum:["Indian Ethnic Wear","Indian Premium Western Wear"] },
   subcategory:   { type:String, default:"" },
   gender:        { type:String, enum:["Women","Men","Unisex"], default:"Women" },
-  images:        [{ type:String }],
+  images:        [{ type:String, set: normalizeImagePathForStorage }],
   sizes:         [{ type:String }],
   stock:         { type:Number, default:0 },
   isNew:         { type:Boolean, default:false },

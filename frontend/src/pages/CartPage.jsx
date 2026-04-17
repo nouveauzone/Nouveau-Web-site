@@ -3,6 +3,7 @@ import { CartContext } from "../context/CartContext";
 import { THEME } from "../styles/theme";
 import { BtnOutline, BtnPrimary } from "../components/Buttons";
 import Footer from "../components/Footer";
+import { resolveImageUrl } from "../utils/imageUrl";
 
 const GOLD    = "#C9A227";
 const CRIMSON = "#B71C1C";
@@ -49,7 +50,7 @@ export default function CartPage({ setPage }) {
 
                 {/* Image */}
                 <div onClick={()=>setPage("Shop")} style={{width:"90px",height:"115px",borderRadius:"12px",overflow:"hidden",flexShrink:0,cursor:"pointer",background:THEME.bgDark}}>
-                  <img src={item.images?.[0]||"/ethnic1.jpeg"} alt={item.title}
+                  <img src={resolveImageUrl(item.images?.[0], "/ethnic1.jpeg")} alt={item.title}
                     style={{width:"100%",height:"100%",objectFit:"cover",transition:"transform 0.4s"}}
                     onMouseEnter={e=>e.target.style.transform="scale(1.06)"}
                     onMouseLeave={e=>e.target.style.transform="scale(1)"}

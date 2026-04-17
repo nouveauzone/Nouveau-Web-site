@@ -11,4 +11,16 @@ const validateEnv = () => {
   console.warn(`[env] Missing variables in development: ${missing.join(", ")}`);
 };
 
-module.exports = { validateEnv };
+const getPublicBaseUrl = () => {
+  const raw = String(process.env.BASE_URL || "").trim();
+  if (raw) return raw.replace(/\/+$/, "");
+
+  if (process.env.NODE_ENV === "production") {
+    return "https://api.nouveauz.com";
+  }
+
+  const port = process.env.PORT || 5000;
+  return `http://localhost:${port}`;
+};
+
+module.exports = { validateEnv, getPublicBaseUrl };

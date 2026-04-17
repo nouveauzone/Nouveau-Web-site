@@ -3,6 +3,7 @@ const { sendOrderConfirmation, sendStatusUpdate } = require("../services/whatsap
 const asyncHandler = require("../utils/asyncHandler");
 const { sendOrderEmail, orderConfirmHTML, shippedEmailHTML } = require("../utils/email");
 const { calculateOrderTotals } = require("../services/pricingService");
+const { normalizeOrderOutput } = require("../utils/imageUrl");
 
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /api/orders/create  — place order (alias for POST /api/orders)
@@ -48,7 +49,7 @@ exports.createOrder = asyncHandler(async (req, res) => {
   }
 
   res.status(201).json({
-    ...order.toObject(),
+    ...normalizeOrderOutput(order.toObject()),
     whatsappMessage: `Your order is confirmed! 🎉\nTracking ID: ${order.trackingId}\nTrack here: ${process.env.CLIENT_URL || "http://localhost:3000"}/track/${order.trackingId}`,
   });
 });
@@ -68,7 +69,7 @@ exports.trackOrder = asyncHandler(async (req, res) => {
   const trackingURL = `${process.env.CLIENT_URL || "http://localhost:3000"}/track/${order.trackingId}`;
   order.whatsappMessage = `Your order is confirmed! 🎉\nTracking ID: ${order.trackingId}\nTrack here: ${trackingURL}`;
 
-  res.json(order);
+  res.json(normalizeOrderOutput(order));
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -108,7 +109,7 @@ exports.updateOrderStatus = asyncHandler(async (req, res) => {
   }
 
   const populated = await Order.findById(order._id).populate("user", "name email");
-  res.json(populated);
+  res.json(normalizeOrderOutput(populated.toObject()));
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -116,7 +117,7 @@ exports.updateOrderStatus = asyncHandler(async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 exports.getMyOrders = asyncHandler(async (req, res) => {
   const orders = await Order.find({ user: req.user._id }).sort({ createdAt: -1 });
-  res.json(orders);
+  res.json(orders.map((order) => normalizeOrderOutput(order.toObject())));
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -127,7 +128,7 @@ exports.getOrderById = asyncHandler(async (req, res) => {
   if (!order) return res.status(404).json({ message: "Order not found" });
   if (order.user._id.toString() !== req.user._id.toString() && req.user.role !== "admin")
     return res.status(403).json({ message: "Not authorized" });
-  res.json(order);
+  res.json(normalizeOrderOutput(order.toObject()));
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -144,7 +145,7 @@ exports.getAllOrders = asyncHandler(async (req, res) => {
       .populate("user", "name email"),
     Order.countDocuments(q),
   ]);
-  res.json({ orders, total });
+  res.json({ orders: orders.map((order) => normalizeOrderOutput(order.toObject())), total });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
