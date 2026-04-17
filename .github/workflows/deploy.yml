@@ -10,22 +10,42 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Checkout repo
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # 2. Setup Node with caching
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '20'
+          cache: 'npm'
 
+      # 3. Install frontend dependencies (FAST)
+      - name: Install Frontend Dependencies
+        working-directory: frontend
+        run: npm ci --no-audit --no-fund
+
+      # 4. Build frontend
       - name: Build Frontend
         working-directory: frontend
         run: |
           echo "REACT_APP_API_URL=http://13.201.9.17/api" > .env
-          npm install
-          CI=false npm run build
+          npm run build
 
-      - name: Deploy to EC2 via SSH
+      # 5. Copy build to EC2 (IMPORTANT)
+      - name: Upload build to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_PORT }}
+          source: "frontend/build/*"
+          target: "/home/ubuntu/build-temp"
+
+      # 6. SSH into EC2 and deploy
+      - name: Deploy on EC2
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -34,30 +54,34 @@ jobs:
           port: ${{ secrets.EC2_PORT }}
           script: |
             cd /home/ubuntu/Nouveau-Web-site-main
+
+            echo "📥 Pull latest code"
             git pull origin main
 
             # Fix permissions
             sudo chown -R ubuntu:ubuntu /home/ubuntu/Nouveau-Web-site-main
 
-            # Backend dependencies
-            cd /home/ubuntu/Nouveau-Web-site-main/backend
-            rm -rf node_modules
-            npm install --production
+            # -------------------------
+            # Backend (NO reinstall every time)
+            # -------------------------
+            cd backend
 
-            # Frontend build
-            cd /home/ubuntu/Nouveau-Web-site-main/frontend
-            rm -rf node_modules
-            npm install
-            CI=false REACT_APP_API_URL=http://13.201.9.17/api npm run build
+            if [ ! -d "node_modules" ]; then
+              echo "Installing backend dependencies..."
+              npm ci --production --no-audit --no-fund
+            fi
 
-            # Copy build to nginx folder
-            sudo cp -r build/* /var/www/nouveau/
-            sudo chown -R www-data:www-data /var/www/nouveau
-
-            # Restart backend (correct path)
-            cd /home/ubuntu/Nouveau-Web-site-main/backend
+            # Restart backend
             pm2 restart nouveau-backend || pm2 start server.js --name "nouveau-backend"
             pm2 save
+
+            # -------------------------
+            # Frontend (USE uploaded build)
+            # -------------------------
+            sudo rm -rf /var/www/nouveau/*
+            sudo cp -r /home/ubuntu/build-temp/frontend/build/* /var/www/nouveau/
+
+            sudo chown -R www-data:www-data /var/www/nouveau
 
             # Restart nginx
             sudo systemctl restart nginx
