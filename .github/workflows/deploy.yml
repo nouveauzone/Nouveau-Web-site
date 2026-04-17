@@ -14,14 +14,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # 2. Setup Node with caching
+      # 2. Setup Node (NO CACHE ERROR)
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '20'
-          cache: 'npm'
 
-      # 3. Install frontend dependencies (FAST)
+      # 3. Install frontend deps (FIXED PATH)
       - name: Install Frontend Dependencies
         working-directory: frontend
         run: npm ci --no-audit --no-fund
@@ -33,7 +32,7 @@ jobs:
           echo "REACT_APP_API_URL=http://13.201.9.17/api" > .env
           npm run build
 
-      # 5. Copy build to EC2 (IMPORTANT)
+      # 5. Upload build to EC2
       - name: Upload build to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -44,7 +43,7 @@ jobs:
           source: "frontend/build/*"
           target: "/home/ubuntu/build-temp"
 
-      # 6. SSH into EC2 and deploy
+      # 6. Deploy on EC2
       - name: Deploy on EC2
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -55,35 +54,24 @@ jobs:
           script: |
             cd /home/ubuntu/Nouveau-Web-site-main
 
-            echo "📥 Pull latest code"
             git pull origin main
 
-            # Fix permissions
             sudo chown -R ubuntu:ubuntu /home/ubuntu/Nouveau-Web-site-main
 
-            # -------------------------
-            # Backend (NO reinstall every time)
-            # -------------------------
+            # Backend
             cd backend
-
             if [ ! -d "node_modules" ]; then
-              echo "Installing backend dependencies..."
               npm ci --production --no-audit --no-fund
             fi
 
-            # Restart backend
             pm2 restart nouveau-backend || pm2 start server.js --name "nouveau-backend"
             pm2 save
 
-            # -------------------------
-            # Frontend (USE uploaded build)
-            # -------------------------
+            # Frontend
             sudo rm -rf /var/www/nouveau/*
             sudo cp -r /home/ubuntu/build-temp/frontend/build/* /var/www/nouveau/
-
             sudo chown -R www-data:www-data /var/www/nouveau
 
-            # Restart nginx
             sudo systemctl restart nginx
 
             echo "✅ Deployment complete!"
