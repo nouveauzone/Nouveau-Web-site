@@ -15,11 +15,25 @@
   color: var(--sf-text);
 }
 
+.sf-shell button,
+.sf-shell input,
+.sf-shell select,
+.sf-shell a {
+  min-width: 0;
+  min-height: 0;
+}
+
+.sf-shell button {
+  border-radius: 10px;
+  font-size: 12px;
+  padding: 0;
+}
+
 .sf-container {
   width: 100%;
   max-width: 1320px;
   margin: 0 auto;
-  padding: 0 16px;
+  padding: 0 clamp(16px, 2.6vw, 24px);
 }
 
 .sf-navbar {

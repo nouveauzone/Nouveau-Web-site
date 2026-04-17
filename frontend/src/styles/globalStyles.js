@@ -67,8 +67,8 @@ export const GLOBAL_CSS = `
     .products { grid-template-columns: 1fr; }
   }
 
-  /* Touch-friendly elements */
-  button, input[type="button"], input[type="submit"], a {
+  /* Touch-friendly utility classes (opt-in) */
+  .tap-target {
     min-height: 44px;
     min-width: 44px;
   }
@@ -79,7 +79,6 @@ export const GLOBAL_CSS = `
     border: 1.5px solid ${THEME.border};
     border-radius: 10px;
     font-family: 'Poppins', sans-serif;
-    min-height: 44px;
   }
   input::placeholder, textarea::placeholder { color: ${THEME.textLight}; }
   input:focus, textarea:focus, select:focus {
