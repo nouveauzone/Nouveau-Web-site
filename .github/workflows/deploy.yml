@@ -27,32 +27,47 @@ jobs:
 
             cd /home/ubuntu/Nouveau-Web-site-main || exit 1
 
-            # 🔥 FORCE CLEAN REPO (VERY IMPORTANT)
+            # 🔥 FORCE CLEAN REPO
             git fetch origin
             git reset --hard origin/main
             git clean -fd
 
+            # =========================
+            # 📦 BACKEND SETUP
+            # =========================
             echo "📦 Backend Setup..."
             cd backend
+
             npm install --production
 
-            # Restart backend safely
+            # Restart backend
             pm2 delete backend || true
             pm2 start server.js --name backend
 
+            # =========================
+            # 🎨 FRONTEND BUILD
+            # =========================
             echo "🎨 Frontend Build..."
             cd ../frontend
 
-            # 🔥 REMOVE OLD BUILD
             rm -rf build
-
             npm install
             npm run build
 
-            echo "🔄 Restarting Nginx..."
-            sudo systemctl restart nginx
+            # =========================
+            # 🔥 COPY BUILD TO NGINX
+            # =========================
+            echo "📁 Updating Nginx files..."
 
-            echo "🧹 Clearing cache..."
+            sudo rm -rf /var/www/html/*
+            sudo cp -r build/* /var/www/html/
+
+            # =========================
+            # 🔄 RESTART NGINX
+            # =========================
+            echo "🔄 Restarting Nginx..."
+
+            sudo systemctl restart nginx
             sudo systemctl reload nginx
 
             echo "✅ Deployment Complete!"
