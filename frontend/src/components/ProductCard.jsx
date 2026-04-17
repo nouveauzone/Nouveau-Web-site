@@ -63,6 +63,7 @@ export default function ProductCard({ product, setPage, setSelectedProduct, comp
 
   return (
     <article
+      className="product-card"
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
@@ -80,7 +81,7 @@ export default function ProductCard({ product, setPage, setSelectedProduct, comp
       <div style={{ position: "relative", overflow: "hidden" }} onClick={goToProduct}>
         <img
           src={primaryImage} alt={product.title}
-          style={{ width: "100%", aspectRatio: "3/4", objectFit: "cover", display: "block", transition: "transform 0.45s ease", transform: hov ? "scale(1.03)" : "scale(1)" }}
+          style={{ width: "100%", height: compact ? "220px" : "280px", objectFit: "cover", display: "block", transition: "transform 0.45s ease", transform: hov ? "scale(1.03)" : "scale(1)" }}
           onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "/ethnic1.jpeg"; }}
           loading="lazy" />
 
@@ -129,7 +130,7 @@ export default function ProductCard({ product, setPage, setSelectedProduct, comp
 
       </div>
 
-      <div style={{ padding: compact ? "14px" : "18px 18px 16px" }} onClick={goToProduct}>
+      <div className="product-info" style={{ padding: compact ? "14px" : "18px 18px 16px" }} onClick={goToProduct}>
         <div style={{ minHeight: "18px", marginBottom: "4px" }}>
           {(rating > 0 || reviewCount > 0) ? (
             <StarRating rating={rating} count={reviewCount} />

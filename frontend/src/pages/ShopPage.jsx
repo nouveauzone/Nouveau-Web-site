@@ -89,11 +89,11 @@ export default function ShopPage({ setPage, setSelectedProduct, initialCategory 
   const westernCount = PRODUCTS.filter(p => p.category === "Indian Premium Western Wear").length;
 
   return (
-    <div style={{ background:THEME.bg, minHeight:"100vh", color:THEME.text }}>
+    <div className="shop-page" style={{ background:THEME.bg, minHeight:"100vh", color:THEME.text }}>
       {/* Header */}
-      <div style={{ background:`linear-gradient(135deg,${THEME.crimson},${THEME.crimsonDark})`, padding:"72px 40px 48px", position:"relative", overflow:"hidden" }}>
+      <div className="collection-header" style={{ position:"relative", overflow:"hidden" }}>
         <div style={{ position:"absolute", right:"0", bottom:"-60px", maxWidth:"100%", opacity:0.06 }}><img src="/nouveau-logo.png" alt="" style={{width:"280px",height:"360px",objectFit:"contain",filter:"brightness(10)",display:"block"}} /></div>
-        <div style={{ maxWidth:"1400px", margin:"0 auto", position:"relative", zIndex:1 }}>
+        <div className="container" style={{ position:"relative", zIndex:1 }}>
           <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"6px", color:THEME.gold, marginBottom:"10px", textTransform:"uppercase" }}>Women's Wear</p>
           <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:"clamp(32px,5vw,56px)", fontWeight:700, color:"#fff" }}>
             {activeCategory === "All" ? "All Collections" : activeCategory}
@@ -103,17 +103,14 @@ export default function ShopPage({ setPage, setSelectedProduct, initialCategory 
       </div>
 
       {/* Category tabs — only 2 categories */}
-      <div style={{ borderBottom:`1px solid ${THEME.border}`, padding:"0 40px", background:THEME.bgCard }}>
-        <div style={{ maxWidth:"1400px", margin:"0 auto", display:"flex", overflowX:"auto" }}>
+      <div className="container" style={{ background:THEME.bgCard }}>
+        <div className="tabs" style={{ overflowX:"auto" }}>
           {CATEGORIES.map((c) => (
-            <button key={c} onClick={() => setActiveCategory(c)}
+            <button key={c} className={activeCategory === c ? "active" : ""} onClick={() => setActiveCategory(c)}
               style={{
-                padding:"18px 28px", background:"none", border:"none",
-                borderBottom: activeCategory === c ? `3px solid ${THEME.crimson}` : "3px solid transparent",
-                color: activeCategory === c ? THEME.crimson : THEME.textMuted,
-                cursor:"pointer", fontSize:"11px", letterSpacing:"2px", textTransform:"uppercase",
+                fontSize:"11px", letterSpacing:"2px", textTransform:"uppercase",
                 fontFamily:"'Poppins',sans-serif", fontWeight:600,
-                transition:"all 0.2s", whiteSpace:"nowrap",
+                transition:"all 0.2s", whiteSpace:"nowrap", padding:"14px 0",
               }}>
               {c}
               {c !== "All" && (
@@ -128,14 +125,15 @@ export default function ShopPage({ setPage, setSelectedProduct, initialCategory 
 
       {/* Category cards */}
       {activeCategory === "All" && (
-        <div style={{ maxWidth:"1400px", margin:"0 auto", padding:"40px 40px 0" }}>
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"20px", marginBottom:"8px" }} className="grid-2col">
+        <div className="container" style={{ paddingTop:"30px" }}>
+          <div className="category-cards" style={{ marginBottom:"8px" }}>
             {[
               { cat:"Indian Ethnic Wear", desc:"Kurtas · Sarees · Lehengas · Anarkalis · Sharara · Suits", emoji:"🪷", color:THEME.crimson, count:ethnicCount },
               { cat:"Indian Premium Western Wear", desc:"Dresses · Blazers · Trousers · Jumpsuits · Co-Ords · Tops", emoji:"✨", color:THEME.gold, count:westernCount },
             ].map(({ cat, desc, emoji, color, count }) => (
               <div key={cat} onClick={() => setActiveCategory(cat)}
-                style={{ background:THEME.bgCard, border:`1.5px solid ${color}30`, borderRadius:"16px", padding:"28px 32px", cursor:"pointer", display:"flex", alignItems:"center", gap:"20px", transition:"all 0.3s", boxShadow:"0 4px 16px rgba(0,0,0,0.04)" }}
+                className="category-card"
+                style={{ border:`1.5px solid ${color}30`, padding:"28px 32px", cursor:"pointer", display:"flex", alignItems:"center", gap:"20px", boxShadow:"0 4px 16px rgba(0,0,0,0.04)" }}
                 onMouseEnter={e=>{e.currentTarget.style.borderColor=color;e.currentTarget.style.transform="translateY(-3px)";e.currentTarget.style.boxShadow=`0 12px 32px ${color}20`}}
                 onMouseLeave={e=>{e.currentTarget.style.borderColor=`${color}30`;e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.boxShadow="0 4px 16px rgba(0,0,0,0.04)"}}>
                 <div style={{ width:"56px", height:"56px", background:`${color}15`, borderRadius:"14px", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"28px", flexShrink:0 }}>{emoji}</div>
@@ -150,15 +148,18 @@ export default function ShopPage({ setPage, setSelectedProduct, initialCategory 
         </div>
       )}
 
-      <div style={{ maxWidth:"1400px", margin:"0 auto", padding:"40px", display:"flex", gap:"48px" }}>
+      <div className="container main-layout" style={{ paddingTop:"30px", paddingBottom:"40px" }}>
         {/* Sidebar */}
-        <aside style={{ width:"220px", flexShrink:0 }} className="hide-mobile">
+        <aside className="sidebar hide-mobile" style={{ width:"100%", flexShrink:0 }}>
           <div style={{ marginBottom:"36px" }}>
             <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"3px", color:THEME.crimson, textTransform:"uppercase", marginBottom:"16px", fontWeight:700 }}>Category</p>
-            {CATEGORIES.map((c) => (
-              <button key={c} onClick={() => setActiveCategory(c)}
-                style={{ display:"block", width:"100%", textAlign:"left", background:"none", border:"none", color: activeCategory===c ? THEME.crimson : THEME.textMuted, cursor:"pointer", padding:"8px 0 8px 12px", fontSize:"13px", fontFamily:"'Poppins',sans-serif", fontWeight: activeCategory===c ? 600 : 400, borderLeft: activeCategory===c ? `2px solid ${THEME.crimson}` : "2px solid transparent", transition:"all 0.2s" }}>{c}</button>
-            ))}
+            <ul>
+              {CATEGORIES.map((c) => (
+                <li key={c} className={activeCategory===c ? "active" : ""} onClick={() => setActiveCategory(c)} style={{ fontFamily:"'Poppins',sans-serif", fontSize:"13px", paddingLeft:"2px" }}>
+                  {c}
+                </li>
+              ))}
+            </ul>
           </div>
 
           <div style={{ marginBottom:"36px" }}>
@@ -173,7 +174,7 @@ export default function ShopPage({ setPage, setSelectedProduct, initialCategory 
         </aside>
 
         {/* Products grid */}
-        <div style={{ flex:1 }}>
+        <div>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"20px" }}>
             <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"13px", color:THEME.textMuted }}>{products.length} results</p>
             <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}
@@ -200,7 +201,7 @@ export default function ShopPage({ setPage, setSelectedProduct, initialCategory 
                 </button>
               </div>
             ) : (
-              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(250px, 1fr))", gap:"18px" }}>
+              <div className="products">
                 {products.map((p) => (
                   <ProductCard key={p._id} product={p} setPage={setPage} setSelectedProduct={setSelectedProduct} />
                 ))}
