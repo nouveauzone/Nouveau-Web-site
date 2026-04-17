@@ -1,86 +1,45 @@
 name: Deploy to EC2
 
 on:
-  push:
-    branches:
-      - main
+push:
+branches:
+- main
 
 jobs:
-  deploy:
-    runs-on: ubuntu-latest
+deploy:
+runs-on: ubuntu-latest
 
-    steps:
-      # 1. Checkout repo
-      - name: Checkout code
-        uses: actions/checkout@v3
+```
+steps:
+  - name: Checkout code
+    uses: actions/checkout@v3
 
-      # 2. Setup Node
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20'
+  - name: Setup SSH
+    run: |
+      echo "${{ secrets.EC2_KEY }}" > key.pem
+      chmod 600 key.pem
 
-      # 3. Install frontend dependencies (safe mode)
-      - name: Install Frontend Dependencies
-        working-directory: frontend
-        run: npm install --no-audit --no-fund
+  - name: Deploy to EC2
+    run: |
+      ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
+        
+        cd /home/ubuntu/Nouveau-Web-site-main
 
-      # 4. Build frontend (FIX ESLINT ERROR)
-      - name: Build Frontend
-        working-directory: frontend
-        run: |
-          echo "REACT_APP_API_URL=http://13.201.9.17/api" > .env
-          CI=false npm run build
+        # Pull latest code
+        git pull origin main
 
-      # 5. Upload build to EC2
-      - name: Upload build to EC2
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          port: ${{ secrets.EC2_PORT }}
-          source: "frontend/build/*"
-          target: "/home/ubuntu/build-temp"
+        # ===== BACKEND =====
+        cd backend
+        npm install
+        pm2 restart all || pm2 start server.js --name backend
 
-      # 6. Deploy on EC2
-      - name: Deploy on EC2
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          port: ${{ secrets.EC2_PORT }}
-          script: |
-            cd /home/ubuntu/Nouveau-Web-site-main
+        # ===== FRONTEND =====
+        cd ../frontend
+        npm install
+        npm run build
 
-            echo "📥 Pull latest code"
-            git pull origin main
+        # ===== NGINX =====
+        sudo systemctl restart nginx
 
-            # Fix permissions
-            sudo chown -R ubuntu:ubuntu /home/ubuntu/Nouveau-Web-site-main
-
-            # -------------------------
-            # Backend setup
-            # -------------------------
-            cd backend
-
-            if [ ! -d "node_modules" ]; then
-              npm install --production --no-audit --no-fund
-            fi
-
-            pm2 restart nouveau-backend || pm2 start server.js --name "nouveau-backend"
-            pm2 save
-
-            # -------------------------
-            # Frontend deploy
-            # -------------------------
-            sudo rm -rf /var/www/nouveau/*
-            sudo cp -r /home/ubuntu/build-temp/frontend/build/* /var/www/nouveau/
-
-            sudo chown -R www-data:www-data /var/www/nouveau
-
-            # Restart nginx
-            sudo systemctl restart nginx
-
-            echo "✅ Deployment complete!"
+      EOF
+```
