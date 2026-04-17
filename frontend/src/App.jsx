@@ -3,6 +3,7 @@ import Navbar from "./components/Navbar";
 import AppErrorBoundary from "./components/AppErrorBoundary";
 import { THEME } from "./styles/theme";
 import { GLOBAL_CSS } from "./styles/globalStyles";
+import "./styles/storefront.css";
 import { AuthContext } from "./context/AuthContext";
 
 const HomePage        = lazy(() => import("./pages/HomePage"));
