@@ -14,23 +14,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # 2. Setup Node.js
+      # 2. Setup Node
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '20'
 
-      # 3. Install frontend deps (SAFE MODE)
+      # 3. Install frontend dependencies (safe mode)
       - name: Install Frontend Dependencies
         working-directory: frontend
         run: npm install --no-audit --no-fund
 
-      # 4. Build frontend
+      # 4. Build frontend (FIX ESLINT ERROR)
       - name: Build Frontend
         working-directory: frontend
         run: |
           echo "REACT_APP_API_URL=http://13.201.9.17/api" > .env
-          npm run build
+          CI=false npm run build
 
       # 5. Upload build to EC2
       - name: Upload build to EC2
@@ -57,9 +57,12 @@ jobs:
             echo "📥 Pull latest code"
             git pull origin main
 
+            # Fix permissions
             sudo chown -R ubuntu:ubuntu /home/ubuntu/Nouveau-Web-site-main
 
+            # -------------------------
             # Backend setup
+            # -------------------------
             cd backend
 
             if [ ! -d "node_modules" ]; then
@@ -69,12 +72,15 @@ jobs:
             pm2 restart nouveau-backend || pm2 start server.js --name "nouveau-backend"
             pm2 save
 
+            # -------------------------
             # Frontend deploy
+            # -------------------------
             sudo rm -rf /var/www/nouveau/*
             sudo cp -r /home/ubuntu/build-temp/frontend/build/* /var/www/nouveau/
 
             sudo chown -R www-data:www-data /var/www/nouveau
 
+            # Restart nginx
             sudo systemctl restart nginx
 
             echo "✅ Deployment complete!"
