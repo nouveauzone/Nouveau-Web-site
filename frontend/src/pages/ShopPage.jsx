@@ -6,11 +6,10 @@ import ProductCard from "../components/ProductCard";
 import NouveauLogo from "../components/Logo";
 import Footer from "../components/Footer";
 import API from "../services/apiService";
-import { resolveImageUrl } from "../utils/imageUrl";
 
 const normalizeProduct = (product) => ({
   ...product,
-  images: Array.isArray(product.images) ? product.images.map((img) => resolveImageUrl(img, "/ethnic1.jpeg")) : ["/ethnic1.jpeg"],
+  images: product.images,
 });
 
 export default function ShopPage({ setPage, setSelectedProduct, initialCategory }) {
