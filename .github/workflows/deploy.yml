@@ -22,18 +22,39 @@ jobs:
       - name: Deploy to EC2
         run: |
           ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
+
+            echo "🚀 Starting Deployment..."
+
             cd /home/ubuntu/Nouveau-Web-site-main || exit 1
 
-            git pull origin main
+            # 🔥 FORCE CLEAN REPO (VERY IMPORTANT)
+            git fetch origin
+            git reset --hard origin/main
+            git clean -fd
 
+            echo "📦 Backend Setup..."
             cd backend
-            npm install
-            pm2 restart backend || pm2 start server.js --name backend
+            npm install --production
 
+            # Restart backend safely
+            pm2 delete backend || true
+            pm2 start server.js --name backend
+
+            echo "🎨 Frontend Build..."
             cd ../frontend
+
+            # 🔥 REMOVE OLD BUILD
+            rm -rf build
+
             npm install
             npm run build
 
+            echo "🔄 Restarting Nginx..."
             sudo systemctl restart nginx
+
+            echo "🧹 Clearing cache..."
+            sudo systemctl reload nginx
+
+            echo "✅ Deployment Complete!"
 
           EOF
