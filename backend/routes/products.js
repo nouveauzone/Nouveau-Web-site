@@ -24,6 +24,7 @@ router.get(
     validate,
   ],
   asyncHandler(async (req, res) => {
+    res.set("Cache-Control", "no-store");
     const { page = 1, limit = 20 } = req.query;
 
     const products = await Product.find()
@@ -68,6 +69,8 @@ router.post(
   ],
   asyncHandler(async (req, res) => {
     const product = await Product.create(normalizeProductInput(req.body));
+    const io = req.app.get("io");
+    if (io) io.emit("productUpdated");
     res.status(201).json(toSafeProduct(product));
   })
 );
@@ -93,6 +96,9 @@ router.put(
       return res.status(404).json({ message: "Not found" });
     }
 
+    const io = req.app.get("io");
+    if (io) io.emit("productUpdated");
+
     res.json(toSafeProduct(product));
   })
 );
@@ -108,6 +114,8 @@ router.delete(
   [param("id").isMongoId(), validate],
   asyncHandler(async (req, res) => {
     await Product.findByIdAndDelete(req.params.id);
+    const io = req.app.get("io");
+    if (io) io.emit("productUpdated");
     res.json({ message: "Deleted successfully" });
   })
 );

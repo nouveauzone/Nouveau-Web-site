@@ -80,7 +80,7 @@ const apiService = {
 
 	getProducts: (params = {}) => {
 		const q = new URLSearchParams(params).toString();
-		return request(`/products${q ? `?${q}` : ""}`);
+		return request(`/products${q ? `?${q}` : ""}`, { cache: "no-store" });
 	},
 	getProduct: (id) => request(`/products/${id}`),
 	createProduct: (data) => request("/products", { method: "POST", body: JSON.stringify(data) }),

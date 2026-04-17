@@ -1,8 +1,10 @@
 const express  = require("express");
+const http = require("http");
 const mongoose = require("mongoose");
 const cors     = require("cors");
 const dotenv   = require("dotenv");
 const path     = require("path");
+const { Server } = require("socket.io");
 const helmet   = require("helmet");
 const compression = require("compression");
 const rateLimit = require("express-rate-limit");
@@ -39,6 +41,23 @@ const isAllowedOrigin = (origin) => {
 
   return false;
 };
+
+const httpServer = http.createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: (origin, callback) => {
+      if (isAllowedOrigin(origin)) return callback(null, true);
+      return callback(new Error("CORS origin not allowed"));
+    },
+    credentials: true,
+  },
+});
+
+app.set("io", io);
+
+io.on("connection", (socket) => {
+  socket.on("disconnect", () => {});
+});
 
 // ── Middleware ──────────────────────────────────────────────────────────────
 app.use(cors({
@@ -109,4 +128,4 @@ app.use(notFound);
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Nouveau™ Server → http://localhost:${PORT}`));
+httpServer.listen(PORT, () => console.log(`🚀 Nouveau™ Server → http://localhost:${PORT}`));

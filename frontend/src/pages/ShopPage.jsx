@@ -5,7 +5,9 @@ import { THEME } from "../styles/theme";
 import ProductCard from "../components/ProductCard";
 import NouveauLogo from "../components/Logo";
 import Footer from "../components/Footer";
-import API from "../services/apiService";
+import apiService from "../services/apiService";
+import API_BASE from "../config/api";
+import { io } from "socket.io-client";
 
 const normalizeProduct = (product) => ({
   ...product,
@@ -20,30 +22,29 @@ export default function ShopPage({ setPage, setSelectedProduct, initialCategory 
   const loadProducts = () => {
     setIsLoading(true);
     setIsError(false);
-    // First try localStorage (Admin panel changes)
-    try {
-      const saved = localStorage.getItem('nouveau_local_products');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setPRODUCTS(parsed.map(normalizeProduct));
-          setIsLoading(false);
-          return;
-        }
-      }
-    } catch {}
-    // Then try backend API
-    API.getProducts({ limit: 100 }).then((data) => {
+    // API-first for production consistency.
+    apiService.getProducts({ limit: 100 }).then((data) => {
       if (data.products && data.products.length > 0) setPRODUCTS(data.products.map(normalizeProduct));
       else if (Array.isArray(data) && data.length > 0) setPRODUCTS(data.map(normalizeProduct));
       else {
-        // Fallback to INITIAL_PRODUCTS
-        const { PRODUCTS: IP } = require("../data/products");
-        setPRODUCTS(IP.map(normalizeProduct));
+        // If API returns empty array, keep empty UI (source of truth is backend).
+        setPRODUCTS([]);
       }
     }).catch(err => {
       console.error(err);
       setIsError(true);
+      // Fallback: localStorage (Admin panel draft data) then static seed.
+      try {
+        const saved = localStorage.getItem("nouveau_local_products");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setPRODUCTS(parsed.map(normalizeProduct));
+            return;
+          }
+        }
+      } catch {}
+
       const { PRODUCTS: IP } = require("../data/products");
       setPRODUCTS(IP.map(normalizeProduct));
     }).finally(() => {
@@ -52,6 +53,12 @@ export default function ShopPage({ setPage, setSelectedProduct, initialCategory 
   };
 
   useEffect(() => {
+    const socketUrl = API_BASE || (typeof window !== "undefined" ? window.location.origin : "");
+    const socket = io(socketUrl, { transports: ["websocket", "polling"], withCredentials: true });
+    const intervalId = setInterval(() => {
+      loadProducts();
+    }, 5000);
+
     loadProducts();
 
     const onStorage = (e) => {
@@ -60,12 +67,19 @@ export default function ShopPage({ setPage, setSelectedProduct, initialCategory 
 
     const onFocus = () => loadProducts();
 
+    socket.on("productUpdated", () => {
+      loadProducts();
+    });
+
     window.addEventListener("storage", onStorage);
     window.addEventListener("focus", onFocus);
 
     return () => {
       window.removeEventListener("storage", onStorage);
       window.removeEventListener("focus", onFocus);
+      socket.off("productUpdated");
+      socket.disconnect();
+      clearInterval(intervalId);
     };
   }, []);
 
@@ -103,13 +117,13 @@ export default function ShopPage({ setPage, setSelectedProduct, initialCategory 
 
       {/* Category tabs — only 2 categories */}
       <div className="container" style={{ background:THEME.bgCard }}>
-        <div className="tabs" style={{ overflowX:"auto" }}>
+        <div className="tabs category-filters" style={{ overflowX:"auto" }}>
           {CATEGORIES.map((c) => (
-            <button key={c} className={activeCategory === c ? "active" : ""} onClick={() => setActiveCategory(c)}
+            <button key={c} className={`category-btn ${activeCategory === c ? "active" : ""}`} onClick={() => setActiveCategory(c)}
               style={{
                 fontSize:"11px", letterSpacing:"2px", textTransform:"uppercase",
                 fontFamily:"'Poppins',sans-serif", fontWeight:600,
-                transition:"all 0.2s", whiteSpace:"nowrap", padding:"14px 0",
+                transition:"all 0.2s", whiteSpace:"nowrap",
               }}>
               {c}
               {c !== "All" && (
@@ -147,14 +161,14 @@ export default function ShopPage({ setPage, setSelectedProduct, initialCategory 
         </div>
       )}
 
-      <div className="container main-layout" style={{ paddingTop:"30px", paddingBottom:"40px" }}>
+      <div className="container main-layout container-main-layout" style={{ paddingTop:"30px", paddingBottom:"40px" }}>
         {/* Sidebar */}
         <aside className="sidebar hide-mobile" style={{ width:"100%", flexShrink:0 }}>
           <div style={{ marginBottom:"36px" }}>
             <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"3px", color:THEME.crimson, textTransform:"uppercase", marginBottom:"16px", fontWeight:700 }}>Category</p>
             <ul>
               {CATEGORIES.map((c) => (
-                <li key={c} className={activeCategory===c ? "active" : ""} onClick={() => setActiveCategory(c)} style={{ fontFamily:"'Poppins',sans-serif", fontSize:"13px", paddingLeft:"2px" }}>
+                <li key={c} className={activeCategory===c ? "active" : ""} onClick={() => setActiveCategory(c)} style={{ fontFamily:"'Poppins',sans-serif", fontSize:"13px" }}>
                   {c}
                 </li>
               ))}
