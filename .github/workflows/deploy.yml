@@ -22,23 +22,20 @@ steps:
   - name: Deploy to EC2
     run: |
       ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
-        
-        cd /home/ubuntu/Nouveau-Web-site-main
 
-        # Pull latest code
+        cd /home/ubuntu/Nouveau-Web-site-main || exit 1
+
         git pull origin main
 
-        # ===== BACKEND =====
         cd backend
         npm install
-        pm2 restart all || pm2 start server.js --name backend
 
-        # ===== FRONTEND =====
+        pm2 restart backend || pm2 start server.js --name backend
+
         cd ../frontend
         npm install
         npm run build
 
-        # ===== NGINX =====
         sudo systemctl restart nginx
 
       EOF
