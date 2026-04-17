@@ -1,5 +1,23 @@
 import API from "../config/api";
 
+const API_FALLBACK = String(process.env.REACT_APP_API_FALLBACK_URL || "https://d2vuhogsmq1zl6.cloudfront.net")
+	.trim()
+	.replace(/\/+$/, "");
+
+const buildApiUrl = (base, path) => `${base}/api${path}`;
+
+const shouldRetryWithFallback = (requestUrl, res) => {
+	if (res.status !== 404 || !API_FALLBACK) return false;
+
+	try {
+		const current = typeof window !== "undefined" ? window.location.origin : "";
+		const requested = new URL(requestUrl, current || undefined).origin;
+		return Boolean(current) && requested === current && API_FALLBACK !== current;
+	} catch {
+		return false;
+	}
+};
+
 const getAuthHeader = () => {
 	try {
 		const auth = JSON.parse(localStorage.getItem("nouveau_auth") || "{}");
@@ -10,10 +28,18 @@ const getAuthHeader = () => {
 };
 
 const request = async (path, options = {}) => {
-	const res = await fetch(`${API}/api${path}`, {
+	const primaryUrl = buildApiUrl(API, path);
+	let res = await fetch(primaryUrl, {
 		headers: { "Content-Type": "application/json", ...getAuthHeader(), ...options.headers },
 		...options,
 	});
+
+	if (shouldRetryWithFallback(primaryUrl, res)) {
+		res = await fetch(buildApiUrl(API_FALLBACK, path), {
+			headers: { "Content-Type": "application/json", ...getAuthHeader(), ...options.headers },
+			...options,
+		});
+	}
 
 	if (!res.ok) {
 		const err = await res.json().catch(() => ({ message: res.statusText }));
@@ -24,11 +50,20 @@ const request = async (path, options = {}) => {
 };
 
 const requestFormData = async (path, formData, options = {}) => {
-	const res = await fetch(`${API}/api${path}`, {
+	const primaryUrl = buildApiUrl(API, path);
+	let res = await fetch(primaryUrl, {
 		method: options.method || "POST",
 		headers: { ...getAuthHeader(), ...options.headers },
 		body: formData,
 	});
+
+	if (shouldRetryWithFallback(primaryUrl, res)) {
+		res = await fetch(buildApiUrl(API_FALLBACK, path), {
+			method: options.method || "POST",
+			headers: { ...getAuthHeader(), ...options.headers },
+			body: formData,
+		});
+	}
 
 	if (!res.ok) {
 		const err = await res.json().catch(() => ({ message: res.statusText }));

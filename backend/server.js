@@ -26,12 +26,25 @@ const allowedOrigins = [
   .map((origin) => String(origin || "").trim())
   .filter(Boolean);
 
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true;
+  if (allowedOrigins.includes(origin)) return true;
+
+  try {
+    const parsed = new URL(origin);
+    if (parsed.protocol === "https:" && parsed.hostname.endsWith(".cloudfront.net")) return true;
+  } catch {
+    return false;
+  }
+
+  return false;
+};
+
 // ── Middleware ──────────────────────────────────────────────────────────────
 app.use(cors({
   origin: (origin, callback) => {
     // Allow non-browser requests and server-to-server calls.
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
+    if (isAllowedOrigin(origin)) return callback(null, true);
     return callback(new Error("CORS origin not allowed"));
   },
   credentials: true,
