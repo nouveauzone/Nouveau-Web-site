@@ -1,6 +1,7 @@
 const express = require("express");
 const jwt     = require("jsonwebtoken");
 const { body, param } = require("express-validator");
+const bcrypt  = require("bcryptjs");
 const User    = require("../models/User");
 const { protect } = require("../middleware/auth");
 const { sendOrderEmail } = require("../utils/email");
@@ -62,7 +63,28 @@ router.post(
     const { email, password } = req.body;
     if (!email || !password) return res.status(400).json({ message:"Email and password required" });
     const user = await User.findOne({ email }).select("+password");
-    if (!user || !(await user.matchPassword(password))) return res.status(401).json({ message:"Invalid email or password" });
+
+    if (!user) return res.status(401).json({ message:"Invalid email or password" });
+
+    const storedPassword = String(user.password || "");
+    let passwordMatches = false;
+
+    if (/^\$2[aby]?\$/.test(storedPassword)) {
+      try {
+        passwordMatches = await user.matchPassword(password);
+      } catch {
+        passwordMatches = false;
+      }
+    } else if (storedPassword) {
+      passwordMatches = storedPassword === password;
+      if (passwordMatches) {
+        user.password = password;
+        await user.save();
+      }
+    }
+
+    if (!passwordMatches) return res.status(401).json({ message:"Invalid email or password" });
+
     res.json({ _id:user._id, name:user.name, email:user.email, role:user.role, phone:user.phone, addresses:user.addresses, token:genToken(user._id) });
   })
 );
