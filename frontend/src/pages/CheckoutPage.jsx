@@ -132,6 +132,7 @@ export default function CheckoutPage({ setPage }) {
   const [processing,   setProcessing]   = useState(false);
   const [errors,       setErrors]       = useState({});
   const [upiConfirmed, setUpiConfirmed] = useState(false);
+  const [upiTxnRef,    setUpiTxnRef]    = useState("");
 
   // ── IMPORTANT: Replace with your actual UPI ID ──
   const YOUR_UPI_ID   = "amderontrendzpvtltd@kotak";
@@ -154,6 +155,8 @@ export default function CheckoutPage({ setPage }) {
     return Object.keys(e).length === 0;
   };
 
+  const isValidUpiRef = (ref) => /^[A-Za-z0-9\-_]{8,40}$/.test(String(ref || "").trim());
+
   const handleOrder = async () => {
     if (!isAuthenticated) {
       localStorage.setItem("nouveau_post_auth_page", "Checkout");
@@ -166,9 +169,14 @@ export default function CheckoutPage({ setPage }) {
       return;
     }
 
+    if (payMethod === "UPI" && !isValidUpiRef(upiTxnRef)) {
+      alert("Valid UPI Transaction/UTR ID daalo (minimum 8 characters).");
+      return;
+    }
+
     setProcessing(true);
     try {
-      const oid = await placeOrder(address, cart, payMethod);
+      const oid = await placeOrder(address, cart, payMethod, upiTxnRef.trim());
       cartDispatch({ type: "CLEAR" });
       localStorage.setItem("lastOrderId", oid);
       setPage("OrderSuccess");
@@ -287,7 +295,7 @@ export default function CheckoutPage({ setPage }) {
                     ["COD","💵","Cash on Delivery","Pay when your order arrives — safe & simple"],
                     ["UPI","📱","UPI / QR Code","Scan QR with GPay, PhonePe, Paytm — instant!"],
                   ].map(([val,icon,title,desc])=>(
-                    <div key={val} onClick={()=>{setPayMethod(val);setUpiConfirmed(false);}} style={{
+                    <div key={val} onClick={()=>{setPayMethod(val);setUpiConfirmed(false);setUpiTxnRef("");}} style={{
                       display:"flex",alignItems:"center",gap:"16px",
                       padding:"20px 24px",borderRadius:"14px",cursor:"pointer",
                       border:`2px solid ${payMethod===val?GOLD:THEME.border}`,
@@ -337,6 +345,34 @@ export default function CheckoutPage({ setPage }) {
                         ✅ I have completed the UPI payment of <strong style={{color:GOLD}}>₹{total.toLocaleString("en-IN")}</strong>
                       </label>
                     </div>
+
+                    <div style={{marginTop:"12px"}}>
+                      <label style={{fontFamily:"'Poppins',sans-serif",fontSize:"11px",letterSpacing:"1px",color:THEME.textMuted,display:"block",marginBottom:"6px",textTransform:"uppercase"}}>
+                        UPI Transaction / UTR ID (Required)
+                      </label>
+                      <input
+                        type="text"
+                        value={upiTxnRef}
+                        onChange={(e)=>setUpiTxnRef(e.target.value)}
+                        placeholder="Example: 431234567890"
+                        style={{
+                          width:"100%",
+                          background:THEME.bg,
+                          border:`1.5px solid ${upiTxnRef && !isValidUpiRef(upiTxnRef) ? CRIMSON : THEME.border}`,
+                          color:THEME.text,
+                          padding:"12px 14px",
+                          fontSize:"13px",
+                          outline:"none",
+                          fontFamily:"'Poppins',sans-serif",
+                          borderRadius:"10px",
+                        }}
+                      />
+                      <p style={{fontFamily:"'Poppins',sans-serif",fontSize:"11px",color:upiTxnRef && !isValidUpiRef(upiTxnRef)?CRIMSON:THEME.textMuted,marginTop:"6px"}}>
+                        {upiTxnRef && !isValidUpiRef(upiTxnRef)
+                          ? "Invalid format: minimum 8 chars, only letters, numbers, - or _"
+                          : "Payment verify hone tak order confirm nahi hoga."}
+                      </p>
+                    </div>
                   </div>
                 )}
 
@@ -344,10 +380,19 @@ export default function CheckoutPage({ setPage }) {
                   <BtnOutline onClick={()=>setStep(1)} color={THEME.textMuted} style={{borderRadius:"12px"}}>← Back</BtnOutline>
                   <BtnPrimary
                     onClick={()=>setStep(3)}
-                    disabled={payMethod==="UPI"&&!upiConfirmed}
-                    style={{borderRadius:"12px",padding:"15px 40px",opacity:payMethod==="UPI"&&!upiConfirmed?0.5:1,cursor:payMethod==="UPI"&&!upiConfirmed?"not-allowed":"pointer"}}
+                    disabled={payMethod==="UPI" && (!upiConfirmed || !isValidUpiRef(upiTxnRef))}
+                    style={{
+                      borderRadius:"12px",
+                      padding:"15px 40px",
+                      opacity:payMethod==="UPI" && (!upiConfirmed || !isValidUpiRef(upiTxnRef))?0.5:1,
+                      cursor:payMethod==="UPI" && (!upiConfirmed || !isValidUpiRef(upiTxnRef))?"not-allowed":"pointer"
+                    }}
                   >
-                    {payMethod==="UPI"&&!upiConfirmed?"✅ Confirm Payment First":"Review Order →"}
+                    {payMethod==="UPI" && !upiConfirmed
+                      ? "✅ Confirm Payment First"
+                      : payMethod==="UPI" && !isValidUpiRef(upiTxnRef)
+                        ? "Add UPI Ref ID First"
+                        : "Review Order →"}
                   </BtnPrimary>
                 </div>
               </div>
@@ -374,8 +419,13 @@ export default function CheckoutPage({ setPage }) {
                     <button onClick={()=>setStep(2)} style={{background:"none",border:"none",color:THEME.textMuted,cursor:"pointer",fontSize:"11px",fontFamily:"'Poppins',sans-serif"}}>Edit</button>
                   </div>
                   <p style={{fontFamily:"'Poppins',sans-serif",fontSize:"14px",color:THEME.text,fontWeight:600}}>
-                    {payMethod==="COD"?"💵 Cash on Delivery":"📱 UPI / QR Code (Paid ✅)"}
+                    {payMethod==="COD"?"💵 Cash on Delivery":"📱 UPI / QR Code (Verification Pending)"}
                   </p>
+                  {payMethod==="UPI" && upiTxnRef.trim() && (
+                    <p style={{fontFamily:"'Poppins',sans-serif",fontSize:"12px",color:THEME.textMuted,marginTop:"6px"}}>
+                      Ref ID: <strong>{upiTxnRef.trim()}</strong>
+                    </p>
+                  )}
                 </div>
 
                 {/* WhatsApp reminder */}

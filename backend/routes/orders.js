@@ -23,6 +23,13 @@ const orderCreateValidation = [
   body("items").isArray({ min: 1 }).withMessage("At least one item required"),
   body("items.*.price").isFloat({ gt: 0 }).withMessage("Item price must be positive"),
   body("items.*.qty").isInt({ min: 1 }).withMessage("Item qty must be >= 1"),
+  body("paymentMethod").optional().isIn(["COD", "UPI", "cod", "upi"]).withMessage("Unsupported payment method"),
+  body("paymentReference")
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ min: 8, max: 40 })
+    .withMessage("paymentReference must be 8-40 characters"),
   body("shippingAddress.name").trim().notEmpty(),
   body("shippingAddress.phone").trim().notEmpty(),
   body("shippingAddress.email").isEmail(),
@@ -30,6 +37,16 @@ const orderCreateValidation = [
   body("shippingAddress.city").trim().notEmpty(),
   body("shippingAddress.state").trim().notEmpty(),
   body("shippingAddress.pincode").trim().notEmpty(),
+  body().custom((value) => {
+    const method = String(value?.paymentMethod || "COD").toUpperCase();
+    if (method === "UPI") {
+      const ref = String(value?.paymentReference || "").trim();
+      if (!/^[A-Za-z0-9\-_]{8,40}$/.test(ref)) {
+        throw new Error("Valid UPI paymentReference is required for UPI orders");
+      }
+    }
+    return true;
+  }),
   validate,
 ];
 

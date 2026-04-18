@@ -9,12 +9,20 @@ const { normalizeOrderOutput } = require("../utils/imageUrl");
 // POST /api/orders/create  — place order (alias for POST /api/orders)
 // ─────────────────────────────────────────────────────────────────────────────
 exports.createOrder = asyncHandler(async (req, res) => {
-  const { items, shippingAddress, paymentMethod, couponCode } = req.body;
+  const { items, shippingAddress, paymentMethod, paymentReference, couponCode } = req.body;
   if (!items?.length) return res.status(400).json({ message: "No items in order" });
 
   const totals = calculateOrderTotals(items, couponCode);
   const normalizedPaymentMethod = String(paymentMethod || "COD").toUpperCase();
   const isUpiOrder = normalizedPaymentMethod === "UPI";
+  const normalizedPaymentReference = String(paymentReference || "").trim();
+
+  if (isUpiOrder && !/^[A-Za-z0-9\-_]{8,40}$/.test(normalizedPaymentReference)) {
+    return res.status(400).json({
+      message: "Valid UPI payment reference is required before placing order.",
+    });
+  }
+
   const initialStatus = isUpiOrder ? "Awaiting Payment Verification" : "Placed";
 
   const order = await Order.create({
@@ -22,6 +30,7 @@ exports.createOrder = asyncHandler(async (req, res) => {
     items,
     shippingAddress,
     paymentMethod: normalizedPaymentMethod,
+    paymentId: isUpiOrder ? normalizedPaymentReference : "",
     orderStatus: initialStatus,
     couponCode:    totals.couponCode,
     subtotal:      totals.subtotal,

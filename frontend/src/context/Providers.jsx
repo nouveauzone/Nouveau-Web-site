@@ -130,7 +130,7 @@ export default function Providers({ children }) {
     setWishlist(prev => prev.find(p => p._id===product._id) ? prev.filter(p => p._id!==product._id) : [...prev, product]);
 
   // ── placeOrder — saves to backend AND local state ─────────────────────────
-  const placeOrder = async (address, items, paymentMethod) => {
+  const placeOrder = async (address, items, paymentMethod, paymentReference = "") => {
     const subtotal       = items.reduce((s,i) => s + i.price*i.qty, 0);
     const shippingCharge = subtotal >= 2999 ? 0 : 199;
     const total          = subtotal + shippingCharge;
@@ -160,6 +160,7 @@ export default function Providers({ children }) {
         items: items.map(i => ({ product:i._id, title:i.title, image:i.images?.[0]||"", price:i.price, size:i.size, qty:i.qty })),
         shippingAddress: address,
         paymentMethod: paymentMethod || "COD",
+        paymentReference,
         subtotal, shippingCharge, total,
       };
       const backendOrder = await API.placeOrder(orderData);
@@ -194,36 +195,9 @@ export default function Providers({ children }) {
         total,
       });
       setAllOrders(prev => [enriched, ...prev]);
-    } catch {
-      // Backend not available — save locally so admin can still see it
-      const localOrder = normalizeOrder({
-        _id:         orderId,
-        user:        authState.user?._id || "",
-        customer:    address.name,
-        email:       address.email,
-        phone:       address.phone,
-        product:     items.map(i=>i.title).join(", "),
-        qty:         items.reduce((s,i)=>s+i.qty,0),
-        price:       total,
-        size:        items[0]?.size || "M",
-        paymentMethod: paymentMethod || "COD",
-        city:        address.city   || "",
-        state:       address.state  || "",
-        pincode:     address.pincode|| "",
-        address:     address.street || "",
-        shippingAddress: address,
-        items:       items.map(i => ({ title:i.title, image:i.images?.[0]||"", price:i.price, size:i.size, qty:i.qty })),
-        status:      "pending",
-        orderStatus: "pending",
-        subtotal,
-        shippingCharge,
-        total,
-        dateRaw:     now,
-        date:        fmt(now),
-        createdAt:   now.toISOString(),
-        steps,
-      });
-      setAllOrders(prev => [localOrder, ...prev]);
+    } catch (err) {
+      // Never create local-only orders for paid checkouts; backend must confirm order creation.
+      throw err;
     }
 
     localStorage.setItem("lastOrderId", orderId);
