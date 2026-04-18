@@ -6,16 +6,25 @@ const API_FALLBACK = String(process.env.REACT_APP_API_FALLBACK_URL || "https://a
 
 const buildApiUrl = (base, path) => `${base}/api${path}`;
 
-const shouldRetryWithFallback = (requestUrl, res) => {
-	if (res.status !== 404 || !API_FALLBACK) return false;
+const isLikelyServerFailure = (status) => status === 502 || status === 503 || status === 504 || status >= 520 || status === 500;
 
-	try {
-		const current = typeof window !== "undefined" ? window.location.origin : "";
-		const requested = new URL(requestUrl, current || undefined).origin;
-		return Boolean(current) && requested === current && API_FALLBACK !== current;
-	} catch {
-		return false;
-	}
+const isSameOriginRequest = (requestUrl) => {
+    try {
+        const current = typeof window !== "undefined" ? window.location.origin : "";
+        if (!current) return false;
+        const requested = new URL(requestUrl, current || undefined).origin;
+        return requested === current;
+    } catch {
+        return false;
+    }
+};
+
+const shouldRetryWithFallback = (requestUrl, res) => {
+	if (!API_FALLBACK) return false;
+	if (!(res.status === 404 || isLikelyServerFailure(res.status))) return false;
+
+	const current = typeof window !== "undefined" ? window.location.origin : "";
+	return Boolean(current) && isSameOriginRequest(requestUrl) && API_FALLBACK !== current;
 };
 
 const getAuthHeader = () => {
@@ -29,10 +38,23 @@ const getAuthHeader = () => {
 
 const request = async (path, options = {}) => {
 	const primaryUrl = buildApiUrl(API, path);
-	let res = await fetch(primaryUrl, {
-		headers: { "Content-Type": "application/json", ...getAuthHeader(), ...options.headers },
-		...options,
-	});
+	let res;
+
+	try {
+		res = await fetch(primaryUrl, {
+			headers: { "Content-Type": "application/json", ...getAuthHeader(), ...options.headers },
+			...options,
+		});
+	} catch (err) {
+		if (API_FALLBACK && isSameOriginRequest(primaryUrl)) {
+			res = await fetch(buildApiUrl(API_FALLBACK, path), {
+				headers: { "Content-Type": "application/json", ...getAuthHeader(), ...options.headers },
+				...options,
+			});
+		} else {
+			throw err;
+		}
+	}
 
 	if (shouldRetryWithFallback(primaryUrl, res)) {
 		res = await fetch(buildApiUrl(API_FALLBACK, path), {
@@ -51,11 +73,25 @@ const request = async (path, options = {}) => {
 
 const requestFormData = async (path, formData, options = {}) => {
 	const primaryUrl = buildApiUrl(API, path);
-	let res = await fetch(primaryUrl, {
-		method: options.method || "POST",
-		headers: { ...getAuthHeader(), ...options.headers },
-		body: formData,
-	});
+	let res;
+
+	try {
+		res = await fetch(primaryUrl, {
+			method: options.method || "POST",
+			headers: { ...getAuthHeader(), ...options.headers },
+			body: formData,
+		});
+	} catch (err) {
+		if (API_FALLBACK && isSameOriginRequest(primaryUrl)) {
+			res = await fetch(buildApiUrl(API_FALLBACK, path), {
+				method: options.method || "POST",
+				headers: { ...getAuthHeader(), ...options.headers },
+				body: formData,
+			});
+		} else {
+			throw err;
+		}
+	}
 
 	if (shouldRetryWithFallback(primaryUrl, res)) {
 		res = await fetch(buildApiUrl(API_FALLBACK, path), {

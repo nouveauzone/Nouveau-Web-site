@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { io } from "socket.io-client";
 import { CATEGORIES } from "../data/constants";
+import { PRODUCTS } from "../data/products";
 import ProductCard from "../components/ProductCard";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
@@ -10,8 +11,10 @@ import API_BASE from "../config/api";
 
 const normalizeProduct = (product) => ({
   ...product,
-  images: product.images,
+  images: Array.isArray(product?.images) && product.images.length ? product.images : ["/ethnic1.jpeg"],
 });
+
+const LOCAL_FALLBACK_PRODUCTS = PRODUCTS.map(normalizeProduct);
 
 const SKELETON_COUNT = 8;
 
@@ -44,11 +47,11 @@ export default function ShopPage({ setPage, setSelectedProduct, initialCategory 
           return;
         }
 
-        setProducts([]);
+        setProducts(LOCAL_FALLBACK_PRODUCTS);
       })
       .catch(() => {
-        setIsError(true);
-        setProducts([]);
+        setIsError(false);
+        setProducts(LOCAL_FALLBACK_PRODUCTS);
       })
       .finally(() => {
         setIsLoading(false);
@@ -56,8 +59,15 @@ export default function ShopPage({ setPage, setSelectedProduct, initialCategory 
   }, []);
 
   useEffect(() => {
-    const socketUrl = API_BASE || (typeof window !== "undefined" ? window.location.origin : "");
-    const socket = io(socketUrl, { transports: ["websocket", "polling"], withCredentials: true });
+    const socketUrl = API_BASE || "";
+    const socket = socketUrl
+      ? io(socketUrl, {
+          transports: ["websocket", "polling"],
+          withCredentials: true,
+          reconnectionAttempts: 2,
+          timeout: 4000,
+        })
+      : null;
 
     const intervalId = setInterval(() => {
       loadProducts();
@@ -66,12 +76,14 @@ export default function ShopPage({ setPage, setSelectedProduct, initialCategory 
     const onFocus = () => loadProducts();
 
     loadProducts();
-    socket.on("productUpdated", loadProducts);
+    if (socket) socket.on("productUpdated", loadProducts);
     window.addEventListener("focus", onFocus);
 
     return () => {
-      socket.off("productUpdated", loadProducts);
-      socket.disconnect();
+      if (socket) {
+        socket.off("productUpdated", loadProducts);
+        socket.disconnect();
+      }
       window.removeEventListener("focus", onFocus);
       clearInterval(intervalId);
     };

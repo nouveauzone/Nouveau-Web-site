@@ -227,12 +227,16 @@ export default function TrackOrderPage({ setPage }) {
   useEffect(() => {
     const saved = localStorage.getItem("lastTrackingId");
     if (saved) setTrackingId(saved);
-    if (isAuthenticated) fetchMyOrders();
-  }, [isAuthenticated]);
+    if (isAuthenticated && token) fetchMyOrders();
+  }, [isAuthenticated, token]);
 
   const fetchMyOrders = async () => {
+    const headers = { ...getAuthHeader() };
+    if (!headers.Authorization) return;
+
     try {
-      const res  = await fetch(`${API_BASE}/api/orders/my`, { headers: { ...getAuthHeader() } });
+      const res  = await fetch(`${API_BASE}/api/orders/my`, { headers });
+      if (!res.ok) return;
       const data = await res.json();
       if (Array.isArray(data)) { setMyOrders(data); if (data.length>0) setActiveTab("myorders"); }
     } catch (e) { console.log("my orders error:", e.message); }
