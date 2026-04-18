@@ -162,9 +162,6 @@ const apiService = {
 	updateOrderStatus: (id, status, message) => request(`/orders/update/${id}`, { method: "PUT", body: JSON.stringify({ status, message }) }),
 	deleteOrder: (id) => request(`/orders/${id}`, { method: "DELETE" }),
 
-	createRazorpayOrder: (amount) => request("/payments/razorpay/create-order", { method: "POST", body: JSON.stringify({ amount }) }),
-	verifyRazorpay: (data) => request("/payments/razorpay/verify", { method: "POST", body: JSON.stringify(data) }),
-
 	getAllUsers: (params = {}) => {
 		const q = new URLSearchParams(params).toString();
 		return request(`/users${q ? `?${q}` : ""}`);

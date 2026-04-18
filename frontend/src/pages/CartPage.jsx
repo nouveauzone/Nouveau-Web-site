@@ -149,7 +149,7 @@ export default function CartPage({ setPage }) {
 
               {/* Payment icons */}
               <div style={{display:"flex",gap:"8px",marginTop:"16px",paddingTop:"16px",borderTop:`1px solid ${THEME.border}`}}>
-                {["UPI","COD","Razorpay"].map(p=>(
+                {["UPI","COD"].map(p=>(
                   <span key={p} style={{fontFamily:"'Poppins',sans-serif",fontSize:"9px",letterSpacing:"1px",color:THEME.textLight,background:"#fffbf0",padding:"4px 10px",borderRadius:"5px",border:`1px solid rgba(201,162,39,0.15)`}}>{p}</span>
                 ))}
               </div>

@@ -106,7 +106,6 @@ const getChatbotReply = async (incomingMsg) => {
       `We accept:`,
       `  💵 Cash on Delivery (COD)`,
       `  📱 UPI / QR Code (GPay, PhonePe, Paytm)`,
-      `  🔒 Razorpay (Card/Net Banking)`,
       ``,
       `💳 UPI ID: *amderontrendzpvtltd@kotak*`,
       ``,
