@@ -44,14 +44,24 @@ const isAllowedOrigin = (origin) => {
   return false;
 };
 
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow non-browser requests and server-to-server calls.
+    if (isAllowedOrigin(origin)) return callback(null, true);
+    return callback(new Error("CORS origin not allowed"));
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
 const httpServer = http.createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: (origin, callback) => {
-      if (isAllowedOrigin(origin)) return callback(null, true);
-      return callback(new Error("CORS origin not allowed"));
-    },
+    origin: corsOptions.origin,
     credentials: true,
+    methods: corsOptions.methods,
+    allowedHeaders: corsOptions.allowedHeaders,
   },
 });
 
@@ -62,14 +72,8 @@ io.on("connection", (socket) => {
 });
 
 // ── Middleware ──────────────────────────────────────────────────────────────
-app.use(cors({
-  origin: (origin, callback) => {
-    // Allow non-browser requests and server-to-server calls.
-    if (isAllowedOrigin(origin)) return callback(null, true);
-    return callback(new Error("CORS origin not allowed"));
-  },
-  credentials: true,
-}));
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 app.use(helmet({
   // Frontend runs on a different origin (localhost:3000) in dev.
   // Allow static resources like product images to be embedded cross-origin.
