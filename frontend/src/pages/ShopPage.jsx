@@ -32,6 +32,7 @@ const getLocalProducts = () => {
 export default function ShopPage({ setPage, setSelectedProduct, initialCategory }) {
   const [products, setProducts] = useState(getLocalProducts);
   const [cat,      setCat]      = useState(initialCategory || "All");
+  const [search,   setSearch]   = useState("");
   const [maxPrice, setMaxPrice] = useState(20000);
   const [sortBy,   setSortBy]   = useState("featured");
 
@@ -70,6 +71,14 @@ export default function ShopPage({ setPage, setSelectedProduct, initialCategory 
 
   // ── Filter + sort ─────────────────────────────────────────────────────────
   let filtered = products.filter((p) => {
+    const q = search.trim().toLowerCase();
+    if (q) {
+      const title = String(p.title || "").toLowerCase();
+      const subcategory = String(p.subcategory || "").toLowerCase();
+      const category = String(p.category || "").toLowerCase();
+      const description = String(p.description || "").toLowerCase();
+      if (!(title.includes(q) || subcategory.includes(q) || category.includes(q) || description.includes(q))) return false;
+    }
     if (cat !== "All" && p.category !== cat) return false;
     if ((p.price || 0) > maxPrice) return false;
     return true;
@@ -85,8 +94,8 @@ export default function ShopPage({ setPage, setSelectedProduct, initialCategory 
   const westernCount = products.filter(p => p.category === "Indian Premium Western Wear").length;
   const totalCount   = products.length;
 
-  const clearFilters = () => { setCat("All"); setMaxPrice(20000); setSortBy("featured"); };
-  const hasFilters = cat !== "All" || maxPrice < 20000 || sortBy !== "featured";
+  const clearFilters = () => { setCat("All"); setSearch(""); setMaxPrice(20000); setSortBy("featured"); };
+  const hasFilters = cat !== "All" || search.trim() !== "" || maxPrice < 20000 || sortBy !== "featured";
 
   return (
     <div style={{ background: THEME.bg, minHeight: "100vh" }}>
@@ -140,7 +149,13 @@ export default function ShopPage({ setPage, setSelectedProduct, initialCategory 
 
       {/* ── MOBILE FILTER BAR ──────────────────────────────────────────────── */}
       <div className="sp-mob-bar">
-        <span style={{ fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textMuted }}>{filtered.length} products</span>
+        <input
+          type="search"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Search"
+          style={{ flex:1, minWidth:0, background:THEME.bg, border:`1px solid ${THEME.border}`, color:THEME.text, padding:"9px 10px", borderRadius:"10px", fontFamily:"'Poppins',sans-serif", fontSize:"12px", outline:"none" }}
+        />
         <select className="sp-sel" value={sortBy} onChange={e => setSortBy(e.target.value)}>
           <option value="featured">Featured</option>
           <option value="newest">New Arrivals</option>
@@ -175,6 +190,17 @@ export default function ShopPage({ setPage, setSelectedProduct, initialCategory 
               <div style={{ display:"flex", justifyContent:"space-between", fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textLight, marginTop:"6px" }}>
                 <span>₹500</span><span style={{ color:THEME.crimson, fontWeight:700 }}>₹{maxPrice.toLocaleString("en-IN")}</span>
               </div>
+            </div>
+
+            <div style={{ borderTop:`1px solid ${THEME.border}`, marginTop:"18px", paddingTop:"18px" }}>
+              <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"3px", color:THEME.crimson, textTransform:"uppercase", marginBottom:"12px", fontWeight:700 }}>Search</p>
+              <input
+                type="search"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Search products..."
+                style={{ width:"100%", background:THEME.bgCard, border:`1px solid ${THEME.border}`, color:THEME.text, padding:"9px 12px", borderRadius:"10px", fontFamily:"'Poppins',sans-serif", fontSize:"12px", outline:"none", minHeight:"40px" }}
+              />
             </div>
 
             <div style={{ borderTop:`1px solid ${THEME.border}`, marginTop:"18px", paddingTop:"18px" }}>
