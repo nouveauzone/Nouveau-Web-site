@@ -116,7 +116,7 @@ mongoose.connect(process.env.MONGO_URI || "mongodb://localhost:27017/nouveau")
 
 // ── Routes ──────────────────────────────────────────────────────────────────
 app.use("/api/auth",     authLimiter, require("./routes/auth"));
-app.use("/api/products", require("./routes/productRoutes"));
+app.use("/api/products", require("./routes/products"));
 app.use("/api/orders",   require("./routes/orders"));
 app.use("/api/users",    require("./routes/users"));
 app.use("/api/payments", require("./routes/payments"));
