@@ -1,197 +1,245 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { CATEGORIES } from "../data/constants";
-import { PRODUCTS } from "../data/products";
+import { useState, useEffect } from "react";
+import { PRODUCTS as INITIAL_PRODUCTS } from "../data/products";
+import { THEME } from "../styles/theme";
 import ProductCard from "../components/ProductCard";
 import Footer from "../components/Footer";
-import Icons from "../components/Icons";
-import OrnamentDivider from "../components/OrnamentDivider";
-import { BtnOutline, BtnPrimary } from "../components/Buttons";
-import { THEME } from "../styles/theme";
-import apiService from "../services/apiService";
+import API from "../services/apiService";
 
-const normalizeProduct = (product) => ({
-  ...product,
-  images: Array.isArray(product?.images) && product.images.length ? product.images : ["/ethnic1.jpeg"],
+const CATS = ["All", "Indian Ethnic Wear", "Indian Premium Western Wear"];
+
+const norm = (p) => ({
+  ...p,
+  images: Array.isArray(p.images) && p.images.length ? p.images : ["/ethnic1.jpeg"],
+  price: Number(p.price) || 0,
+  originalPrice: Number(p.originalPrice) || Number(p.price) || 0,
+  stock: p.stock != null ? Number(p.stock) : 10,
+  rating: Number(p.rating) || 0,
+  discount: Number(p.discount) || 0,
 });
 
-const LOCAL_FALLBACK_PRODUCTS = PRODUCTS.map(normalizeProduct);
-
-const SKELETON_COUNT = 8;
+// Get products from localStorage OR fallback to built-in 16 products
+const getLocalProducts = () => {
+  try {
+    const s = localStorage.getItem("nouveau_local_products");
+    if (s) {
+      const p = JSON.parse(s);
+      if (Array.isArray(p) && p.length > 0) return p.map(norm);
+    }
+  } catch {}
+  return INITIAL_PRODUCTS.map(norm);
+};
 
 export default function ShopPage({ setPage, setSelectedProduct, initialCategory }) {
-  const [products, setProducts] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isError, setIsError] = useState(false);
-  const [activeCategory, setActiveCategory] = useState(initialCategory || "All");
-  const [priceMax, setPriceMax] = useState(20000);
-  const [sortBy, setSortBy] = useState("featured");
+  const [products, setProducts] = useState(getLocalProducts);
+  const [cat,      setCat]      = useState(initialCategory || "All");
+  const [maxPrice, setMaxPrice] = useState(20000);
+  const [sortBy,   setSortBy]   = useState("featured");
 
+  // ── Background sync: try backend, silently fallback to local ─────────────
   useEffect(() => {
-    if (initialCategory) setActiveCategory(initialCategory);
-  }, [initialCategory]);
+    let alive = true;
 
-  const loadProducts = useCallback(async () => {
-    setIsLoading(true);
-    setIsError(false);
+    API.getProducts({ limit: 200 })
+      .then((data) => {
+        if (!alive) return;
+        const list = data?.products?.length ? data.products
+          : Array.isArray(data) && data.length ? data : null;
+        if (list && list.length > 0) {
+          const normalized = list.map(norm);
+          setProducts(normalized);
+          try { localStorage.setItem("nouveau_local_products", JSON.stringify(normalized)); } catch {}
+        }
+        // else: backend returned empty → keep showing local products (no error shown)
+      })
+      .catch(() => {
+        // Backend down/slow → silently keep local products, never show error
+      });
 
-    try {
-      const data = await apiService.getProducts({ limit: 100 });
-
-      if (Array.isArray(data)) {
-        setProducts(data.map(normalizeProduct));
-        return;
+    // Listen for admin panel changes
+    const onStorage = (e) => {
+      if (e.key === "nouveau_local_products" && e.newValue) {
+        try {
+          const p = JSON.parse(e.newValue);
+          if (Array.isArray(p) && p.length > 0) setProducts(p.map(norm));
+        } catch {}
       }
-
-      if (Array.isArray(data?.products)) {
-        setProducts(data.products.map(normalizeProduct));
-        return;
-      }
-
-      throw new Error("Unexpected product response");
-    } catch {
-      setIsError(true);
-      setProducts(LOCAL_FALLBACK_PRODUCTS);
-    } finally {
-      setIsLoading(false);
-    }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => { alive = false; window.removeEventListener("storage", onStorage); };
   }, []);
 
-  useEffect(() => {
-    loadProducts();
-  }, [loadProducts]);
+  // ── Filter + sort ─────────────────────────────────────────────────────────
+  let filtered = products.filter((p) => {
+    if (cat !== "All" && p.category !== cat) return false;
+    if ((p.price || 0) > maxPrice) return false;
+    return true;
+  });
 
-  const visibleProducts = useMemo(() => {
-    let result = [...products];
+  if (sortBy === "price-asc")  filtered = [...filtered].sort((a,b) => a.price - b.price);
+  if (sortBy === "price-desc") filtered = [...filtered].sort((a,b) => b.price - a.price);
+  if (sortBy === "rating")     filtered = [...filtered].sort((a,b) => b.rating - a.rating);
+  if (sortBy === "newest")     filtered = [...filtered].filter(p => p.isNew);
+  if (sortBy === "discount")   filtered = [...filtered].sort((a,b) => b.discount - a.discount);
 
-    result = result.filter((item) => {
-      if (activeCategory !== "All" && item.category !== activeCategory) return false;
-      return Number(item.price) <= priceMax;
-    });
+  const ethnicCount  = products.filter(p => p.category === "Indian Ethnic Wear").length;
+  const westernCount = products.filter(p => p.category === "Indian Premium Western Wear").length;
+  const totalCount   = products.length;
 
-    if (sortBy === "price-asc") result.sort((a, b) => Number(a.price) - Number(b.price));
-    if (sortBy === "price-desc") result.sort((a, b) => Number(b.price) - Number(a.price));
-    if (sortBy === "rating") result.sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0));
-    if (sortBy === "newest") result = result.filter((item) => item.isNew);
-
-    return result;
-  }, [products, activeCategory, priceMax, sortBy]);
-
-  const clearFilters = useCallback(() => {
-    setActiveCategory("All");
-    setPriceMax(20000);
-    setSortBy("featured");
-  }, []);
+  const clearFilters = () => { setCat("All"); setMaxPrice(20000); setSortBy("featured"); };
+  const hasFilters = cat !== "All" || maxPrice < 20000 || sortBy !== "featured";
 
   return (
-    <div style={{ background: THEME.bg, minHeight: "100vh", color: THEME.text }}>
-      <section style={{ background: THEME.bgCard, borderBottom: `1px solid ${THEME.border}` }}>
-        <div className="sf-container" style={{ paddingTop: "clamp(32px, 6vw, 56px)", paddingBottom: "clamp(24px, 4vw, 36px)" }}>
-          <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "10px", letterSpacing: "6px", color: THEME.crimson, textTransform: "uppercase", marginBottom: "12px", textAlign: "center" }}>
-            Curated Collections
-          </p>
-          <h1 style={{ fontFamily: "'Playfair Display',serif", fontSize: "clamp(30px, 5vw, 48px)", fontWeight: 700, textAlign: "center" }}>
-            Shop Womenswear
+    <div style={{ background: THEME.bg, minHeight: "100vh" }}>
+      <style>{`
+        .sp-layout { display: flex; gap: 28px; max-width: 1400px; margin: 0 auto; padding: clamp(20px,4vw,36px) clamp(16px,5vw,40px); }
+        .sp-sidebar { width: 220px; flex-shrink: 0; }
+        .sp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(clamp(140px,36vw,250px),1fr)); gap: clamp(10px,2.5vw,18px); }
+        @media(max-width:768px){
+          .sp-sidebar{display:none!important;}
+          .sp-layout{flex-direction:column;gap:0;}
+          .sp-grid{grid-template-columns:repeat(2,1fr)!important;gap:10px!important;}
+          .sp-desktop-sort{display:none!important;}
+        }
+        @media(max-width:380px){.sp-grid{grid-template-columns:1fr!important;}}
+        .sp-tab{padding:13px clamp(10px,2.5vw,22px);background:none;border:none;border-bottom:3px solid transparent;cursor:pointer;font-size:10px;letter-spacing:2px;text-transform:uppercase;font-family:'Poppins',sans-serif;font-weight:600;transition:all 0.2s;white-space:nowrap;min-height:44px;color:${THEME.textMuted};}
+        .sp-tab.on{border-bottom-color:${THEME.crimson};color:${THEME.crimson};}
+        .sp-sel{background:${THEME.bgCard};border:1px solid ${THEME.border};color:${THEME.text};padding:9px 12px;border-radius:10px;font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer;min-height:40px;outline:none;}
+        .sp-mob-bar{display:none;background:${THEME.bgCard};border-bottom:1px solid ${THEME.border};padding:10px 16px;align-items:center;justify-content:space-between;gap:10px;}
+        @media(max-width:768px){.sp-mob-bar{display:flex!important;}}
+      `}</style>
+
+      {/* ── HEADER ─────────────────────────────────────────────────────────── */}
+      <div style={{ background: `linear-gradient(135deg,${THEME.crimson},${THEME.crimsonDark})`, padding: "clamp(32px,7vw,60px) clamp(16px,5vw,40px) clamp(20px,4vw,36px)", position: "relative", overflow: "hidden" }}>
+        <div style={{ position:"absolute", right:0, bottom:"-30px", opacity:0.06 }}>
+          <img src="/nouveau-logo.png" alt="" style={{ width:"200px", height:"260px", objectFit:"contain", filter:"brightness(10)" }}/>
+        </div>
+        <div style={{ maxWidth:"1400px", margin:"0 auto", position:"relative", zIndex:1 }}>
+          <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"6px", color:THEME.gold, marginBottom:"8px", textTransform:"uppercase" }}>Nouveau™ Store</p>
+          <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:"clamp(26px,5vw,48px)", fontWeight:700, color:"#fff", marginBottom:"6px" }}>
+            {cat === "All" ? "All Collections" : cat}
           </h1>
-          <OrnamentDivider />
-          <p style={{ fontFamily: "'Poppins',sans-serif", color: THEME.textMuted, textAlign: "center", maxWidth: "620px", margin: "0 auto", lineHeight: 1.75, fontSize: "14px" }}>
-            Premium everyday styles with clean tailoring and elevated fabrics, inspired by the same design language as Nouveau Home.
+          <p style={{ color:"rgba(255,255,255,0.65)", fontSize:"13px", fontFamily:"'Poppins',sans-serif" }}>
+            {filtered.length} of {totalCount} products · Women Only
           </p>
+        </div>
+      </div>
 
-          <div className="sf-filter-row" role="tablist" aria-label="Category filters" style={{ justifyContent: "center", marginTop: "22px" }}>
-            {CATEGORIES.map((category) => (
-              <button
-                key={category}
-                type="button"
-                role="tab"
-                aria-selected={activeCategory === category}
-                className={`sf-pill ${activeCategory === category ? "active" : ""}`}
-                onClick={() => setActiveCategory(category)}>
-                {category}
+      {/* ── CATEGORY TABS ──────────────────────────────────────────────────── */}
+      <div style={{ borderBottom:`1px solid ${THEME.border}`, background:THEME.bgCard, position:"sticky", top:"72px", zIndex:50 }}>
+        <div style={{ maxWidth:"1400px", margin:"0 auto", padding:"0 clamp(16px,5vw,40px)", display:"flex", overflowX:"auto", WebkitOverflowScrolling:"touch", scrollbarWidth:"none" }}>
+          {CATS.map(c => {
+            const count = c==="All" ? totalCount : c==="Indian Ethnic Wear" ? ethnicCount : westernCount;
+            return (
+              <button key={c} className={`sp-tab${cat===c?" on":""}`} onClick={() => setCat(c)}>
+                {c==="All" ? `All (${count})` : c==="Indian Ethnic Wear" ? `Ethnic (${count})` : `Western (${count})`}
               </button>
-            ))}
-          </div>
+            );
+          })}
+        </div>
+      </div>
 
-          <div style={{ marginTop: "16px", display: "grid", gap: "14px", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", alignItems: "center" }}>
-            <div>
-              <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "10px", letterSpacing: "3px", color: THEME.textLight, textTransform: "uppercase", marginBottom: "6px" }}>
-                Max Price: Rs {priceMax.toLocaleString("en-IN")}
-              </p>
-              <input
-                type="range"
-                min="1000"
-                max="20000"
-                step="500"
-                value={priceMax}
-                onChange={(e) => setPriceMax(parseInt(e.target.value, 10))}
-                style={{ width: "100%" }}
-              />
+      {/* ── MOBILE FILTER BAR ──────────────────────────────────────────────── */}
+      <div className="sp-mob-bar">
+        <span style={{ fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textMuted }}>{filtered.length} products</span>
+        <select className="sp-sel" value={sortBy} onChange={e => setSortBy(e.target.value)}>
+          <option value="featured">Featured</option>
+          <option value="newest">New Arrivals</option>
+          <option value="price-asc">Price: Low → High</option>
+          <option value="price-desc">Price: High → Low</option>
+          <option value="rating">Top Rated</option>
+          <option value="discount">Best Discount</option>
+        </select>
+      </div>
+
+      {/* ── MAIN LAYOUT ────────────────────────────────────────────────────── */}
+      <div className="sp-layout">
+
+        {/* Sidebar */}
+        <aside className="sp-sidebar">
+          <div style={{ background:THEME.bgCard, border:`1px solid ${THEME.border}`, borderRadius:"14px", padding:"20px", position:"sticky", top:"130px" }}>
+
+            <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"3px", color:THEME.crimson, textTransform:"uppercase", marginBottom:"14px", fontWeight:700 }}>Category</p>
+            {CATS.map(c => {
+              const count = c==="All" ? totalCount : c==="Indian Ethnic Wear" ? ethnicCount : westernCount;
+              return (
+                <button key={c} onClick={() => setCat(c)} style={{ display:"block", width:"100%", textAlign:"left", background:cat===c?`${THEME.crimson}10`:"none", border:"none", color:cat===c?THEME.crimson:THEME.textMuted, cursor:"pointer", padding:"9px 12px", fontSize:"13px", fontFamily:"'Poppins',sans-serif", fontWeight:cat===c?700:400, borderLeft:cat===c?`2px solid ${THEME.crimson}`:"2px solid transparent", borderRadius:"0 6px 6px 0", transition:"all 0.2s", minHeight:"40px", marginBottom:"4px" }}>
+                  {c === "All" ? `All Products (${count})` : c === "Indian Ethnic Wear" ? `Ethnic Wear (${count})` : `Western Wear (${count})`}
+                </button>
+              );
+            })}
+
+            <div style={{ borderTop:`1px solid ${THEME.border}`, marginTop:"18px", paddingTop:"18px" }}>
+              <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"3px", color:THEME.crimson, textTransform:"uppercase", marginBottom:"12px", fontWeight:700 }}>Max Price</p>
+              <input type="range" min="500" max="20000" step="250" value={maxPrice} onChange={e => setMaxPrice(+e.target.value)}
+                style={{ width:"100%", accentColor:THEME.crimson, cursor:"pointer" }}/>
+              <div style={{ display:"flex", justifyContent:"space-between", fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textLight, marginTop:"6px" }}>
+                <span>₹500</span><span style={{ color:THEME.crimson, fontWeight:700 }}>₹{maxPrice.toLocaleString("en-IN")}</span>
+              </div>
             </div>
 
-            <div style={{ display: "flex", justifyContent: "flex-end" }}>
-              <select className="sf-sort" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+            <div style={{ borderTop:`1px solid ${THEME.border}`, marginTop:"18px", paddingTop:"18px" }}>
+              <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"3px", color:THEME.crimson, textTransform:"uppercase", marginBottom:"12px", fontWeight:700 }}>Sort By</p>
+              <select className="sp-sel" value={sortBy} onChange={e => setSortBy(e.target.value)} style={{ width:"100%" }}>
                 <option value="featured">Featured</option>
-                <option value="newest">Newest</option>
-                <option value="price-asc">Price: Low to High</option>
-                <option value="price-desc">Price: High to Low</option>
+                <option value="newest">New Arrivals</option>
+                <option value="price-asc">Price: Low → High</option>
+                <option value="price-desc">Price: High → Low</option>
                 <option value="rating">Top Rated</option>
+                <option value="discount">Best Discount</option>
               </select>
             </div>
+
+            {hasFilters && (
+              <button onClick={clearFilters} style={{ width:"100%", marginTop:"14px", background:"none", border:`1px solid ${THEME.crimson}`, color:THEME.crimson, padding:"9px", borderRadius:"8px", cursor:"pointer", fontFamily:"'Poppins',sans-serif", fontSize:"12px", fontWeight:600, minHeight:"40px" }}>
+                ✕ Clear Filters
+              </button>
+            )}
           </div>
-        </div>
-      </section>
+        </aside>
 
-      <section className="sf-container" style={{ paddingTop: "clamp(28px, 5vw, 44px)", paddingBottom: "clamp(48px, 8vw, 76px)" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "14px", flexWrap: "wrap", marginBottom: "18px" }}>
-          <p className="sf-results">{visibleProducts.length} products</p>
-          <BtnOutline onClick={clearFilters} color={THEME.crimson} style={{ padding: "10px 18px", fontSize: "10px" }}>
-            Reset Filters <Icons.X />
-          </BtnOutline>
-        </div>
+        {/* Products */}
+        <div style={{ flex:1, minWidth:0 }}>
+          <div className="sp-desktop-sort" style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"18px", flexWrap:"wrap", gap:"10px" }}>
+            <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"13px", color:THEME.textMuted }}>
+              Showing <strong style={{ color:THEME.text }}>{filtered.length}</strong> of {totalCount} products
+            </p>
+            <select className="sp-sel" value={sortBy} onChange={e => setSortBy(e.target.value)}>
+              <option value="featured">Featured</option>
+              <option value="newest">New Arrivals</option>
+              <option value="price-asc">Price: Low → High</option>
+              <option value="price-desc">Price: High → Low</option>
+              <option value="rating">Top Rated</option>
+              <option value="discount">Best Discount</option>
+            </select>
+          </div>
 
-        {isError && !isLoading && (
-          <div className="sf-state" style={{ marginBottom: "18px" }}>
-            <h3>Could not sync latest products</h3>
-            <p>Showing curated catalog fallback. Check API and retry for live inventory.</p>
-            <div style={{ marginTop: "12px", display: "flex", justifyContent: "center" }}>
-              <BtnPrimary onClick={loadProducts}>Retry API</BtnPrimary>
+          {filtered.length === 0 ? (
+            <div style={{ textAlign:"center", padding:"60px 20px", background:THEME.bgCard, borderRadius:"16px", border:`1px solid ${THEME.border}` }}>
+              <p style={{ fontFamily:"'Playfair Display',serif", fontSize:"22px", color:THEME.textMuted, marginBottom:"10px" }}>No products found</p>
+              <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"13px", color:THEME.textLight, marginBottom:"20px" }}>Try removing filters</p>
+              <button onClick={clearFilters} style={{ background:THEME.crimson, color:"#fff", border:"none", padding:"12px 28px", borderRadius:"99px", cursor:"pointer", fontFamily:"'Poppins',sans-serif", fontSize:"12px", fontWeight:700, minHeight:"44px" }}>
+                Show All Products
+              </button>
             </div>
-          </div>
-        )}
-
-        {isLoading && (
-          <div className="sf-products-grid" aria-live="polite" aria-label="Loading products">
-            {Array.from({ length: SKELETON_COUNT }).map((_, idx) => (
-              <div className="sf-skeleton-card" key={`skeleton-${idx}`}>
-                <div className="sf-skeleton-media" />
-                <div className="sf-skeleton-lines">
-                  <div className="sf-skeleton-line" />
-                  <div className="sf-skeleton-line" style={{ width: "70%" }} />
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {!isLoading && visibleProducts.length === 0 && (
-          <div className="sf-state">
-            <h3>No products found</h3>
-            <p>Try resetting category or increasing the max price filter.</p>
-            <div style={{ marginTop: "12px", display: "flex", justifyContent: "center" }}>
-              <BtnOutline onClick={clearFilters} color={THEME.crimson}>Clear Filters</BtnOutline>
+          ) : (
+            <div className="sp-grid">
+              {filtered.map((p, i) => (
+                <ProductCard key={`${p._id||"p"}-${i}`} product={p} setPage={setPage} setSelectedProduct={setSelectedProduct}/>
+              ))}
             </div>
-          </div>
-        )}
+          )}
 
-        {!isLoading && visibleProducts.length > 0 && (
-          <div className="sf-products-grid">
-            {visibleProducts.map((product) => (
-              <ProductCard key={product._id || product.title} product={product} setPage={setPage} setSelectedProduct={setSelectedProduct} />
-            ))}
-          </div>
-        )}
-      </section>
+          {filtered.length > 0 && (
+            <div style={{ textAlign:"center", marginTop:"32px", padding:"16px", background:THEME.bgCard, borderRadius:"12px", border:`1px solid ${THEME.border}` }}>
+              <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textMuted }}>
+                ✅ {filtered.length} products shown · <span style={{ color:THEME.crimson, fontWeight:600 }}>Free shipping above ₹2500</span>
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
 
-      <Footer setPage={setPage} />
+      <Footer setPage={setPage}/>
     </div>
   );
 }
