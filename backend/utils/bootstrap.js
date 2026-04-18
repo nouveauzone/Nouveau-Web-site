@@ -19,7 +19,8 @@ exports.bootstrapAdminUser = async () => {
       }
 
       if (Object.keys(updates).length > 0) {
-        await User.findByIdAndUpdate(exists._id, updates);
+        Object.assign(exists, updates);
+        await exists.save();
         console.log("✅ Admin account synchronized for", adminEmail);
       }
       return;
