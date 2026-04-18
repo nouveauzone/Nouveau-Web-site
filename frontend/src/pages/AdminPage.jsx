@@ -874,5 +874,3 @@ export default function AdminPage({ setPage }) {
     </div>
   );
 }
-                      { label: "Last Login", value: selectedUser.lastLogin ? new Date(selectedUser.lastLogin).toLocaleString("en-IN",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}) : "Never" },
-                      { label: "Login Count", value: Number(selectedUser.loginCount || 0) },
