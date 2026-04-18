@@ -22,6 +22,8 @@ app.set("trust proxy", 1);
 const allowedOrigins = [
   ...(process.env.CLIENT_URLS || "").split(","),
   process.env.CLIENT_URL,
+  "https://nouveauz.com",
+  "https://www.nouveauz.com",
   "http://localhost:3000",
   "http://localhost:3001",
 ]
