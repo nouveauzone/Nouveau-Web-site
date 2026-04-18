@@ -10,11 +10,6 @@ const CATALOG_IMAGE_RE = /^(ethnic\d+|western\d+|product\d+|nouveau-logo|payment
 
 const toFileName = (pathValue = "") => String(pathValue).split("/").filter(Boolean).pop() || "";
 
-const toUploadsUrl = (pathValue = "") => {
-  const normalized = pathValue.startsWith("/") ? pathValue : `/${pathValue}`;
-  return `${UPLOADS_ORIGIN}${normalized}`;
-};
-
 const normalizeUploadsPath = (pathValue = "", fallback = "/ethnic1.jpeg") => {
   const fileName = toFileName(pathValue);
   if (!fileName) return fallback;
@@ -23,7 +18,7 @@ const normalizeUploadsPath = (pathValue = "", fallback = "/ethnic1.jpeg") => {
     return `/${fileName}`;
   }
 
-  return toUploadsUrl(pathValue);
+  return pathValue.startsWith("/") ? pathValue : `/${pathValue}`;
 };
 
 const toLocalImagePath = (urlValue) => {

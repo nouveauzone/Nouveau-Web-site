@@ -48,9 +48,9 @@ const toPublicImageUrl = (src) => {
   if (!stored) return "";
 
   if (HTTP_RE.test(stored)) return forceHttps(stored);
-  if (stored.startsWith("uploads/")) return `${baseUrl}/${stored}`;
-  if (stored.startsWith("/uploads/")) return `${baseUrl}${stored}`;
-  if (stored.startsWith("/")) return `${baseUrl}/uploads/${stored.slice(1)}`;
+  if (stored.startsWith("uploads/")) return `/${stored}`;
+  if (stored.startsWith("/uploads/")) return stored;
+  if (stored.startsWith("/")) return `/uploads/${stored.slice(1)}`;
   return `${baseUrl}/${stored}`;
 };
 
