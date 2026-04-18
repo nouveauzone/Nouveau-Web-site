@@ -227,8 +227,13 @@ export default function TrackOrderPage({ setPage }) {
   useEffect(() => {
     const saved = localStorage.getItem("lastTrackingId");
     if (saved) setTrackingId(saved);
-    if (isAuthenticated && token) fetchMyOrders();
-  }, [isAuthenticated, token]);
+  }, []);
+
+  useEffect(() => {
+    if (activeTab !== "myorders") return;
+    if (!isAuthenticated || !token) return;
+    fetchMyOrders();
+  }, [activeTab, isAuthenticated, token]);
 
   const fetchMyOrders = async () => {
     const headers = { ...getAuthHeader() };

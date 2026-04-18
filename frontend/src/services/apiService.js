@@ -1,8 +1,21 @@
 import API from "../config/api";
 
-const API_FALLBACK = String(process.env.REACT_APP_API_FALLBACK_URL || "https://api.nouveauz.com")
-	.trim()
-	.replace(/\/+$/, "");
+const normalizeFallback = (value) => {
+	const raw = String(value || "").trim();
+	if (!raw) return "";
+	if (raw === "/api") return "";
+	if (raw.startsWith("/")) return "";
+
+	let normalized = raw.replace(/\/+$/, "");
+
+	if (typeof window !== "undefined" && window.location.protocol === "https:" && normalized.startsWith("http://")) {
+		normalized = normalized.replace(/^http:\/\//i, "https://");
+	}
+
+	return normalized.replace(/\/api$/i, "");
+};
+
+const API_FALLBACK = normalizeFallback(process.env.REACT_APP_API_FALLBACK_URL || process.env.VITE_API_FALLBACK_URL);
 
 const buildApiUrl = (base, path) => `${base}/api${path}`;
 
