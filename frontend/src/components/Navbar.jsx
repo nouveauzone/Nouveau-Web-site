@@ -34,7 +34,21 @@ export default function Navbar({ page, setPage }) {
         <div className="sf-container sf-navbar-inner">
           <button type="button" className="sf-logo" onClick={() => setPage("Home")}>
             <img src="/nouveau-logo.png" alt="Nouveau" className="sf-logo-mark" />
-            <span className="sf-logo-word">Nouveau</span>
+            <span
+              className="sf-logo-word"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "1px",
+                fontFamily: "'Playfair Display',serif",
+                fontSize: "18px",
+                fontWeight: 700,
+                letterSpacing: "2px",
+                color: "#1A1A1A",
+              }}
+            >
+              nouveau<span style={{ color: "#C9A227" }}>™</span>
+            </span>
           </button>
 
           <div className="sf-nav-links">
