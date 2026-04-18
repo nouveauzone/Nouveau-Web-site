@@ -1,25 +1,36 @@
 import { useEffect, useState } from "react";
 import NouveauLogo from "./Logo";
 import { THEME } from "../styles/theme";
+import API from "../services/apiService";
 
 function VisitorCount() {
   const [count, setCount] = useState(null);
 
   useEffect(() => {
-    try {
-      let current = parseInt(localStorage.getItem("nouveau_visitor_count") || "0", 10);
-      if (!sessionStorage.getItem("nouveau_visited")) {
-        current += 1;
-        localStorage.setItem("nouveau_visitor_count", String(current));
-        sessionStorage.setItem("nouveau_visited", "true");
+    const loadMonthlyViews = async () => {
+      try {
+        const now = new Date();
+        const monthKey = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
+        const sessionKey = `nouveau_monthly_viewed_${monthKey}`;
+
+        let response;
+        if (!sessionStorage.getItem(sessionKey)) {
+          response = await API.incrementMonthlyViews(monthKey);
+          sessionStorage.setItem(sessionKey, "true");
+        } else {
+          response = await API.getMonthlyViews(monthKey);
+        }
+
+        setCount(Number(response?.views || 0));
+      } catch {
+        setCount(null);
       }
-      setCount(current);
-    } catch {
-      setCount(null);
-    }
+    };
+
+    loadMonthlyViews();
   }, []);
 
-  if (!count) return null;
+  if (count == null) return null;
 
   return (
     <span
@@ -43,7 +54,7 @@ function VisitorCount() {
           boxShadow: "0 0 5px #22c55e",
         }}
       />
-      {count.toLocaleString("en-IN")} visitors
+      {count.toLocaleString("en-IN")} views this month
     </span>
   );
 }

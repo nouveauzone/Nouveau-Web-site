@@ -171,6 +171,15 @@ const apiService = {
 	updateProfile: (data) => request("/users/profile", { method: "PUT", body: JSON.stringify(data) }),
 	addAddress: (data) => request("/users/addresses", { method: "POST", body: JSON.stringify(data) }),
 	deleteAddress: (addressId) => request(`/users/addresses/${addressId}`, { method: "DELETE" }),
+
+	getMonthlyViews: (month) => {
+		const q = month ? `?month=${encodeURIComponent(month)}` : "";
+		return request(`/metrics/views${q}`);
+	},
+	incrementMonthlyViews: (month) => request("/metrics/views", {
+		method: "POST",
+		body: JSON.stringify(month ? { month } : {}),
+	}),
 };
 
 export default apiService;

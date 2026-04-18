@@ -125,6 +125,7 @@ app.use("/api/reviews",  require("./routes/reviews"));
 app.use("/api/email",    require("./routes/email"));
 app.use("/api/health",   require("./routes/health"));
 app.use("/api/whatsapp", require("./routes/whatsapp"));
+app.use("/api/metrics",  require("./routes/metrics"));
 
 // ── Health check ────────────────────────────────────────────────────────────
 app.get("/", (req, res) => res.json({ message:"Nouveau™ API v2 running 🪷", status:"ok" }));
