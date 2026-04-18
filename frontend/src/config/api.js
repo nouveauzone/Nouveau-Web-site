@@ -12,9 +12,10 @@ const normalizeApiBase = (value) => {
 		try {
 			const configured = new URL(normalized);
 			const currentHost = window.location.host;
+			const isLocalHost = /^(localhost|127\.0\.0\.1)(:\d+)?$/i.test(currentHost);
 
-			// If a stale CloudFront domain is baked into the bundle, prefer same-origin /api.
-			if (configured.hostname.endsWith("cloudfront.net") && configured.host !== currentHost) {
+			// In production, prefer same-origin /api and let the host proxy to the backend.
+			if (!isLocalHost && configured.host !== currentHost) {
 				return "";
 			}
 		} catch {
