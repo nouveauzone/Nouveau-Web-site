@@ -23,16 +23,19 @@ router.get(
     query("limit").optional().isInt({ min: 1, max: 200 }),
     validate,
   ],
-  asyncHandler(async (req, res) => {
-    res.set("Cache-Control", "no-store");
-    const { page = 1, limit = 20 } = req.query;
+  async (req, res) => {
+    try {
+      res.set("Cache-Control", "no-store");
+      const parsedLimit = Number.parseInt(req.query.limit, 10);
+      const limit = Number.isFinite(parsedLimit) && parsedLimit > 0 ? parsedLimit : 0;
 
-    const products = await Product.find()
-      .skip((page - 1) * limit)
-      .limit(Number(limit));
-
-    res.json(products.map(toSafeProduct));
-  })
+      const products = await Product.find({}).limit(limit);
+      res.json(products.map(toSafeProduct));
+    } catch (error) {
+      console.error("PRODUCT ERROR:", error);
+      res.status(500).json({ message: "Server Error" });
+    }
+  }
 );
 
 
