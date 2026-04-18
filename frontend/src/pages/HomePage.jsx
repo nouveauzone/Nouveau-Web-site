@@ -202,27 +202,6 @@ export default function HomePage({ setPage, setSelectedProduct }) {
         </div>
       </div>
 
-      {/* ── STATS ── */}
-      <div style={{ background:`linear-gradient(135deg, #3d1a20, #5c2630)`, padding:"clamp(40px, 8vw, 72px) clamp(16px, 5vw, 32px)" }}>
-        <style>{`
-          .stats-grid-responsive { grid-template-columns: repeat(4, 1fr); }
-          @media (max-width: 768px) {
-            .stats-grid-responsive { grid-template-columns: repeat(2, 1fr) !important; }
-          }
-          @media (max-width: 480px) {
-            .stats-grid-responsive { grid-template-columns: 1fr !important; }
-          }
-        `}</style>
-        <div style={{ maxWidth:"1200px", margin:"0 auto", display:"grid", gap:"2px" }} className="stats-grid-responsive">
-          {[["50,000+","Happy Customers"],["500+","Premium Styles"],["4.9/5","Average Rating"],["100%","Authentic Fabric"]].map(([n,l]) => (
-            <div key={l} style={{ textAlign:"center", padding:"clamp(16px, 3vw, 24px) clamp(6px, 2vw, 12px)", borderRight:"1px solid rgba(255,255,255,0.12)" }}>
-              <div style={{ fontFamily:"'Playfair Display',serif", fontSize:"clamp(22px,5vw,46px)", color:THEME.gold, fontWeight:900, lineHeight:1 }}>{n}</div>
-              <div style={{ fontFamily:"'Poppins',sans-serif", fontSize:"clamp(8px,1.5vw,10px)", letterSpacing:"2px", color:"rgba(255,255,255,0.65)", textTransform:"uppercase", marginTop:"10px" }}>{l}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
       <Footer setPage={setPage} />
     </div>
   );
