@@ -130,7 +130,6 @@ export default function Hero({ setPage }) {
               fontFamily: "'Poppins', sans-serif",
             }}
           >
-            hello
           </p>
 
           <div style={{ display: "flex", gap: "10px", marginTop: "20px", flexWrap: "wrap" }}>
