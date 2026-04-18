@@ -33,7 +33,11 @@ export function resolveImageUrl(src, fallback = "/ethnic1.jpeg") {
       const currentHost = typeof window !== "undefined" ? window.location.host : "";
 
       if (currentHost && parsed.host === currentHost) {
-        return parsed.pathname || fallback;
+        const sameHostPath = parsed.pathname || "";
+        if (sameHostPath.startsWith("/uploads/")) {
+          return sameHostPath.replace(/^\/uploads\//, "/") || fallback;
+        }
+        return sameHostPath || fallback;
       }
 
       const localPath = toLocalImagePath(value);
