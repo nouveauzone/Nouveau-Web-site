@@ -86,7 +86,7 @@ export default function OrderSuccessPage({ setPage }) {
           {/* Policy reminder */}
           <div style={{background:"#fff5f5",border:`1px solid ${CRIMSON}30`,borderRadius:"10px",padding:"14px 18px",marginBottom:"32px",textAlign:"left"}}>
             <p style={{fontFamily:"'Poppins',sans-serif",fontSize:"11px",color:THEME.textMuted,lineHeight:1.7}}>
-              <strong style={{color:CRIMSON}}>⚠️ No Return / No Exchange:</strong> All sales are final. For queries, WhatsApp <strong style={{color:GOLD}}>9427746289</strong>
+              <strong style={{color:CRIMSON}}>⚠️ No Return / No Exchange:</strong> All sales are final. For queries, WhatsApp <strong style={{color:GOLD}}>+91 7733881577</strong>
             </p>
           </div>
 

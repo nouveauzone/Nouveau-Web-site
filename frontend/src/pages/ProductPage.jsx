@@ -276,7 +276,7 @@ export default function ProductPage({ product, setPage }) {
                   All sales are final. We do not accept returns or exchanges once an order is placed. Please verify your size, colour, and product details carefully before purchasing.
                 </p>
                 <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"11px", color:THEME.textLight, marginTop:"8px" }}>
-                  For queries: WhatsApp <strong style={{color:"#D4AF37"}}>9427746289</strong>
+                  For queries: WhatsApp <strong style={{color:"#D4AF37"}}>+91 7733881577</strong>
                 </p>
               </div>
             </div>
