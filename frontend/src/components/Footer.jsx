@@ -91,10 +91,7 @@ export default function Footer({ setPage }) {
           <div style={{ fontFamily: "'Playfair Display',serif", fontSize: "28px", color: "#fff", letterSpacing: "3px", margin: "16px 0 6px" }}>
             nouveau<span style={{ color: "#C9A227" }}>™</span>
           </div>
-          <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "9px", letterSpacing: "6px", color: THEME.gold }}>OWN YOUR AURA</p>
-          <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "12px", color: "rgba(255,255,255,0.55)", marginTop: "12px" }}>
-            Indian Ethnic Wear · Indian Premium Western Wear · Women's Wear
-          </p>
+          <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "9px", letterSpacing: "6px", color: THEME.gold }}>Wear Your Aura</p>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: "48px", marginBottom: "48px" }} className="footer-grid">

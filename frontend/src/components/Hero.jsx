@@ -133,11 +133,6 @@ export default function Hero({ setPage }) {
           </p>
 
           <div style={{ display: "flex", gap: "10px", marginTop: "20px", flexWrap: "wrap" }}>
-            {["Premium Fabrics", "Curated Fits", "Women Only"].map((label) => (
-              <span key={label} style={{ fontFamily: "'Poppins',sans-serif", fontSize: "10px", letterSpacing: "2px", color: THEME.textMuted, background: "rgba(255,255,255,0.72)", border: `1px solid ${THEME.border}`, padding: "7px 10px", borderRadius: "999px" }}>
-                {label}
-              </span>
-            ))}
           </div>
 
           <div className="hero-btn-row" style={{ marginTop: "28px", display: "flex", gap: "12px", flexWrap: "wrap" }}>

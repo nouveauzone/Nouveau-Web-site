@@ -111,9 +111,6 @@ export default function HomePage({ setPage, setSelectedProduct }) {
                 <h3 style={{ fontFamily:"'Playfair Display',serif", fontSize:"clamp(24px,3vw,38px)", fontWeight:700, color:"#fff", lineHeight:1.2, marginBottom:"10px" }}>
                   Indian Premium<br />Western Wear
                 </h3>
-                <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"13px", color:"rgba(255,255,255,0.75)", marginBottom:"20px", lineHeight:1.6 }}>
-                  Dresses · Blazers · Trousers · Jumpsuits · Co-Ords · Tops
-                </p>
                 <div style={{ display:"inline-flex", alignItems:"center", gap:"8px", color:THEME.goldLight, fontFamily:"'Poppins',sans-serif", fontSize:"12px", fontWeight:700, letterSpacing:"2px" }}>
                   EXPLORE <Icons.Arrow />
                 </div>

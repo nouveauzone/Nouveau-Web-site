@@ -26,7 +26,7 @@ export default function AboutPage({ setPage }) {
           <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:"32px", fontWeight:700, marginBottom:"16px" }}>All About Us</h2>
           <OrnamentDivider />
           <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"16px", color:THEME.textMuted, lineHeight:1.85, marginBottom:"20px" }}>
-            Nouveau is a contemporary ethnic wear label for women, founded in 2025 by Jinal Mehta. The brand embodies fresh design thinking while staying rooted in Indian traditions, offering chic, comfortable, and elegant outfits that redefine everyday ethnic fashion with a perfect balance of heritage and modernity.
+            Nouveau is a contemporary ethnic wear label for women, founded in 2025 by Team Jinal. The brand embodies fresh design thinking while staying rooted in Indian traditions, offering chic, comfortable, and elegant outfits that redefine everyday ethnic fashion with a perfect balance of heritage and modernity.
           </p>
           <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"16px", color:THEME.textMuted, lineHeight:1.85 }}>
             Which inspired by the idea of "newness" and evolving fashion identity. The brand beautifully blends traditional Indian aesthetics with contemporary silhouettes, offering elegant, high-quality designs that celebrate femininity, culture, and confidence for the modern woman.

@@ -16,9 +16,8 @@ export default function ShippingPage({ setPage }) {
       <div style={{ maxWidth:"900px", margin:"0 auto", padding:"60px 40px" }}>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"20px", marginBottom:"56px" }} className="grid-2col">
           {[
-            { icon:"🚚", label:"Standard Delivery", value:"5–7 Business Days", note:"Free above ₹2,999 · ₹99 below" },
-            { icon:"⚡", label:"Express Delivery", value:"2–3 Business Days", note:"₹199 flat rate" },
-            { icon:"📦", label:"Same Day Delivery", value:"Select cities only", note:"₹299 · Order before 12 PM" },
+            { icon:"🚚", label:"Standard Delivery", value:"5–7 Business Days", note:"Free above ₹2,499" },
+            { icon:"⚡", label:"Express Delivery", value:"2–3 Business Days", note:"₹500 flat rate" },
           ].map(({ icon, label, value, note }) => (
             <div key={label} style={{ background:THEME.bgCard, border:`1px solid ${THEME.border}`, borderRadius:"14px", padding:"28px 20px", textAlign:"center" }}>
               <div style={{ fontSize:"32px", marginBottom:"10px" }}>{icon}</div>
