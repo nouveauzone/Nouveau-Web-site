@@ -42,7 +42,7 @@ router.get(
   "/all",
   protect, admin,
   [
-    query("status").optional().isIn(["Placed","Processing","Shipped","Out for Delivery","Delivered","Cancelled"]),
+    query("status").optional().isIn(["Awaiting Payment Verification","Placed","Processing","Shipped","Out for Delivery","Delivered","Cancelled"]),
     query("page").optional().isInt({ min: 1 }),
     query("limit").optional().isInt({ min: 1, max: 200 }),
     validate,
@@ -55,7 +55,7 @@ router.put(
   protect, admin,
   [
     param("id").isMongoId(),
-    body("status").isIn(["Placed","Processing","Shipped","Out for Delivery","Delivered","Cancelled"]),
+    body("status").isIn(["Awaiting Payment Verification","Placed","Processing","Shipped","Out for Delivery","Delivered","Cancelled"]),
     validate,
   ],
   updateOrderStatus
@@ -67,7 +67,7 @@ router.put(
   protect, admin,
   [
     param("id").isMongoId(),
-    body("status").isIn(["Placed","Processing","Shipped","Out for Delivery","Delivered","Cancelled"]),
+    body("status").isIn(["Awaiting Payment Verification","Placed","Processing","Shipped","Out for Delivery","Delivered","Cancelled"]),
     validate,
   ],
   updateOrderStatus

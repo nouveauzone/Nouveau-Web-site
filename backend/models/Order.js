@@ -30,7 +30,7 @@ const orderSchema = new mongoose.Schema(
     // ── Status ──────────────────────────────────────────────────────────────
     orderStatus: {
       type: String,
-      enum: ["Placed", "Processing", "Shipped", "Out for Delivery", "Delivered", "Cancelled"],
+      enum: ["Awaiting Payment Verification", "Placed", "Processing", "Shipped", "Out for Delivery", "Delivered", "Cancelled"],
       default: "Placed",
     },
     statusHistory: { type: [statusHistorySchema], default: [] },
@@ -68,7 +68,11 @@ const orderSchema = new mongoose.Schema(
 // Auto-push "Placed" to statusHistory on first save
 orderSchema.pre("save", function (next) {
   if (this.isNew) {
-    this.statusHistory.push({ status: "Placed", message: "Order placed successfully." });
+    const defaultMessage = this.orderStatus === "Awaiting Payment Verification"
+      ? "Order received. Waiting for UPI payment verification."
+      : "Order placed successfully.";
+
+    this.statusHistory.push({ status: this.orderStatus, message: defaultMessage });
     const est = new Date();
     est.setDate(est.getDate() + 7);
     this.estimatedDelivery = est;

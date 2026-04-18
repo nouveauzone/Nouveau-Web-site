@@ -8,7 +8,16 @@ import { BtnPrimary } from "../components/Buttons";
 import API from "../services/apiService";
 import { resolveImageUrl } from "../utils/imageUrl";
 
-const STATUS_COLORS = { Placed:{bg:"#fff3cd",text:"#856404"}, Processing:{bg:"#cce5ff",text:"#004085"}, Shipped:{bg:"#d4edda",text:"#155724"}, "Out for Delivery":{bg:"#ffe8cc",text:"#7a4100"}, Delivered:{bg:"#d1ecf1",text:"#0c5460"}, Cancelled:{bg:"#f8d7da",text:"#721c24"} };
+const ORDER_STATUSES = ["Awaiting Payment Verification","Placed","Processing","Shipped","Out for Delivery","Delivered","Cancelled"];
+const STATUS_COLORS = {
+  "Awaiting Payment Verification": { bg:"#fff7e6", text:"#d97706" },
+  Placed:{bg:"#fff3cd",text:"#856404"},
+  Processing:{bg:"#cce5ff",text:"#004085"},
+  Shipped:{bg:"#d4edda",text:"#155724"},
+  "Out for Delivery":{bg:"#ffe8cc",text:"#7a4100"},
+  Delivered:{bg:"#d1ecf1",text:"#0c5460"},
+  Cancelled:{bg:"#f8d7da",text:"#721c24"}
+};
 function StatusBadge({ status }) {
   const c = STATUS_COLORS[status]||{bg:"#eee",text:"#333"};
   return <span style={{ background:c.bg, color:c.text, padding:"4px 12px", borderRadius:"99px", fontSize:"10px", fontFamily:"'Poppins',sans-serif", fontWeight:700, letterSpacing:"1px", textTransform:"uppercase", whiteSpace:"nowrap" }}>{status}</span>;
@@ -494,7 +503,7 @@ export default function AdminPage({ setPage }) {
             <div style={{ display:"grid", gridTemplateColumns:twoCol, gap:"20px", marginBottom:"20px" }}>
               <div style={{ background:THEME.bgCard, border:`1px solid ${THEME.border}`, borderRadius:"14px", padding:sectionPadding }}>
                 <h3 style={{ fontFamily:"'Poppins',sans-serif", fontSize:"11px", letterSpacing:"3px", color:THEME.crimson, fontWeight:700, marginBottom:"20px" }}>ORDER STATUS</h3>
-                {["Placed","Processing","Shipped","Out for Delivery","Delivered","Cancelled"].map(st => {
+                {ORDER_STATUSES.map(st => {
                   const count = allOrders.filter(o=>getOrderStatus(o)===st).length;
                   const pct   = allOrders.length ? Math.round(count/allOrders.length*100) : 0;
                   const c = STATUS_COLORS[st];
@@ -700,7 +709,15 @@ export default function AdminPage({ setPage }) {
                       <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"2px", color:THEME.crimson, fontWeight:700, marginBottom:"10px" }}>STATUS HISTORY</p>
                       {[...selectedOrder.statusHistory].reverse().map((h,i)=>(
                         <div key={i} style={{ display:"flex", gap:"10px", alignItems:"flex-start", padding:"8px 0", borderBottom:`1px solid ${THEME.border}` }}>
-                          <span style={{ fontSize:"16px" }}>{"📋⚙️🚀🛵✅❌".split("")[["Placed","Processing","Shipped","Out for Delivery","Delivered","Cancelled"].indexOf(h.status)]||"📋"}</span>
+                          <span style={{ fontSize:"16px" }}>{{
+                            "Awaiting Payment Verification": "⏳",
+                            Placed: "📋",
+                            Processing: "⚙️",
+                            Shipped: "🚀",
+                            "Out for Delivery": "🛵",
+                            Delivered: "✅",
+                            Cancelled: "❌",
+                          }[h.status] || "📋"}</span>
                           <div style={{ flex:1 }}>
                             <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"12px", fontWeight:700, color:THEME.text }}>{h.status}</p>
                             {h.message && <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"11px", color:THEME.textMuted }}>{h.message}</p>}
@@ -716,12 +733,12 @@ export default function AdminPage({ setPage }) {
                     onChange={e=>handleUpdateOrderStatus(selectedOrder._id, e.target.value)}
                     style={{ width:"100%", background:THEME.bg, border:`1.5px solid ${THEME.crimson}`, color:THEME.text, padding:"11px 14px", fontSize:"13px", outline:"none", fontFamily:"'Poppins',sans-serif", borderRadius:"8px", marginBottom:"12px", cursor:"pointer" }}
                   >
-                    {["Placed","Processing","Shipped","Out for Delivery","Delivered","Cancelled"].map(st=>(
+                    {ORDER_STATUSES.map(st=>(
                       <option key={st} value={st}>{st}</option>
                     ))}
                   </select>
                   <div style={{ display:"flex", gap:"8px", flexWrap:"wrap", marginBottom:"12px" }}>
-                    {["Placed","Processing","Shipped","Out for Delivery","Delivered","Cancelled"].map(st => (
+                    {ORDER_STATUSES.map(st => (
                       <button key={st} onClick={()=>handleUpdateOrderStatus(selectedOrder._id,st)}
                         style={{ background:getOrderStatus(selectedOrder)===st?THEME.crimson:"transparent", color:getOrderStatus(selectedOrder)===st?"#fff":THEME.textMuted, border:`1.5px solid ${getOrderStatus(selectedOrder)===st?THEME.crimson:THEME.border}`, padding:"7px 12px", borderRadius:"99px", cursor:"pointer", fontFamily:"'Poppins',sans-serif", fontSize:"10px", fontWeight:600 }}>
                         {st}
@@ -739,7 +756,7 @@ export default function AdminPage({ setPage }) {
               <input placeholder="🔍 Search order ID, customer, city…" value={orderSearch} onChange={e=>setOrderSearch(e.target.value)} style={{ ...iStyle, flex:1, minWidth:isMobile?"0":"200px", fontSize:"16px" }} />
               <select value={orderFilter} onChange={e=>setOrderFilter(e.target.value)} style={{ ...iStyle, width:isMobile?"100%":"auto" }}>
                 <option value="all">All Statuses</option>
-                {["Placed","Processing","Shipped","Out for Delivery","Delivered","Cancelled"].map(s=><option key={s} value={s}>{s.charAt(0).toUpperCase()+s.slice(1)}</option>)}
+                {ORDER_STATUSES.map(s=><option key={s} value={s}>{s.charAt(0).toUpperCase()+s.slice(1)}</option>)}
               </select>
             </div>
             <div style={{ background:THEME.bgCard, border:`1px solid ${THEME.border}`, borderRadius:"14px", overflow:"hidden" }}>

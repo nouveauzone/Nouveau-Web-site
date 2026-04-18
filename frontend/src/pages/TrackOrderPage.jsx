@@ -18,6 +18,7 @@ const getAuthHeader = () => {
 const STATUS_STEPS = ["Placed", "Processing", "Shipped", "Out for Delivery", "Delivered"];
 
 const STATUS_CONFIG = {
+  "Awaiting Payment Verification": { color: "#d97706", bg: "#d9770615", icon: "⏳", label: "Awaiting Payment Verification" },
   Placed:             { color: "#D4AF37", bg: "#D4AF3715", icon: "📋", label: "Placed" },
   Processing:         { color: "#2196F3", bg: "#2196F315", icon: "⚙️",  label: "Processing" },
   Shipped:            { color: "#9C27B0", bg: "#9C27B015", icon: "🚀", label: "Shipped" },
@@ -27,6 +28,7 @@ const STATUS_CONFIG = {
 };
 
 function getStepIndex(status) {
+  if (status === "Awaiting Payment Verification") return -1;
   const idx = STATUS_STEPS.indexOf(status);
   return idx === -1 ? 0 : idx;
 }
@@ -34,7 +36,9 @@ function getStepIndex(status) {
 // ── Progress Bar ──────────────────────────────────────────────────────────────
 function ProgressBar({ status }) {
   const currentIdx  = getStepIndex(status);
+  const progressIdx = Math.max(currentIdx, 0);
   const isCancelled = status === "Cancelled";
+  const isAwaitingPayment = status === "Awaiting Payment Verification";
   return (
     <div style={{ background: THEME.bgCard, border: `1px solid ${THEME.border}`, borderRadius: "16px", padding: "32px 28px", marginBottom: "20px" }}>
       <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"3px", color:THEME.crimson, fontWeight:700, marginBottom:"28px" }}>ORDER PROGRESS</p>
@@ -43,10 +47,16 @@ function ProgressBar({ status }) {
           <span style={{ fontSize:"40px" }}>❌</span>
           <p style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, color:THEME.crimson, marginTop:"12px" }}>Order Cancelled</p>
         </div>
+      ) : isAwaitingPayment ? (
+        <div style={{ textAlign:"center", padding:"20px 0" }}>
+          <span style={{ fontSize:"40px" }}>⏳</span>
+          <p style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, color:"#d97706", marginTop:"12px" }}>Awaiting Payment Verification</p>
+          <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textMuted, marginTop:"6px" }}>Order will be confirmed after UPI payment is verified.</p>
+        </div>
       ) : (
         <div style={{ position:"relative" }}>
           <div style={{ position:"absolute", top:"18px", left:"0", right:"0", height:"4px", background:THEME.border, zIndex:0, borderRadius:"99px", margin:"0 32px" }}>
-            <div style={{ height:"100%", width:`${(currentIdx/(STATUS_STEPS.length-1))*100}%`, background:`linear-gradient(to right,${THEME.crimson},#D4AF37)`, borderRadius:"99px", transition:"width 1s ease" }} />
+            <div style={{ height:"100%", width:`${(progressIdx/(STATUS_STEPS.length-1))*100}%`, background:`linear-gradient(to right,${THEME.crimson},#D4AF37)`, borderRadius:"99px", transition:"width 1s ease" }} />
           </div>
           <div style={{ display:"flex", justifyContent:"space-between", position:"relative", zIndex:1 }}>
             {STATUS_STEPS.map((step, i) => {
@@ -114,6 +124,7 @@ function StatusTimeline({ history }) {
 // ── Order Info ────────────────────────────────────────────────────────────────
 function OrderCard({ order }) {
   const cfg     = STATUS_CONFIG[order.orderStatus] || STATUS_CONFIG.Placed;
+  const isAwaitingPayment = order.orderStatus === "Awaiting Payment Verification";
   const estDate = order.estimatedDelivery
     ? new Date(order.estimatedDelivery).toLocaleDateString("en-IN", { day:"numeric", month:"long", year:"numeric" })
     : "5–7 business days";
@@ -122,7 +133,6 @@ function OrderCard({ order }) {
     <>
       {/* Status Banner */}
       <div style={{ background:`linear-gradient(135deg,${cfg.color}25,${cfg.color}08)`, border:`1.5px solid ${cfg.color}50`, borderRadius:"16px", padding:"20px 24px", display:"flex", alignItems:"center", gap:"16px", marginBottom:"20px" }}>
-        <span style={{ fontSize:"36px" }}>{cfg.icon}</span>
         <div style={{ flex:1 }}>
           <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"2px", color:cfg.color, fontWeight:700 }}>ORDER STATUS</p>
           <p style={{ fontFamily:"'Playfair Display',serif", fontSize:"22px", fontWeight:700, color:cfg.color }}>{cfg.label.toUpperCase()}</p>
@@ -143,7 +153,7 @@ function OrderCard({ order }) {
           ["💰 Total",      `₹${(order.total||0).toLocaleString("en-IN")}`],
           ["💳 Payment",    order.paymentMethod || "COD"],
           ["📅 Ordered",    new Date(order.createdAt).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"})],
-          ["🚚 Est. Delivery", order.orderStatus==="Delivered"?"✅ Delivered":estDate],
+          ["🚚 Est. Delivery", isAwaitingPayment ? "After payment verification" : order.orderStatus==="Delivered"?"✅ Delivered":estDate],
           ["📦 Items",      `${order.items?.length||0} item(s)`],
         ].map(([label, value]) => (
           <div key={label} style={{ background:THEME.bgCard, border:`1px solid ${THEME.border}`, borderRadius:"12px", padding:"14px 18px" }}>
@@ -195,7 +205,16 @@ function OrderCard({ order }) {
       )}
 
       {/* Delivery callout */}
-      {order.orderStatus!=="Delivered" && order.orderStatus!=="Cancelled" && (
+      {isAwaitingPayment && (
+        <div style={{ background:"#fff7e6", border:"1px solid #ffd8a8", borderRadius:"12px", padding:"16px 20px", display:"flex", gap:"14px", alignItems:"center" }}>
+          <span style={{ fontSize:"24px" }}>⏳</span>
+          <div>
+            <p style={{ fontFamily:"'Poppins',sans-serif", fontWeight:700, color:"#d97706", fontSize:"13px" }}>Payment Verification Pending</p>
+            <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textMuted }}>Once payment is verified, order confirmation and dispatch timeline will begin.</p>
+          </div>
+        </div>
+      )}
+      {!isAwaitingPayment && order.orderStatus!=="Delivered" && order.orderStatus!=="Cancelled" && (
         <div style={{ background:"#D4AF3710", border:"1px solid #D4AF3735", borderRadius:"12px", padding:"16px 20px", display:"flex", gap:"14px", alignItems:"center" }}>
           <span style={{ fontSize:"24px" }}>🚚</span>
           <div>

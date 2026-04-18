@@ -13,12 +13,16 @@ exports.createOrder = asyncHandler(async (req, res) => {
   if (!items?.length) return res.status(400).json({ message: "No items in order" });
 
   const totals = calculateOrderTotals(items, couponCode);
+  const normalizedPaymentMethod = String(paymentMethod || "COD").toUpperCase();
+  const isUpiOrder = normalizedPaymentMethod === "UPI";
+  const initialStatus = isUpiOrder ? "Awaiting Payment Verification" : "Placed";
 
   const order = await Order.create({
     user: req.user._id,
     items,
     shippingAddress,
-    paymentMethod: paymentMethod || "COD",
+    paymentMethod: normalizedPaymentMethod,
+    orderStatus: initialStatus,
     couponCode:    totals.couponCode,
     subtotal:      totals.subtotal,
     discount:      totals.discount,
@@ -26,31 +30,37 @@ exports.createOrder = asyncHandler(async (req, res) => {
     total:         totals.total,
   });
 
-  // Send confirmation email (non-blocking)
-  try {
-    await sendOrderEmail({
-      to: shippingAddress.email || req.user.email,
-      subject: `Order Confirmed #${order.trackingId} — Nouveau™ 🪷`,
-      html: orderConfirmHTML(order, req.user),
-    });
-  } catch (e) { console.log("Order email error:", e.message); }
+  // Confirm only after payment verification for UPI orders.
+  if (!isUpiOrder) {
+    try {
+      await sendOrderEmail({
+        to: shippingAddress.email || req.user.email,
+        subject: `Order Confirmed #${order.trackingId} — Nouveau™ 🪷`,
+        html: orderConfirmHTML(order, req.user),
+      });
+    } catch (e) { console.log("Order email error:", e.message); }
 
-  // Send WhatsApp confirmation (non-blocking)
-  const phone = shippingAddress?.phone || req.user?.phone;
-  if (phone) {
-    sendOrderConfirmation({
-      phone,
-      customerName: shippingAddress?.name || req.user?.name || "Customer",
-      trackingId:   order.trackingId,
-      orderId:      order._id,
-      total:        order.total,
-      items:        order.items || [],
-    }).catch(e => console.log("WhatsApp order confirm error:", e.message));
+    const phone = shippingAddress?.phone || req.user?.phone;
+    if (phone) {
+      sendOrderConfirmation({
+        phone,
+        customerName: shippingAddress?.name || req.user?.name || "Customer",
+        trackingId:   order.trackingId,
+        orderId:      order._id,
+        total:        order.total,
+        items:        order.items || [],
+      }).catch(e => console.log("WhatsApp order confirm error:", e.message));
+    }
   }
+
+  const trackingUrl = `${process.env.CLIENT_URL || "http://localhost:3000"}/track/${order.trackingId}`;
+  const userFacingMessage = isUpiOrder
+    ? `UPI payment received request. Order will be confirmed after payment verification.\nTracking ID: ${order.trackingId}\nTrack here: ${trackingUrl}`
+    : `Your order is confirmed! 🎉\nTracking ID: ${order.trackingId}\nTrack here: ${trackingUrl}`;
 
   res.status(201).json({
     ...normalizeOrderOutput(order.toObject()),
-    whatsappMessage: `Your order is confirmed! 🎉\nTracking ID: ${order.trackingId}\nTrack here: ${process.env.CLIENT_URL || "http://localhost:3000"}/track/${order.trackingId}`,
+    whatsappMessage: userFacingMessage,
   });
 });
 
@@ -67,7 +77,10 @@ exports.trackOrder = asyncHandler(async (req, res) => {
 
   // Build WhatsApp message
   const trackingURL = `${process.env.CLIENT_URL || "http://localhost:3000"}/track/${order.trackingId}`;
-  order.whatsappMessage = `Your order is confirmed! 🎉\nTracking ID: ${order.trackingId}\nTrack here: ${trackingURL}`;
+  const isAwaitingPayment = order.orderStatus === "Awaiting Payment Verification";
+  order.whatsappMessage = isAwaitingPayment
+    ? `UPI payment under verification. Order confirmation will be shared once payment is verified.\nTracking ID: ${order.trackingId}\nTrack here: ${trackingURL}`
+    : `Your order is confirmed! 🎉\nTracking ID: ${order.trackingId}\nTrack here: ${trackingURL}`;
 
   res.json(normalizeOrderOutput(order));
 });
@@ -77,7 +90,7 @@ exports.trackOrder = asyncHandler(async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 exports.updateOrderStatus = asyncHandler(async (req, res) => {
   const { status, message } = req.body;
-  const VALID = ["Placed", "Processing", "Shipped", "Out for Delivery", "Delivered", "Cancelled"];
+  const VALID = ["Awaiting Payment Verification", "Placed", "Processing", "Shipped", "Out for Delivery", "Delivered", "Cancelled"];
 
   if (!VALID.includes(status)) {
     return res.status(400).json({ message: `Invalid status. Must be one of: ${VALID.join(", ")}` });
@@ -86,9 +99,44 @@ exports.updateOrderStatus = asyncHandler(async (req, res) => {
   const order = await Order.findById(req.params.id);
   if (!order) return res.status(404).json({ message: "Order not found" });
 
+  const isUpiOrder = String(order.paymentMethod || "").toUpperCase() === "UPI";
+  const needsPaymentVerification = isUpiOrder && order.paymentStatus !== "paid";
+
+  let statusMessage = message || `Order status updated to ${status}`;
+  let paymentJustVerified = false;
+
+  if (needsPaymentVerification && !["Awaiting Payment Verification", "Cancelled"].includes(status)) {
+    order.paymentStatus = "paid";
+    order.paymentId = order.paymentId || `MANUAL-UPI-${Date.now()}`;
+    paymentJustVerified = true;
+    statusMessage = message || `UPI payment verified. Order moved to ${status}.`;
+  }
+
   order.orderStatus = status;
-  order.statusHistory.push({ status, message: message || `Order status updated to ${status}` });
+  order.statusHistory.push({ status, message: statusMessage });
   await order.save();
+
+  if (paymentJustVerified) {
+    try {
+      await sendOrderEmail({
+        to: order.shippingAddress?.email,
+        subject: `Order Confirmed #${order.trackingId} — Nouveau™ 🪷`,
+        html: orderConfirmHTML(order, { name: order.shippingAddress?.name || "Customer" }),
+      });
+    } catch (e) { console.log("Order confirm email error:", e.message); }
+
+    const phone = order.shippingAddress?.phone;
+    if (phone) {
+      sendOrderConfirmation({
+        phone,
+        customerName: order.shippingAddress?.name || "Customer",
+        trackingId:   order.trackingId,
+        orderId:      order._id,
+        total:        order.total,
+        items:        order.items || [],
+      }).catch(e => console.log("WhatsApp order confirm error:", e.message));
+    }
+  }
 
   // Send shipped email
   if (status === "Shipped") {

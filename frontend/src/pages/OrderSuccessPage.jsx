@@ -18,6 +18,9 @@ export default function OrderSuccessPage({ setPage }) {
 
   const order = myOrders?.find(o=>o._id===orderId);
   const trackingId = order?.trackingId || localStorage.getItem("lastTrackingId") || "";
+  const isAwaitingPayment =
+    order?.orderStatus === "Awaiting Payment Verification" &&
+    String(order?.paymentMethod || "").toUpperCase() === "UPI";
 
   return (
     <div style={{background:THEME.bg,minHeight:"100vh",color:THEME.text,display:"flex",flexDirection:"column"}}>
@@ -40,10 +43,12 @@ export default function OrderSuccessPage({ setPage }) {
           </div>
 
           <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(28px,5vw,42px)",fontWeight:700,color:THEME.text,marginBottom:"12px",lineHeight:1.2}}>
-            Order Placed Successfully! 🎉
+            {isAwaitingPayment ? "Order Received!" : "Order Placed Successfully! 🎉"}
           </h1>
           <p style={{fontFamily:"'Poppins',sans-serif",fontSize:"14px",color:THEME.textMuted,lineHeight:1.8,marginBottom:"8px"}}>
-            Thank you for shopping with <strong style={{color:GOLD}}>Nouveau™</strong>. Your order has been confirmed.
+            {isAwaitingPayment
+              ? <>Thank you for shopping with <strong style={{color:GOLD}}>Nouveau™</strong>. Your UPI payment is under verification. Order confirmation will be shared once payment is verified.</>
+              : <>Thank you for shopping with <strong style={{color:GOLD}}>Nouveau™</strong>. Your order has been confirmed.</>}
           </p>
 
           {(orderId || trackingId) && (
@@ -68,11 +73,19 @@ export default function OrderSuccessPage({ setPage }) {
           {/* What's next */}
           <div style={{background:THEME.bgCard,border:`1px solid ${THEME.border}`,borderRadius:"16px",padding:"24px",marginBottom:"32px",textAlign:"left"}}>
             <p style={{fontFamily:"'Poppins',sans-serif",fontSize:"10px",letterSpacing:"3px",color:GOLD,marginBottom:"18px",fontWeight:700,textAlign:"center"}}>WHAT HAPPENS NEXT</p>
-            {[
-              ["📦","Order Confirmed","Your order is confirmed and being prepared"],
-              ["🚚","Dispatch","Will be dispatched within 1-3 business days"],
-              ["🏠","Delivery","Expected delivery in 5-7 business days"],
-            ].map(([ic,title,desc],i)=>(
+            {(
+              isAwaitingPayment
+                ? [
+                    ["⏳","Payment Verification","Our team verifies your UPI payment"],
+                    ["📦","Order Confirmation","Order gets confirmed after payment verification"],
+                    ["🚚","Dispatch","After confirmation, dispatch starts in 1-3 business days"],
+                  ]
+                : [
+                    ["📦","Order Confirmed","Your order is confirmed and being prepared"],
+                    ["🚚","Dispatch","Will be dispatched within 1-3 business days"],
+                    ["🏠","Delivery","Expected delivery in 5-7 business days"],
+                  ]
+            ).map(([ic,title,desc],i)=>(
               <div key={i} style={{display:"flex",gap:"14px",alignItems:"flex-start",marginBottom:i<2?"16px":0}}>
                 <div style={{width:"40px",height:"40px",borderRadius:"10px",background:"#fffbf0",border:`1px solid rgba(201,162,39,0.2)`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"18px",flexShrink:0}}>{ic}</div>
                 <div>
