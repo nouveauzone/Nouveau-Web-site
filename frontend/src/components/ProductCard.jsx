@@ -1,4 +1,4 @@
-import { useContext, useMemo } from "react";
+import { memo, useContext, useMemo } from "react";
 import { WishlistContext } from "../context/WishlistContext";
 import { CartContext } from "../context/CartContext";
 import Icons from "./Icons";
@@ -13,22 +13,34 @@ const safeText = (value, fallback = "") => {
   return raw;
 };
 
-export default function ProductCard({ product, setPage, setSelectedProduct }) {
+function ProductCard({ product, setPage, setSelectedProduct }) {
   const { wishlist, toggleWishlist } = useContext(WishlistContext);
   const { dispatch: cartDispatch } = useContext(CartContext);
 
   const wished = wishlist.some((item) => item._id === product._id);
 
-  const title = safeText(product.title, "Nouveau Signature Piece");
-  const subtitle = safeText(product.subcategory, "Womenswear");
-  const image = resolveImageUrl(product.images?.[0], "/ethnic1.jpeg");
+  const { title, subtitle, category, image, price, originalPrice, rating, reviewCount, hasDiscount } = useMemo(() => {
+    const nextTitle = safeText(product.title, "Nouveau Signature Piece");
+    const nextSubtitle = safeText(product.subcategory, "Womenswear");
+    const nextCategory = safeText(product.category, "Nouveau Collection");
+    const nextImage = resolveImageUrl(product.images?.[0], "/ethnic1.jpeg");
+    const nextPrice = Number(product.price) || 0;
+    const nextOriginalPrice = Number(product.originalPrice) || nextPrice;
+    const nextRating = Number(product.rating) || 0;
+    const nextReviewCount = Array.isArray(product.reviews) ? product.reviews.length : Number(product.reviews) || 0;
 
-  const price = Number(product.price) || 0;
-  const originalPrice = Number(product.originalPrice) || price;
-  const rating = Number(product.rating) || 0;
-  const reviewCount = Array.isArray(product.reviews) ? product.reviews.length : Number(product.reviews) || 0;
-
-  const hasDiscount = useMemo(() => originalPrice > price, [originalPrice, price]);
+    return {
+      title: nextTitle,
+      subtitle: nextSubtitle,
+      category: nextCategory,
+      image: nextImage,
+      price: nextPrice,
+      originalPrice: nextOriginalPrice,
+      rating: nextRating,
+      reviewCount: nextReviewCount,
+      hasDiscount: nextOriginalPrice > nextPrice,
+    };
+  }, [product]);
 
   const goToProduct = () => {
     setSelectedProduct(product);
@@ -65,7 +77,8 @@ export default function ProductCard({ product, setPage, setSelectedProduct }) {
       </div>
 
       <div className="sf-product-body">
-        {(rating > 0 || reviewCount > 0) && <StarRating rating={rating} count={reviewCount} />}
+        <p className="sf-product-cat">{category}</p>
+        <StarRating rating={rating} count={reviewCount} />
 
         <h3 className="sf-product-title" onClick={goToProduct}>{title}</h3>
         <p className="sf-product-sub">{subtitle}</p>
@@ -83,3 +96,5 @@ export default function ProductCard({ product, setPage, setSelectedProduct }) {
     </article>
   );
 }
+
+export default memo(ProductCard);

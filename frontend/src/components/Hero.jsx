@@ -117,7 +117,7 @@ export default function Hero({ setPage }) {
               color: "transparent",
             }}
           >
-            Own Your Aura
+            Wear Your Aura
           </h1>
           <p
             style={{
