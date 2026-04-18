@@ -160,17 +160,93 @@ export default function CheckoutPage({ setPage }) {
       setPage("Auth");
       return;
     }
+
+    if (payMethod === "UPI" && !upiConfirmed) {
+      alert("Pehle UPI payment complete karo aur checkbox tick karo ✅");
+      return;
+    }
+
     setProcessing(true);
     try {
-      await new Promise(r => setTimeout(r, 1500));
+      const apiBase = (process.env.REACT_APP_API_URL || "/api").replace(/\/$/, "");
+
+      if (payMethod === "Razorpay") {
+        const token = localStorage.getItem("nouveau_token");
+        const rpRes = await fetch(`${apiBase}/payments/razorpay/create-order`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ amount: total }),
+        });
+
+        if (!rpRes.ok) {
+          throw new Error("Razorpay order create nahi hua");
+        }
+
+        const rpData = await rpRes.json();
+
+        const options = {
+          key: process.env.REACT_APP_RAZORPAY_KEY_ID,
+          amount: rpData.amount,
+          currency: "INR",
+          name: "Nouveau™",
+          description: "Fashion Order",
+          order_id: rpData.orderId,
+          prefill: { name: address.name, email: address.email, contact: address.phone },
+          theme: { color: "#C9A227" },
+          handler: async function (response) {
+            try {
+              const oid = await placeOrder(address, cart, "Razorpay");
+
+              await fetch(`${apiBase}/payments/razorpay/verify`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${localStorage.getItem("nouveau_token")}`,
+                },
+                body: JSON.stringify({
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                  orderId: oid,
+                }),
+              });
+
+              cartDispatch({ type: "CLEAR" });
+              localStorage.setItem("lastOrderId", oid);
+              setPage("OrderSuccess");
+            } catch (err) {
+              console.error("Razorpay verification failed:", err);
+              alert("Payment ho gaya, lekin order verify nahi hua. Support se contact karo.");
+            } finally {
+              setProcessing(false);
+            }
+          },
+          modal: { ondismiss: () => setProcessing(false) },
+        };
+
+        if (!window.Razorpay) {
+          throw new Error("Razorpay SDK load nahi hua");
+        }
+
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+        return;
+      }
+
       const oid = await placeOrder(address, cart, payMethod);
-      cartDispatch({ type:"CLEAR" });
+      cartDispatch({ type: "CLEAR" });
       localStorage.setItem("lastOrderId", oid);
       setPage("OrderSuccess");
     } catch (err) {
       console.error("Order failed:", err);
+      alert("Order fail ho gaya. Dobara try karo.");
     } finally {
-      setProcessing(false);
+      if (payMethod !== "Razorpay") {
+        setProcessing(false);
+      }
     }
   };
 
