@@ -72,6 +72,7 @@ router.post(
     const { email, password } = req.body;
     if (!email || !password) return res.status(400).json({ message:"Email and password required" });
     const user = await User.findOne({ email }).select("+password");
+    let needsUserSave = false;
 
     if (!user) return res.status(401).json({ message:"Invalid email or password" });
 
@@ -88,7 +89,7 @@ router.post(
       passwordMatches = storedPassword === password;
       if (passwordMatches) {
         user.password = password;
-        await user.save();
+        needsUserSave = true;
       }
     }
 
@@ -98,12 +99,20 @@ router.post(
       const isBootstrapAdmin = normalizedEmail === ADMIN_EMAIL && user.role === "admin";
       if (isBootstrapAdmin && ADMIN_PASSWORD_CANDIDATES.includes(password)) {
         user.password = password;
-        await user.save();
+        needsUserSave = true;
         passwordMatches = true;
       }
     }
 
     if (!passwordMatches) return res.status(401).json({ message:"Invalid email or password" });
+
+    user.lastLogin = new Date();
+    user.loginCount = Number(user.loginCount || 0) + 1;
+    needsUserSave = true;
+
+    if (needsUserSave) {
+      await user.save();
+    }
 
     res.json({ _id:user._id, name:user.name, email:user.email, role:user.role, phone:user.phone, addresses:user.addresses, token:genToken(user._id) });
   })

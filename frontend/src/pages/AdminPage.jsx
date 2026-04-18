@@ -832,7 +832,7 @@ export default function AdminPage({ setPage }) {
                 <table style={{ width:"100%", borderCollapse:"collapse" }}>
                   <thead>
                     <tr style={{ background:THEME.bgDark }}>
-                      {["Customer","Email","Phone","Location","Joined","Role","Actions"].map(h=>(
+                      {["Customer","Email","Phone","Location","Last Login","Logins","Role","Actions"].map(h=>(
                         <th key={h} style={{ padding:"11px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"9px", letterSpacing:"2px", textTransform:"uppercase", color:THEME.textLight, textAlign:"left", borderBottom:`1px solid ${THEME.border}`, whiteSpace:"nowrap" }}>{h}</th>
                       ))}
                     </tr>
@@ -851,7 +851,8 @@ export default function AdminPage({ setPage }) {
                         <td style={{ padding:"13px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textMuted }}>{u.email}</td>
                         <td style={{ padding:"13px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textMuted, whiteSpace:"nowrap" }}>{u.phone||"—"}</td>
                         <td style={{ padding:"13px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textMuted, whiteSpace:"nowrap" }}>📍{u.addresses?.[0]?.city||u.city||"—"}, {u.addresses?.[0]?.state||u.state||"—"}</td>
-                        <td style={{ padding:"13px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"11px", color:THEME.textLight, whiteSpace:"nowrap" }}>{u.createdAt?new Date(u.createdAt).toLocaleDateString("en-IN",{month:"short",year:"numeric"}):u.joined||"—"}</td>
+                        <td style={{ padding:"13px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"11px", color:THEME.textLight, whiteSpace:"nowrap" }}>{u.lastLogin?new Date(u.lastLogin).toLocaleString("en-IN",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}):"Never"}</td>
+                        <td style={{ padding:"13px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"11px", color:THEME.textLight, whiteSpace:"nowrap" }}>{Number(u.loginCount||0)}</td>
                         <td style={{ padding:"13px 14px" }}><span style={{ background:u.role==="admin"?`${THEME.crimson}15`:`${THEME.gold}15`, color:u.role==="admin"?THEME.crimson:THEME.goldDark, padding:"3px 10px", borderRadius:"99px", fontSize:"10px", fontFamily:"'Poppins',sans-serif", fontWeight:700 }}>{u.role?.toUpperCase()||"USER"}</span></td>
                         <td style={{ padding:"13px 14px" }}>
                           <div style={{ display:"flex", gap:"5px" }}>
@@ -873,3 +874,5 @@ export default function AdminPage({ setPage }) {
     </div>
   );
 }
+                      { label: "Last Login", value: selectedUser.lastLogin ? new Date(selectedUser.lastLogin).toLocaleString("en-IN",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}) : "Never" },
+                      { label: "Login Count", value: Number(selectedUser.loginCount || 0) },

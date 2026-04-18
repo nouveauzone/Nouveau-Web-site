@@ -16,6 +16,8 @@ const userSchema = new mongoose.Schema({
   password:    { type:String, required:true, minlength:6 },
   phone:       { type:String, default:"" },
   role:        { type:String, enum:["user","admin"], default:"user" },
+  lastLogin:   { type:Date, default:null },
+  loginCount:  { type:Number, default:0 },
   addresses:   [addressSchema],
   wishlist:    [{ type:mongoose.Schema.Types.ObjectId, ref:"Product" }],
   isVerified:  { type:Boolean, default:false },
