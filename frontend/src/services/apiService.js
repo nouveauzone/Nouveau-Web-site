@@ -1,4 +1,15 @@
 import API from "../config/api";
+import { PRODUCTS as INITIAL_PRODUCTS } from "../data/products";
+
+const normalizeProduct = (product) => ({
+	...product,
+	images: Array.isArray(product?.images) && product.images.length ? product.images : ["/ethnic1.jpeg"],
+	price: Number(product?.price) || 0,
+	originalPrice: Number(product?.originalPrice) || Number(product?.price) || 0,
+	stock: product?.stock != null ? Number(product.stock) : 10,
+	rating: Number(product?.rating) || 0,
+	discount: Number(product?.discount) || 0,
+});
 
 const normalizeFallback = (value) => {
 	const raw = String(value || "").trim();
@@ -129,7 +140,9 @@ const apiService = {
 
 	getProducts: (params = {}) => {
 		const q = new URLSearchParams(params).toString();
-		return request(`/products${q ? `?${q}` : ""}`, { cache: "no-store" });
+		return request(`/products${q ? `?${q}` : ""}`, { cache: "no-store" }).catch(() => {
+			return INITIAL_PRODUCTS.map(normalizeProduct);
+		});
 	},
 	getProduct: (id) => request(`/products/${id}`),
 	createProduct: (data) => request("/products", { method: "POST", body: JSON.stringify(data) }),
