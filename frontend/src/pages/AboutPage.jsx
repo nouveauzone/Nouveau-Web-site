@@ -14,7 +14,7 @@ export default function AboutPage({ setPage }) {
         <div style={{ position:"relative", zIndex:1 }}>
           <div style={{ display:"flex", justifyContent:"center", marginBottom:"24px" }}><NouveauLogo size={72} bg={true} /></div>
           <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:"clamp(40px,7vw,80px)", fontWeight:900, color:"#fff", marginBottom:"16px" }}>Our Story</h1>
-          <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"16px", color:"rgba(255,255,255,0.9)", fontWeight:600, letterSpacing:"2px", marginBottom:"8px" }}>Nouveau — By Jinal Mehta</p>
+          <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"16px", color:"rgba(255,255,255,0.9)", fontWeight:600, letterSpacing:"2px", marginBottom:"8px" }}>Nouveau — By Jinal & Team</p>
           <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"16px", color:"rgba(255,255,255,0.7)", fontStyle:"italic", maxWidth:"600px", margin:"0 auto", lineHeight:1.7 }}>Where Tradition Meets Modern Elegance</p>
         </div>
       </div>
