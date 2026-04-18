@@ -27,7 +27,7 @@ export function resolveImageUrl(src, fallback = "/ethnic1.jpeg") {
 
     return value;
   }
-  if (value.startsWith("/uploads/")) return `${BASE_URL}${value}`;
-  if (value.startsWith("uploads/")) return `${BASE_URL}/${value}`;
+  if (value.startsWith("/uploads/")) return value.replace(/^\/uploads\//, "/");
+  if (value.startsWith("uploads/")) return `/${value.replace(/^uploads\//, "")}`;
   return value;
 }
