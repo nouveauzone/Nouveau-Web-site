@@ -2,6 +2,7 @@ import { useReducer, useState, useEffect, createContext } from "react";
 import { AuthContext }     from "./AuthContext";
 import { CartContext }     from "./CartContext";
 import { WishlistContext } from "./WishlistContext";
+import { getShippingCharge } from "../data/constants";
 
 export const AppDataContext = createContext(null);
 export const ToastContext   = createContext(null);
@@ -132,7 +133,7 @@ export default function Providers({ children }) {
   // ── placeOrder — saves to backend AND local state ─────────────────────────
   const placeOrder = async (address, items, paymentMethod, paymentReference = "") => {
     const subtotal       = items.reduce((s,i) => s + i.price*i.qty, 0);
-    const shippingCharge = subtotal >= 2999 ? 0 : 199;
+    const shippingCharge = getShippingCharge(subtotal);
     const total          = subtotal + shippingCharge;
     const now            = new Date();
     const fmt = (d) => d.toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"});

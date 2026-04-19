@@ -4,6 +4,7 @@ import { THEME } from "../styles/theme";
 import { BtnOutline, BtnPrimary } from "../components/Buttons";
 import Footer from "../components/Footer";
 import { resolveImageUrl } from "../utils/imageUrl";
+import { getShippingCharge, SHIPPING_FREE_THRESHOLD } from "../data/constants";
 
 const GOLD    = "#C9A227";
 const CRIMSON = "#B71C1C";
@@ -12,7 +13,7 @@ export default function CartPage({ setPage }) {
   const { cart, dispatch } = useContext(CartContext);
 
   const subtotal = cart.reduce((s,i)=>s+i.price*i.qty,0);
-  const shipping  = subtotal>=2499?0:300;
+  const shipping  = getShippingCharge(subtotal);
   const total     = subtotal+shipping;
 
   if (!cart.length) return (
@@ -126,7 +127,7 @@ export default function CartPage({ setPage }) {
                 <span style={{fontFamily:"'Poppins',sans-serif",fontSize:"13px",color:THEME.textMuted}}>Shipping</span>
                 <span style={{fontFamily:"'Poppins',sans-serif",fontSize:"13px",color:shipping===0?"#2ecc71":THEME.text}}>{shipping===0?"FREE":`₹${shipping}`}</span>
               </div>
-              {shipping>0&&<p style={{fontFamily:"'Poppins',sans-serif",fontSize:"10px",color:THEME.textMuted,marginBottom:"8px",lineHeight:1.5}}>Add ₹{(2499-subtotal).toLocaleString("en-IN")} more for free shipping</p>}
+              {shipping>0&&<p style={{fontFamily:"'Poppins',sans-serif",fontSize:"10px",color:THEME.textMuted,marginBottom:"8px",lineHeight:1.5}}>Add ₹{(SHIPPING_FREE_THRESHOLD-subtotal).toLocaleString("en-IN")} more for free shipping</p>}
               {shipping===0&&<p style={{fontFamily:"'Poppins',sans-serif",fontSize:"10px",color:"#2ecc71",marginBottom:"8px"}}>🎉 You qualify for free shipping!</p>}
 
               <div style={{borderTop:`1px solid ${THEME.border}`,paddingTop:"16px",marginTop:"8px",marginBottom:"24px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>

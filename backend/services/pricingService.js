@@ -7,7 +7,7 @@ const calculateOrderTotals = (items = [], couponCode = "") => {
   const normalizedCoupon = normalizeCoupon(couponCode);
   const discountPct = COUPONS[normalizedCoupon] || 0;
   const discount = Math.round((subtotal * discountPct) / 100);
-  const shippingCharge = subtotal >= 2999 ? 0 : 199;
+  const shippingCharge = subtotal >= 2999 ? 0 : 300;
   const total = subtotal - discount + shippingCharge;
 
   return {

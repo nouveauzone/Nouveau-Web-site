@@ -1,6 +1,7 @@
 import { THEME } from "../styles/theme";
 import OrnamentDivider from "../components/OrnamentDivider";
 import Footer from "../components/Footer";
+import { SHIPPING_FREE_THRESHOLD } from "../data/constants";
 
 export default function ShippingPage({ setPage }) {
   return (
@@ -9,14 +10,14 @@ export default function ShippingPage({ setPage }) {
         <div style={{ maxWidth:"900px", margin:"0 auto" }}>
           <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"6px", color:THEME.gold, marginBottom:"10px", textTransform:"uppercase" }}>Fast & Safe</p>
           <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:"clamp(32px,5vw,52px)", fontWeight:700, color:"#fff" }}>Shipping Information</h1>
-          <p style={{ color:"rgba(255,255,255,0.6)", fontSize:"14px", marginTop:"8px", fontFamily:"'Poppins',sans-serif" }}>Pan-India delivery. Free shipping on orders above ₹2,999.</p>
+          <p style={{ color:"rgba(255,255,255,0.6)", fontSize:"14px", marginTop:"8px", fontFamily:"'Poppins',sans-serif" }}>Pan-India delivery. Free shipping on orders above ₹{SHIPPING_FREE_THRESHOLD.toLocaleString("en-IN")}.</p>
         </div>
       </div>
 
       <div style={{ maxWidth:"900px", margin:"0 auto", padding:"60px 40px" }}>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"20px", marginBottom:"56px" }} className="grid-2col">
           {[
-            { icon:"🚚", label:"Standard Delivery", value:"5–7 Business Days", note:"Free above ₹2,499" },
+            { icon:"🚚", label:"Standard Delivery", value:"5–7 Business Days", note:`Free above ₹${SHIPPING_FREE_THRESHOLD.toLocaleString("en-IN")}` },
             { icon:"⚡", label:"Express Delivery", value:"2–3 Business Days", note:"₹500 flat rate" },
           ].map(({ icon, label, value, note }) => (
             <div key={label} style={{ background:THEME.bgCard, border:`1px solid ${THEME.border}`, borderRadius:"14px", padding:"28px 20px", textAlign:"center" }}>

@@ -6,6 +6,7 @@ import { AuthContext } from "../context/AuthContext";
 import { THEME } from "../styles/theme";
 import { BtnOutline, BtnPrimary } from "../components/Buttons";
 import { resolveImageUrl } from "../utils/imageUrl";
+import { getShippingCharge } from "../data/constants";
 
 const GOLD    = "#C9A227";
 const CRIMSON = "#B71C1C";
@@ -139,7 +140,7 @@ export default function CheckoutPage({ setPage }) {
   const YOUR_UPI_NAME = "Nouveau Store";
 
   const subtotal = cart.reduce((s,i) => s + i.price * i.qty, 0);
-  const shipping  = subtotal >= 2500 ? 0 : 199;
+  const shipping  = getShippingCharge(subtotal);
   const total     = subtotal + shipping;
 
   const validate = () => {
