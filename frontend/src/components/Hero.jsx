@@ -1,5 +1,6 @@
 import heroImg from "../assets/images/banner.png";
 import { THEME } from "../styles/theme";
+import NouveauLogo from "./Logo";
 
 export default function Hero({ setPage }) {
   return (
@@ -73,6 +74,35 @@ export default function Hero({ setPage }) {
           background: "radial-gradient(circle at 18% 30%, rgba(212,175,55,0.10) 0%, transparent 24%), radial-gradient(circle at 8% 72%, rgba(183,110,121,0.08) 0%, transparent 20%), linear-gradient(to right, rgba(250,247,242,0.94), rgba(250,247,242,0.74), rgba(250,247,242,0.10), transparent)",
         }}
       />
+
+      <div
+        style={{
+          position: "absolute",
+          top: "clamp(70px, 12vh, 120px)",
+          right: "clamp(20px, 4vw, 48px)",
+          opacity: 0.22,
+          filter: "brightness(1.18) saturate(1.08)",
+          pointerEvents: "none",
+          zIndex: 2,
+        }}
+      >
+        <NouveauLogo size={110} />
+      </div>
+
+      <div
+        style={{
+          position: "absolute",
+          top: "clamp(70px, 12vh, 120px)",
+          left: "clamp(20px, 4vw, 48px)",
+          opacity: 0.22,
+          filter: "brightness(1.18) saturate(1.08)",
+          transform: "scaleX(-1)",
+          pointerEvents: "none",
+          zIndex: 2,
+        }}
+      >
+        <NouveauLogo size={110} />
+      </div>
 
       <div
         className="hero-wrap"
