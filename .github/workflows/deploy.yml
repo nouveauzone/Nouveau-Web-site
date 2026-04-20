@@ -1,0 +1,78 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup SSH
+        run: |
+          echo "${{ secrets.EC2_SSH_KEY }}" | tr -d '\r' > key.pem
+          chmod 600 key.pem
+
+      - name: Deploy to EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
+
+            set -e
+
+            echo "🚀 Starting Deployment..."
+
+            cd /home/ubuntu/Nouveau-Web-site || exit 1
+
+            # Sync repo
+            git fetch origin
+            git reset --hard origin/main
+            git clean -fd
+
+            # Fix permissions
+            sudo chown -R ubuntu:ubuntu /home/ubuntu/Nouveau-Web-site
+
+            # =========================
+            # 📦 BACKEND
+            # =========================
+            cd backend
+            npm install --production
+
+            # IMPORTANT: no delete, only restart
+            pm2 restart backend || pm2 start server.js --name backend
+            pm2 save
+
+            # =========================
+            # 🎨 FRONTEND
+            # =========================
+            cd ../frontend
+            npm install
+            npm run build
+
+            if [ ! -f build/index.html ]; then
+              echo "❌ Frontend build missing build/index.html"
+              exit 1
+            fi
+
+            # =========================
+            # 🔄 NGINX
+            # =========================
+            echo "📁 Updating Nginx files..."
+
+            sudo mkdir -p /var/www/html
+            sudo rm -rf /var/www/html/*
+            sudo cp -r build/. /var/www/html/
+
+            # =========================
+            # 🔄 RESTART NGINX
+            # =========================
+            echo "🔄 Restarting Nginx..."
+            sudo systemctl restart nginx
+
+            echo "✅ Deployment Complete!"
+
+          EOF
