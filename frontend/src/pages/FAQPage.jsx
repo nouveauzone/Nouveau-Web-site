@@ -4,7 +4,7 @@ import Footer from "../components/Footer";
 import { SHIPPING_FREE_THRESHOLD, SHIPPING_FEE } from "../data/constants";
 
 const FAQS = [
-  { q:"What are the two categories Nouveau™ offers?", a:"We offer Indian Ethnic Wear (kurtas, sarees, anarkalis, lehengas, sharara, suits, palazzos) and Indian Premium Western Wear (dresses, blazers, trousers, jumpsuits, co-ords, tops) — all exclusively for women." },
+  { q:"What are the two categories Nouveau™ offers?", a:"We offer Indian Ethnic Wear (kurtas, sarees, anarkalis, lehengas, sharara, suits, palazzos) and Indian Western Wear (dresses, blazers, trousers, jumpsuits, co-ords, tops) — all exclusively for women." },
   { q:"Do you offer free shipping?", a:`Yes! We offer free standard shipping on all orders above ₹${SHIPPING_FREE_THRESHOLD.toLocaleString("en-IN")}. Orders below that attract a flat shipping fee of ₹${SHIPPING_FEE.toLocaleString("en-IN")}.` },
   { q:"Can I return or exchange my order?", a:"Yes! We have a hassle-free 7-day return policy. All items must be unworn, unwashed, and in original packaging with tags attached. Size exchanges are accepted within 14 days." },
   { q:"How long does delivery take?", a:"Standard delivery takes 5–7 business days. Express delivery (2–3 days) is available at ₹500. Same-day delivery is available in select cities for orders placed before 12 PM." },

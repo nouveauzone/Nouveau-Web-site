@@ -6,7 +6,7 @@ import Footer from "../components/Footer";
 import API from "../services/apiService";
 import { SHIPPING_FREE_THRESHOLD } from "../data/constants";
 
-const CATS = ["All", "Indian Ethnic Wear", "Indian Premium Western Wear"];
+const CATS = ["All", "Indian Ethnic Wear", "Indian Western Wear"];
 
 const norm = (p) => ({
   ...p,
@@ -92,7 +92,7 @@ export default function ShopPage({ setPage, setSelectedProduct, initialCategory 
   if (sortBy === "discount")   filtered = [...filtered].sort((a,b) => b.discount - a.discount);
 
   const ethnicCount  = products.filter(p => p.category === "Indian Ethnic Wear").length;
-  const westernCount = products.filter(p => p.category === "Indian Premium Western Wear").length;
+  const westernCount = products.filter(p => p.category === "Indian Western Wear").length;
   const totalCount   = products.length;
 
   const clearFilters = () => { setCat("All"); setSearch(""); setMaxPrice(20000); setSortBy("featured"); };

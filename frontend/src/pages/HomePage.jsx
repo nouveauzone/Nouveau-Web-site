@@ -43,10 +43,10 @@ export default function HomePage({ setPage, setSelectedProduct }) {
   }, []);
 
   const ethnic = PRODUCTS.filter((p) => p.category === "Indian Ethnic Wear");
-  const western = PRODUCTS.filter((p) => p.category === "Indian Premium Western Wear");
+  const western = PRODUCTS.filter((p) => p.category === "Indian Western Wear");
   const newArrivals = PRODUCTS.filter((p) => p.isNew && p.category === "Indian Ethnic Wear").slice(0, 4);
 
-  const trendingBase = PRODUCTS.filter((p) => p.category === "Indian Premium Western Wear");
+  const trendingBase = PRODUCTS.filter((p) => p.category === "Indian Western Wear");
   const trendingFallback = PRODUCTS.filter((p) => !trendingBase.some((w) => w._id === p._id));
   const trending = [...trendingBase, ...trendingFallback].slice(0, 4);
 
@@ -95,7 +95,7 @@ export default function HomePage({ setPage, setSelectedProduct }) {
               </div>
             </div>
 
-            {/* Indian Premium Western Wear */}
+            {/* Indian Western Wear */}
             <div onClick={() => setPage("WesternWear")}
               style={{ position:"relative", borderRadius:"20px", overflow:"hidden", cursor:"pointer", minHeight:"420px", background:`linear-gradient(135deg, #2a1a00, #6b5000)`, display:"flex", flexDirection:"column", justifyContent:"flex-end", padding:"40px", transition:"transform 0.35s" }}
               onMouseEnter={e => e.currentTarget.style.transform="scale(1.015)"}

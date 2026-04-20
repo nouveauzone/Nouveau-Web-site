@@ -1,4 +1,4 @@
-export const CATEGORIES = ["All", "Indian Ethnic Wear", "Indian Premium Western Wear"];
+export const CATEGORIES = ["All", "Indian Ethnic Wear", "Indian Western Wear"];
 
 export const SHIPPING_FREE_THRESHOLD = 2999;
 export const SHIPPING_FEE = 99;

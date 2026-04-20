@@ -48,7 +48,7 @@ export default function App() {
       case "Home":         return <HomePage setPage={setPage} setSelectedProduct={setSelectedProduct} />;
       case "Shop":         return <ShopPage setPage={setPage} setSelectedProduct={setSelectedProduct} />;
       case "EthnicWear":   return <ShopPage setPage={setPage} setSelectedProduct={setSelectedProduct} initialCategory="Indian Ethnic Wear" />;
-      case "WesternWear":  return <ShopPage setPage={setPage} setSelectedProduct={setSelectedProduct} initialCategory="Indian Premium Western Wear" />;
+      case "WesternWear":  return <ShopPage setPage={setPage} setSelectedProduct={setSelectedProduct} initialCategory="Indian Western Wear" />;
       case "Product":      return <ProductPage product={selectedProduct} setPage={setPage} />;
       case "Cart":         return <CartPage setPage={setPage} />;
       case "Checkout":     return <CheckoutPage setPage={setPage} />;

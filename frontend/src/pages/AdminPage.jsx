@@ -67,7 +67,7 @@ function SalesChart({ orders }) {
 // ── Donut chart for category split ────────────────────────────────────────────
 function CategoryDonut({ products }) {
   const ethnic  = products.filter(p=>p.category==="Indian Ethnic Wear").length;
-  const western = products.filter(p=>p.category==="Indian Premium Western Wear").length;
+  const western = products.filter(p=>p.category==="Indian Western Wear").length;
   const total   = ethnic+western||1;
   const ethnicPct  = Math.round(ethnic/total*100);
   const westernPct = 100-ethnicPct;
@@ -130,7 +130,7 @@ const normalizeProduct = (product) => ({
   subcategory: cleanText(product.subcategory, "Women's Wear"),
   description: cleanText(product.description, "Elegant premium womenswear crafted with attention to detail and all-day comfort."),
   images: cleanImages(product.images),
-  category: product.category === "Indian Ethnic Wear" || product.category === "Indian Premium Western Wear" ? product.category : "Indian Ethnic Wear",
+  category: product.category === "Indian Ethnic Wear" || product.category === "Indian Western Wear" ? product.category : "Indian Ethnic Wear",
   price: Number(product.price) || 0,
   originalPrice: Number(product.originalPrice) || Number(product.price) || 0,
   stock: Number(product.stock) || 0,
@@ -599,7 +599,7 @@ export default function AdminPage({ setPage }) {
                     <label style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"2px", color:THEME.crimson, display:"block", marginBottom:"6px", fontWeight:700 }}>CATEGORY</label>
                     <select value={productForm.category} onChange={e=>setProductForm(f=>({...f,category:e.target.value}))} style={iStyle}>
                       <option>Indian Ethnic Wear</option>
-                      <option>Indian Premium Western Wear</option>
+                      <option>Indian Western Wear</option>
                     </select>
                   </div>
                   <div>

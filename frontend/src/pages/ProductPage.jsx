@@ -22,7 +22,7 @@ const cleanText = (value, fallback = "") => {
 };
 
 const cleanCategory = (value) => {
-  if (value === "Indian Ethnic Wear" || value === "Indian Premium Western Wear") return value;
+  if (value === "Indian Ethnic Wear" || value === "Indian Western Wear") return value;
   return "Nouveau Collection";
 };
 

@@ -50,7 +50,7 @@ router.post(
               <p style="font-size:28px;font-weight:bold;margin:8px 0;letter-spacing:4px">NOUVEAU10</p>
               <p style="margin:0;font-size:13px;opacity:0.85">10% off on your first order</p>
             </div>
-            <p style="color:#888;font-size:13px">Start exploring our two exclusive collections:<br>• Indian Ethnic Wear (Sarees, Lehengas, Anarkalis…)<br>• Indian Premium Western Wear (Dresses, Blazers, Jumpsuits…)</p>
+            <p style="color:#888;font-size:13px">Start exploring our two exclusive collections:<br>• Indian Ethnic Wear (Sarees, Lehengas, Anarkalis…)<br>• Indian Western Wear (Dresses, Blazers, Jumpsuits…)</p>
             <p style="color:#B76E79;font-size:12px;margin-top:32px">Team Nouveau™ · Own Your Aura</p>
           </div>
         `

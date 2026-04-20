@@ -65,7 +65,7 @@ export default function SizeGuidePage({ setPage }) {
           </table>
         </div>
 
-        <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:"28px", marginBottom:"8px" }}>Indian Premium Western Wear</h2>
+        <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:"28px", marginBottom:"8px" }}>Indian Western Wear</h2>
         <OrnamentDivider />
         <div style={{ overflowX:"auto", marginBottom:"48px" }}>
           <table style={{ width:"100%", borderCollapse:"collapse", background:THEME.bgCard, borderRadius:"12px", overflow:"hidden", border:`1px solid ${THEME.border}` }}>

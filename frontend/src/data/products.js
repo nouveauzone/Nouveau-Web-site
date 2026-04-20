@@ -1,6 +1,6 @@
 export const CATEGORIES_MAIN = [
   "Indian Ethnic Wear",
-  "Indian Premium Western Wear",
+  "Indian Western Wear",
 ];
 
 export const PRODUCTS = [
@@ -245,13 +245,13 @@ export const PRODUCTS = [
     discount: 23,
   },
 
-  // ── INDIAN PREMIUM WESTERN WEAR ──────────────────────────────────────────
+  // ── INDIAN WESTERN WEAR ──────────────────────────────────────────────────
   {
     _id: "w1",
     title: "Black Embellished Sequin Jumpsuit",
     price: 3300,
     originalPrice: 3300,
-    category: "Indian Premium Western Wear",
+    category: "Indian Western Wear",
     subcategory: "Jumpsuit",
     gender: "Women",
     images: ["/western2.jpeg"],
@@ -268,7 +268,7 @@ export const PRODUCTS = [
     title: "Ivory Silk Corset & Skirt Set",
     price: 3300,
     originalPrice: 3300,
-    category: "Indian Premium Western Wear",
+    category: "Indian Western Wear",
     subcategory: "Co-Ord Set",
     gender: "Women",
     images: ["/western1.jpeg"],

@@ -18,7 +18,7 @@ const products = [
     description: "Stylish western wear",
     price: 2499,
     originalPrice: 2499,
-    category: "Indian Premium Western Wear",
+    category: "Indian Western Wear",
     images: ["western1.jpg"],
     stock: 5,
     gender: "Women"
