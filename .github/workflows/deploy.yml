@@ -75,21 +75,22 @@ jobs:
             echo "📁 Updating Nginx files..."
 
             sudo mkdir -p /var/www/html
-            sudo rm -rf /var/www/html/*
-            sudo cp -r build/. /var/www/html/
+            sudo rsync -a --delete build/ /var/www/html/
 
             # =========================
             # 🔄 RESTART NGINX
             # =========================
-            echo "🔄 Restarting Nginx..."
-            sudo systemctl restart nginx
-
-            # Nginx + site smoke checks to catch hidden 500s
+            # Validate config before reload
             if ! sudo nginx -t; then
               echo "❌ nginx config test failed"
               sudo journalctl -u nginx -n 120 --no-pager || true
               exit 1
             fi
+
+            echo "🔄 Reloading Nginx..."
+            sudo systemctl reload nginx
+
+            # Nginx + site smoke checks to catch hidden 500s
 
             SITE_CODE=$(curl --max-time 12 -sS -o /tmp/nouveau-site-check.html -w "%{http_code}" -H "Host: nouveauz.com" http://127.0.0.1/ || echo "000")
             if [[ ! "$SITE_CODE" =~ ^(2|3) ]]; then
