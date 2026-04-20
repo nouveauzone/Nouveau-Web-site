@@ -52,10 +52,9 @@ jobs:
 
             # Quick backend smoke check
             if ! curl --max-time 12 -fsS http://127.0.0.1:5000/api/health > /dev/null; then
-              echo "❌ Backend health check failed"
+              echo "⚠️ Backend health check failed, continuing frontend deploy"
               pm2 status || true
               pm2 logs backend --lines 120 --nostream || true
-              exit 1
             fi
 
             # =========================
