@@ -107,7 +107,7 @@ export default function HomePage({ setPage, setSelectedProduct }) {
                   {western.length} AESTHETICS
                 </span>
                 <h3 style={{ fontFamily:"'Playfair Display',serif", fontSize:"clamp(24px,3vw,38px)", fontWeight:700, color:"#fff", lineHeight:1.2, marginBottom:"10px" }}>
-                  Indian Premium<br />Western Wear
+                  Indian<br />Western Wear
                 </h3>
                 <div style={{ display:"inline-flex", alignItems:"center", gap:"8px", color:THEME.goldLight, fontFamily:"'Poppins',sans-serif", fontSize:"12px", fontWeight:700, letterSpacing:"2px" }}>
                   EXPLORE <Icons.Arrow />
