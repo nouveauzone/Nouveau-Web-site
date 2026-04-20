@@ -46,6 +46,14 @@ jobs:
             pm2 restart backend || pm2 start server.js --name backend
             pm2 save
 
+            # Quick backend smoke check
+            if ! curl -fsS http://127.0.0.1:5000/api/health > /dev/null; then
+              echo "❌ Backend health check failed"
+              pm2 status || true
+              pm2 logs backend --lines 120 || true
+              exit 1
+            fi
+
             # =========================
             # 🎨 FRONTEND
             # =========================
@@ -72,6 +80,20 @@ jobs:
             # =========================
             echo "🔄 Restarting Nginx..."
             sudo systemctl restart nginx
+
+            # Nginx + site smoke checks to catch hidden 500s
+            if ! sudo nginx -t; then
+              echo "❌ nginx config test failed"
+              sudo journalctl -u nginx -n 120 --no-pager || true
+              exit 1
+            fi
+
+            if ! curl -fsS http://127.0.0.1/ > /dev/null; then
+              echo "❌ Nginx root check failed"
+              sudo systemctl status nginx --no-pager || true
+              sudo journalctl -u nginx -n 120 --no-pager || true
+              exit 1
+            fi
 
             echo "✅ Deployment Complete!"
 
