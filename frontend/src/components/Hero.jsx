@@ -40,18 +40,24 @@ export default function Hero({ setPage }) {
 
         .hero-title-wrap {
           position: relative;
-          display: inline-block;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          isolation: isolate;
+          padding: clamp(8px, 1.2vw, 14px) 0;
         }
 
         .hero-title-logo {
           position: absolute;
-          left: 52%;
-          top: 52%;
+          left: 50%;
+          top: 48%;
           transform: translate(-50%, -50%);
-          opacity: 0.16;
+          width: clamp(120px, 18vw, 200px);
+          height: auto;
+          opacity: 0.11;
           filter: saturate(1.2) contrast(1.05);
           pointer-events: none;
-          z-index: 0;
+          z-index: -1;
         }
 
         .hero-line {
@@ -141,8 +147,9 @@ export default function Hero({ setPage }) {
 
           .hero-title-logo {
             left: 50%;
-            top: 50%;
-            opacity: 0.14;
+            top: 46%;
+            width: clamp(92px, 34vw, 140px);
+            opacity: 0.09;
           }
 
           .hero-buttons {
@@ -163,7 +170,7 @@ export default function Hero({ setPage }) {
             <div className="hero-line" />
             <div className="hero-title-wrap">
               <div className="hero-title-logo" aria-hidden="true">
-                <NouveauLogo size={220} />
+                <NouveauLogo size={150} />
               </div>
               <h1 className="hero-title">Wear Your Aura</h1>
             </div>
