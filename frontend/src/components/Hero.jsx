@@ -78,30 +78,32 @@ export default function Hero({ setPage }) {
       <div
         style={{
           position: "absolute",
-          top: "clamp(70px, 12vh, 120px)",
-          right: "clamp(20px, 4vw, 48px)",
-          opacity: 0.22,
-          filter: "brightness(1.18) saturate(1.08)",
+          top: "clamp(155px, 24vh, 220px)",
+          right: "clamp(20px, 4vw, 52px)",
+          opacity: 0.42,
+          filter: "brightness(1.28) saturate(1.16) drop-shadow(0 8px 18px rgba(26,26,26,0.18))",
+          mixBlendMode: "multiply",
           pointerEvents: "none",
-          zIndex: 2,
+          zIndex: 7,
         }}
       >
-        <NouveauLogo size={110} />
+        <NouveauLogo size={168} />
       </div>
 
       <div
         style={{
           position: "absolute",
-          top: "clamp(70px, 12vh, 120px)",
-          left: "clamp(20px, 4vw, 48px)",
-          opacity: 0.22,
-          filter: "brightness(1.18) saturate(1.08)",
+          top: "clamp(155px, 24vh, 220px)",
+          left: "clamp(20px, 4vw, 52px)",
+          opacity: 0.42,
+          filter: "brightness(1.28) saturate(1.16) drop-shadow(0 8px 18px rgba(26,26,26,0.18))",
+          mixBlendMode: "multiply",
           transform: "scaleX(-1)",
           pointerEvents: "none",
-          zIndex: 2,
+          zIndex: 7,
         }}
       >
-        <NouveauLogo size={110} />
+        <NouveauLogo size={168} />
       </div>
 
       <div
