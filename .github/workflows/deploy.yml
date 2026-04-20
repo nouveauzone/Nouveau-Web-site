@@ -50,7 +50,7 @@ jobs:
             # 🎨 FRONTEND
             # =========================
             cd ../frontend
-            npm install
+            npm ci
             npm run build
 
             if [ ! -f build/index.html ]; then
@@ -63,15 +63,29 @@ jobs:
             # =========================
             echo "📁 Updating Nginx files..."
 
+            BUILD_TMP="/tmp/nouveau-build-$(date +%s)"
+            sudo mkdir -p "$BUILD_TMP"
+            sudo cp -r build/. "$BUILD_TMP/"
+
+            # Validate nginx config before touching live content
+            sudo nginx -t
+
+            # Atomic-ish deploy: backup existing content then replace
             sudo mkdir -p /var/www/html
+            if [ -d /var/www/html ] && [ "$(ls -A /var/www/html 2>/dev/null)" ]; then
+              sudo rm -rf /var/www/html_prev
+              sudo cp -r /var/www/html /var/www/html_prev
+            fi
             sudo rm -rf /var/www/html/*
-            sudo cp -r build/. /var/www/html/
+            sudo cp -r "$BUILD_TMP"/. /var/www/html/
+            sudo rm -rf "$BUILD_TMP"
 
             # =========================
             # 🔄 RESTART NGINX
             # =========================
             echo "🔄 Restarting Nginx..."
             sudo systemctl restart nginx
+            sudo systemctl --no-pager --full status nginx | head -n 30
 
             echo "✅ Deployment Complete!"
 
