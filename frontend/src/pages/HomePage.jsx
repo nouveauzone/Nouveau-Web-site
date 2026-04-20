@@ -81,7 +81,7 @@ export default function HomePage({ setPage, setSelectedProduct }) {
               onMouseEnter={e => e.currentTarget.style.transform="scale(1.015)"}
               onMouseLeave={e => e.currentTarget.style.transform="scale(1)"}>
               <div style={{ position:"absolute", inset:0, background:"linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 60%)", borderRadius:"20px" }} />
-              <div style={{ position:"absolute", top:"28px", right:"28px", opacity:0.15 }}><NouveauLogo size={120} /></div>
+              <div style={{ position:"absolute", top:"28px", right:"28px", opacity:0.32, filter:"brightness(1.35) saturate(1.1) drop-shadow(0 0 10px rgba(212,175,55,0.25))" }}><NouveauLogo size={120} /></div>
               <div style={{ position:"relative", zIndex:1 }}>
                 <span style={{ background:THEME.gold, color:"#fff", fontSize:"9px", letterSpacing:"3px", padding:"5px 14px", fontFamily:"'Poppins',sans-serif", fontWeight:700, borderRadius:"99px", display:"inline-block", marginBottom:"14px" }}>
                   {ethnic.length} AESTHETICS
@@ -101,7 +101,7 @@ export default function HomePage({ setPage, setSelectedProduct }) {
               onMouseEnter={e => e.currentTarget.style.transform="scale(1.015)"}
               onMouseLeave={e => e.currentTarget.style.transform="scale(1)"}>
               <div style={{ position:"absolute", inset:0, background:"linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 60%)", borderRadius:"20px" }} />
-              <div style={{ position:"absolute", top:"28px", right:"28px", opacity:0.12 }}><NouveauLogo size={120} /></div>
+              <div style={{ position:"absolute", top:"28px", right:"28px", opacity:0.32, filter:"brightness(1.35) saturate(1.1) drop-shadow(0 0 10px rgba(212,175,55,0.25))" }}><NouveauLogo size={120} /></div>
               <div style={{ position:"relative", zIndex:1 }}>
                 <span style={{ background:THEME.crimson, color:"#fff", fontSize:"9px", letterSpacing:"3px", padding:"5px 14px", fontFamily:"'Poppins',sans-serif", fontWeight:700, borderRadius:"99px", display:"inline-block", marginBottom:"14px" }}>
                   {western.length} AESTHETICS
