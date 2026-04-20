@@ -76,37 +76,6 @@ export default function Hero({ setPage }) {
       />
 
       <div
-        style={{
-          position: "absolute",
-          top: "clamp(110px, 16vh, 170px)",
-          right: "clamp(20px, 4vw, 52px)",
-          opacity: 0.92,
-          filter: "brightness(1.35) contrast(1.2) saturate(1.25) drop-shadow(0 10px 24px rgba(26,26,26,0.3))",
-          mixBlendMode: "normal",
-          pointerEvents: "none",
-          zIndex: 14,
-        }}
-      >
-        <NouveauLogo size={188} />
-      </div>
-
-      <div
-        style={{
-          position: "absolute",
-          top: "clamp(110px, 16vh, 170px)",
-          left: "clamp(20px, 4vw, 52px)",
-          opacity: 0.92,
-          filter: "brightness(1.35) contrast(1.2) saturate(1.25) drop-shadow(0 10px 24px rgba(26,26,26,0.3))",
-          mixBlendMode: "normal",
-          transform: "scaleX(-1)",
-          pointerEvents: "none",
-          zIndex: 14,
-        }}
-      >
-        <NouveauLogo size={188} />
-      </div>
-
-      <div
         className="hero-wrap"
         style={{
           position: "relative",
@@ -133,6 +102,27 @@ export default function Hero({ setPage }) {
             overflow: "hidden",
           }}
         >
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "0 clamp(24px, 5vw, 56px)",
+              pointerEvents: "none",
+              zIndex: 1,
+              opacity: 0.14,
+            }}
+          >
+            <div style={{ transform: "scaleX(-1)", filter: "brightness(1.2) saturate(1.15)" }}>
+              <NouveauLogo size={170} />
+            </div>
+            <div style={{ filter: "brightness(1.2) saturate(1.15)" }}>
+              <NouveauLogo size={170} />
+            </div>
+          </div>
+
           <div style={{ position: "absolute", inset: "auto -60px -70px auto", width: "220px", height: "220px", borderRadius: "50%", background: "radial-gradient(circle, rgba(212,175,55,0.16) 0%, transparent 70%)", pointerEvents: "none", animation: "floatSoft 6s ease-in-out infinite" }} />
 
           <div style={{ width: "64px", height: "2px", background: `linear-gradient(to right, ${THEME.crimson}, ${THEME.gold})`, marginBottom: "16px", animation: "pulseLine 4s ease-in-out infinite", position: "relative", zIndex: 4 }} />
