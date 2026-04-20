@@ -5,6 +5,10 @@ on:
     branches:
       - main
 
+concurrency:
+  group: deploy-ec2
+  cancel-in-progress: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -47,10 +51,10 @@ jobs:
             pm2 save
 
             # Quick backend smoke check
-            if ! curl -fsS http://127.0.0.1:5000/api/health > /dev/null; then
+            if ! curl --max-time 12 -fsS http://127.0.0.1:5000/api/health > /dev/null; then
               echo "❌ Backend health check failed"
               pm2 status || true
-              pm2 logs backend --lines 120 || true
+              pm2 logs backend --lines 120 --nostream || true
               exit 1
             fi
 
@@ -88,7 +92,7 @@ jobs:
               exit 1
             fi
 
-            SITE_CODE=$(curl -sS -o /tmp/nouveau-site-check.html -w "%{http_code}" -H "Host: nouveauz.com" http://127.0.0.1/ || echo "000")
+            SITE_CODE=$(curl --max-time 12 -sS -o /tmp/nouveau-site-check.html -w "%{http_code}" -H "Host: nouveauz.com" http://127.0.0.1/ || echo "000")
             if [[ "$SITE_CODE" =~ ^5 ]]; then
               echo "❌ Nginx site check failed with HTTP $SITE_CODE"
               sudo systemctl status nginx --no-pager || true
