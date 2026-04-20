@@ -3,6 +3,7 @@ import { AuthContext } from "../context/AuthContext";
 import { AppDataContext, ToastContext } from "../context/Providers";
 import { THEME } from "../styles/theme";
 import { PRODUCTS as INITIAL_PRODUCTS } from "../data/products";
+import { normalizeCategory } from "../data/constants";
 import NouveauLogo from "../components/Logo";
 import { BtnPrimary } from "../components/Buttons";
 import API from "../services/apiService";
@@ -124,19 +125,22 @@ const cleanImages = (images) => {
   return filtered.length ? filtered : ["/product1.jpeg"];
 };
 
-const normalizeProduct = (product) => ({
-  ...product,
-  title: cleanText(product.title, "Nouveau Signature Piece"),
-  subcategory: cleanText(product.subcategory, "Women's Wear"),
-  description: cleanText(product.description, "Elegant premium womenswear crafted with attention to detail and all-day comfort."),
-  images: cleanImages(product.images),
-  category: product.category === "Indian Ethnic Wear" || product.category === "Indian Western Wear" ? product.category : "Indian Ethnic Wear",
-  price: Number(product.price) || 0,
-  originalPrice: Number(product.originalPrice) || Number(product.price) || 0,
-  stock: Number(product.stock) || 0,
-  discount: Number(product.discount) || 0,
-  sizes: Array.isArray(product.sizes) && product.sizes.length ? product.sizes : ["S","M","L","XL"],
-});
+const normalizeProduct = (product) => {
+  const category = normalizeCategory(product.category);
+  return {
+    ...product,
+    title: cleanText(product.title, "Nouveau Signature Piece"),
+    subcategory: cleanText(product.subcategory, "Women's Wear"),
+    description: cleanText(product.description, "Elegant premium womenswear crafted with attention to detail and all-day comfort."),
+    images: cleanImages(product.images),
+    category: category === "Indian Ethnic Wear" || category === "Indian Western Wear" ? category : "Indian Ethnic Wear",
+    price: Number(product.price) || 0,
+    originalPrice: Number(product.originalPrice) || Number(product.price) || 0,
+    stock: Number(product.stock) || 0,
+    discount: Number(product.discount) || 0,
+    sizes: Array.isArray(product.sizes) && product.sizes.length ? product.sizes : ["S", "M", "L", "XL"],
+  };
+};
 
 export default function AdminPage({ setPage }) {
   const { dispatch: authDispatch, isAuthenticated, user } = useContext(AuthContext);

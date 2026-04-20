@@ -4,12 +4,13 @@ import { THEME } from "../styles/theme";
 import ProductCard from "../components/ProductCard";
 import Footer from "../components/Footer";
 import API from "../services/apiService";
-import { SHIPPING_FREE_THRESHOLD } from "../data/constants";
+import { SHIPPING_FREE_THRESHOLD, normalizeCategory } from "../data/constants";
 
 const CATS = ["All", "Indian Ethnic Wear", "Indian Western Wear"];
 
 const norm = (p) => ({
   ...p,
+  category: normalizeCategory(p.category),
   images: Array.isArray(p.images) && p.images.length ? p.images : ["/ethnic1.jpeg"],
   price: Number(p.price) || 0,
   originalPrice: Number(p.originalPrice) || Number(p.price) || 0,

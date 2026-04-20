@@ -9,7 +9,7 @@ import OrnamentDivider from "../components/OrnamentDivider";
 import { BtnOutline, BtnPrimary } from "../components/Buttons";
 import Footer from "../components/Footer";
 import API from "../services/apiService";
-import { SHIPPING_FREE_THRESHOLD } from "../data/constants";
+import { SHIPPING_FREE_THRESHOLD, normalizeCategory } from "../data/constants";
 
 export default function HomePage({ setPage, setSelectedProduct }) {
   const [PRODUCTS, setPRODUCTS] = useState([]);
@@ -42,11 +42,11 @@ export default function HomePage({ setPage, setSelectedProduct }) {
     });
   }, []);
 
-  const ethnic = PRODUCTS.filter((p) => p.category === "Indian Ethnic Wear");
-  const western = PRODUCTS.filter((p) => p.category === "Indian Western Wear");
-  const newArrivals = PRODUCTS.filter((p) => p.isNew && p.category === "Indian Ethnic Wear").slice(0, 4);
+  const ethnic = PRODUCTS.filter((p) => normalizeCategory(p.category) === "Indian Ethnic Wear");
+  const western = PRODUCTS.filter((p) => normalizeCategory(p.category) === "Indian Western Wear");
+  const newArrivals = PRODUCTS.filter((p) => p.isNew && normalizeCategory(p.category) === "Indian Ethnic Wear").slice(0, 4);
 
-  const trendingBase = PRODUCTS.filter((p) => p.category === "Indian Western Wear");
+  const trendingBase = PRODUCTS.filter((p) => normalizeCategory(p.category) === "Indian Western Wear");
   const trendingFallback = PRODUCTS.filter((p) => !trendingBase.some((w) => w._id === p._id));
   const trending = [...trendingBase, ...trendingFallback].slice(0, 4);
 
