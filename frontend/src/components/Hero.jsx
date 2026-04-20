@@ -38,6 +38,18 @@ export default function Hero({ setPage }) {
           overflow: hidden;
         }
 
+        .hero-logo-center {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          pointer-events: none;
+          z-index: 0;
+          opacity: 0.1;
+          filter: saturate(1.15) contrast(1.05);
+        }
+
         .hero-title-wrap {
           position: relative;
           display: inline-flex;
@@ -45,19 +57,7 @@ export default function Hero({ setPage }) {
           justify-content: center;
           isolation: isolate;
           padding: clamp(8px, 1.2vw, 14px) 0;
-        }
-
-        .hero-title-logo {
-          position: absolute;
-          left: 50%;
-          top: 48%;
-          transform: translate(-50%, -50%);
-          width: clamp(120px, 18vw, 200px);
-          height: auto;
-          opacity: 0.11;
-          filter: saturate(1.2) contrast(1.05);
-          pointer-events: none;
-          z-index: -1;
+          z-index: 1;
         }
 
         .hero-line {
@@ -85,6 +85,8 @@ export default function Hero({ setPage }) {
         }
 
         .hero-buttons {
+          position: relative;
+          z-index: 1;
           margin-top: 28px;
           display: flex;
           gap: 12px;
@@ -145,10 +147,7 @@ export default function Hero({ setPage }) {
             line-height: 1.2;
           }
 
-          .hero-title-logo {
-            left: 50%;
-            top: 46%;
-            width: clamp(92px, 34vw, 140px);
+          .hero-logo-center {
             opacity: 0.09;
           }
 
@@ -167,11 +166,11 @@ export default function Hero({ setPage }) {
       <div className="hero">
         <div className="hero-text">
           <div className="hero-card">
+            <div className="hero-logo-center" aria-hidden="true">
+              <NouveauLogo size={170} />
+            </div>
             <div className="hero-line" />
             <div className="hero-title-wrap">
-              <div className="hero-title-logo" aria-hidden="true">
-                <NouveauLogo size={150} />
-              </div>
               <h1 className="hero-title">Wear Your Aura</h1>
             </div>
 
