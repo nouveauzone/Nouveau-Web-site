@@ -88,10 +88,12 @@ jobs:
               exit 1
             fi
 
-            if ! curl -fsS http://127.0.0.1/ > /dev/null; then
-              echo "❌ Nginx root check failed"
+            SITE_CODE=$(curl -sS -o /tmp/nouveau-site-check.html -w "%{http_code}" -H "Host: nouveauz.com" http://127.0.0.1/ || echo "000")
+            if [[ "$SITE_CODE" =~ ^5 ]]; then
+              echo "❌ Nginx site check failed with HTTP $SITE_CODE"
               sudo systemctl status nginx --no-pager || true
               sudo journalctl -u nginx -n 120 --no-pager || true
+              tail -n 60 /tmp/nouveau-site-check.html || true
               exit 1
             fi
 
