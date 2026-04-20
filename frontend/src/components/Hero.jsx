@@ -94,21 +94,21 @@ export default function Hero({ setPage }) {
             transform: "translateY(-50%)",
             width: "min(700px, 94%)",
             maxWidth: "720px",
-            height: "clamp(260px, 40vw, 360px)",
+            height: "clamp(300px, 46vw, 430px)",
             pointerEvents: "none",
             zIndex: 1,
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            padding: "0 clamp(24px, 5vw, 56px)",
-            opacity: 0.2,
+            padding: "0 clamp(8px, 2vw, 18px)",
+            opacity: 0.46,
           }}
         >
-          <div style={{ transform: "scaleX(-1)", filter: "contrast(1.1) saturate(1.2)" }}>
-            <NouveauLogo size={180} />
+          <div style={{ transform: "translateX(-24px) scaleX(-1)", filter: "contrast(1.35) saturate(1.35) brightness(1.12) drop-shadow(0 8px 16px rgba(183,110,121,0.22))" }}>
+            <NouveauLogo size={300} />
           </div>
-          <div style={{ filter: "contrast(1.1) saturate(1.2)" }}>
-            <NouveauLogo size={180} />
+          <div style={{ transform: "translateX(24px)", filter: "contrast(1.35) saturate(1.35) brightness(1.12) drop-shadow(0 8px 16px rgba(183,110,121,0.22))" }}>
+            <NouveauLogo size={300} />
           </div>
         </div>
 
