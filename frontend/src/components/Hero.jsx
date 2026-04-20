@@ -78,32 +78,32 @@ export default function Hero({ setPage }) {
       <div
         style={{
           position: "absolute",
-          top: "clamp(155px, 24vh, 220px)",
+          top: "clamp(110px, 16vh, 170px)",
           right: "clamp(20px, 4vw, 52px)",
-          opacity: 0.42,
-          filter: "brightness(1.28) saturate(1.16) drop-shadow(0 8px 18px rgba(26,26,26,0.18))",
-          mixBlendMode: "multiply",
+          opacity: 0.92,
+          filter: "brightness(1.35) contrast(1.2) saturate(1.25) drop-shadow(0 10px 24px rgba(26,26,26,0.3))",
+          mixBlendMode: "normal",
           pointerEvents: "none",
-          zIndex: 7,
+          zIndex: 14,
         }}
       >
-        <NouveauLogo size={168} />
+        <NouveauLogo size={188} />
       </div>
 
       <div
         style={{
           position: "absolute",
-          top: "clamp(155px, 24vh, 220px)",
+          top: "clamp(110px, 16vh, 170px)",
           left: "clamp(20px, 4vw, 52px)",
-          opacity: 0.42,
-          filter: "brightness(1.28) saturate(1.16) drop-shadow(0 8px 18px rgba(26,26,26,0.18))",
-          mixBlendMode: "multiply",
+          opacity: 0.92,
+          filter: "brightness(1.35) contrast(1.2) saturate(1.25) drop-shadow(0 10px 24px rgba(26,26,26,0.3))",
+          mixBlendMode: "normal",
           transform: "scaleX(-1)",
           pointerEvents: "none",
-          zIndex: 7,
+          zIndex: 14,
         }}
       >
-        <NouveauLogo size={168} />
+        <NouveauLogo size={188} />
       </div>
 
       <div
@@ -134,21 +134,6 @@ export default function Hero({ setPage }) {
           }}
         >
           <div style={{ position: "absolute", inset: "auto -60px -70px auto", width: "220px", height: "220px", borderRadius: "50%", background: "radial-gradient(circle, rgba(212,175,55,0.16) 0%, transparent 70%)", pointerEvents: "none", animation: "floatSoft 6s ease-in-out infinite" }} />
-
-          <div
-            style={{
-              position: "absolute",
-              top: "14px",
-              left: "18px",
-              opacity: 0.28,
-              filter: "brightness(1.25) saturate(1.15) drop-shadow(0 6px 14px rgba(183,110,121,0.24))",
-              transform: "scaleX(-1)",
-              pointerEvents: "none",
-              zIndex: 2,
-            }}
-          >
-            <NouveauLogo size={132} />
-          </div>
 
           <div style={{ width: "64px", height: "2px", background: `linear-gradient(to right, ${THEME.crimson}, ${THEME.gold})`, marginBottom: "16px", animation: "pulseLine 4s ease-in-out infinite", position: "relative", zIndex: 4 }} />
           <h1
