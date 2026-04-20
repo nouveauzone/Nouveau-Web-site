@@ -1,172 +1,140 @@
 import heroImg from "../assets/images/banner.png";
 import { THEME } from "../styles/theme";
-import NouveauLogo from "./Logo";
 
 export default function Hero({ setPage }) {
   return (
-    <section
-      style={{
-        position: "relative",
-        width: "100%",
-        minHeight: "92vh",
-        overflow: "hidden",
-        display: "flex",
-        alignItems: "center",
-        background: `linear-gradient(90deg, rgba(250,247,242,0.96) 0%, rgba(250,247,242,0.72) 42%, rgba(250,247,242,0.12) 70%, rgba(250,247,242,0.0) 100%), url(${heroImg})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center top",
-      }}
-    >
+    <section className="hero-shell">
       <style>{`
-        @keyframes fadeUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+        .hero-shell {
+          width: 100%;
+          padding: clamp(28px, 6vw, 60px) clamp(16px, 5vw, 40px);
+          background: linear-gradient(180deg, #fffdfa 0%, #f7f3ee 100%);
         }
+
+        .hero {
+          max-width: 1400px;
+          margin: 0 auto;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: clamp(18px, 3vw, 36px);
+        }
+
+        .hero-text {
+          flex: 1;
+          min-width: 0;
+          max-width: 720px;
+        }
+
         .hero-card {
-          animation: fadeUp 1s ease;
+          background: rgba(255, 255, 255, 0.64);
+          border: 1px solid ${THEME.border};
+          border-radius: 22px;
+          padding: clamp(20px, 3.2vw, 40px);
+          box-shadow: 0 18px 44px rgba(26, 26, 26, 0.10);
+          backdrop-filter: blur(20px);
         }
 
-        @keyframes floatSoft {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-8px); }
+        .hero-line {
+          width: 86px;
+          height: 3px;
+          border-radius: 999px;
+          background: linear-gradient(to right, ${THEME.crimson}, ${THEME.gold});
+          margin-bottom: 16px;
         }
 
-        @keyframes pulseLine {
-          0%, 100% { opacity: 0.55; transform: scaleX(1); }
-          50% { opacity: 1; transform: scaleX(1.08); }
+        .hero-title {
+          font-family: 'Playfair Display', serif;
+          font-size: clamp(28px, 5vw, 56px);
+          line-height: 1.08;
+          font-weight: 700;
+          letter-spacing: -0.4px;
+          background: linear-gradient(to right, ${THEME.crimsonDark}, ${THEME.goldDark});
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+        }
+
+        .hero-buttons {
+          margin-top: 28px;
+          display: flex;
+          gap: 12px;
+          flex-wrap: wrap;
+        }
+
+        .hero-media {
+          flex: 1;
+          min-width: 0;
+          display: flex;
+          justify-content: flex-end;
+        }
+
+        .hero-image {
+          width: min(100%, 620px);
+          border-radius: 24px;
+          border: 1px solid ${THEME.border};
+          box-shadow: 0 16px 36px rgba(26, 26, 26, 0.12);
+          object-fit: cover;
+          aspect-ratio: 16 / 11;
         }
 
         @media (max-width: 768px) {
-          .hero-wrap {
-            padding: 0 16px !important;
+          .hero {
+            flex-direction: column;
+            gap: 18px;
+          }
+
+          .hero-media {
+            width: 100%;
+            order: 1;
+          }
+
+          .hero-image {
+            width: 100%;
+            border-radius: 18px;
+            aspect-ratio: 16 / 10;
+          }
+
+          .hero-text {
+            width: 100%;
+            max-width: 100%;
+            order: 2;
           }
 
           .hero-card {
-            max-width: 100% !important;
-            padding: 22px !important;
-            margin-left: 0 !important;
+            backdrop-filter: blur(8px);
+            padding: 20px;
+            text-align: center;
+          }
+
+          .hero-line {
+            margin: 0 auto 14px auto;
           }
 
           .hero-title {
-            font-size: clamp(34px, 10vw, 58px) !important;
+            font-size: clamp(28px, 8.8vw, 42px);
+            line-height: 1.2;
           }
 
-          .hero-btn-row {
-            flex-direction: column !important;
+          .hero-buttons {
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
           }
 
-          .hero-stats {
-            flex-wrap: wrap !important;
+          .hero-buttons button {
+            width: 100%;
           }
         }
       `}</style>
 
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: "radial-gradient(circle at 18% 30%, rgba(212,175,55,0.10) 0%, transparent 24%), radial-gradient(circle at 8% 72%, rgba(183,110,121,0.08) 0%, transparent 20%), linear-gradient(to right, rgba(250,247,242,0.94), rgba(250,247,242,0.74), rgba(250,247,242,0.10), transparent)",
-        }}
-      />
+      <div className="hero">
+        <div className="hero-text">
+          <div className="hero-card">
+            <div className="hero-line" />
+            <h1 className="hero-title">Wear Your Aura</h1>
 
-      <div
-        className="hero-wrap"
-        style={{
-          position: "relative",
-          zIndex: 10,
-          width: "100%",
-          maxWidth: "1400px",
-          margin: "0 auto",
-          padding: "0 clamp(16px, 5vw, 40px)",
-        }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            left: "0",
-            top: "50%",
-            transform: "translateY(-50%)",
-            width: "min(700px, 94%)",
-            maxWidth: "720px",
-            height: "clamp(300px, 46vw, 430px)",
-            pointerEvents: "none",
-            zIndex: 1,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "0 clamp(8px, 2vw, 18px)",
-            opacity: 0.46,
-          }}
-        >
-          <div style={{ transform: "translateX(-24px) scaleX(-1)", filter: "contrast(1.35) saturate(1.35) brightness(1.12) drop-shadow(0 8px 16px rgba(183,110,121,0.22))" }}>
-            <NouveauLogo size={300} />
-          </div>
-          <div style={{ transform: "translateX(24px)", filter: "contrast(1.35) saturate(1.35) brightness(1.12) drop-shadow(0 8px 16px rgba(183,110,121,0.22))" }}>
-            <NouveauLogo size={300} />
-          </div>
-        </div>
-
-        <div
-          className="hero-card"
-          style={{
-            width: "min(700px, 94%)",
-            maxWidth: "720px",
-            background: "rgba(255,255,255,0.52)",
-            border: `1px solid ${THEME.border}`,
-            borderRadius: "20px",
-            padding: "clamp(20px, 5vw, 38px)",
-            boxShadow: "0 18px 44px rgba(26,26,26,0.10)",
-            backdropFilter: "blur(12px)",
-            marginLeft: "0",
-            position: "relative",
-            overflow: "hidden",
-            zIndex: 3,
-          }}
-        >
-          <div style={{ position: "absolute", inset: "auto -60px -70px auto", width: "220px", height: "220px", borderRadius: "50%", background: "radial-gradient(circle, rgba(212,175,55,0.16) 0%, transparent 70%)", pointerEvents: "none", animation: "floatSoft 6s ease-in-out infinite" }} />
-
-          <div style={{ width: "64px", height: "2px", background: `linear-gradient(to right, ${THEME.crimson}, ${THEME.gold})`, marginBottom: "16px", animation: "pulseLine 4s ease-in-out infinite", position: "relative", zIndex: 4 }} />
-          <h1
-            className="hero-title"
-            style={{
-              fontFamily: "'Playfair Display', serif",
-              fontSize: "clamp(38px, 7vw, 68px)",
-              lineHeight: 0.92,
-              fontWeight: 600,
-              letterSpacing: "-0.6px",
-              background: `linear-gradient(to right, ${THEME.crimsonDark}, ${THEME.goldDark})`,
-              WebkitBackgroundClip: "text",
-              backgroundClip: "text",
-              color: "transparent",
-              position: "relative",
-              zIndex: 4,
-            }}
-          >
-            Wear Your Aura
-          </h1>
-          <p
-            style={{
-              marginTop: "16px",
-              fontSize: "13px",
-              letterSpacing: "3px",
-              textTransform: "uppercase",
-              fontWeight: 600,
-              color: THEME.crimson,
-              fontFamily: "'Poppins', sans-serif",
-            }}
-          >
-          </p>
-
-          <div style={{ display: "flex", gap: "10px", marginTop: "20px", flexWrap: "wrap" }}>
-          </div>
-
-          <div className="hero-btn-row" style={{ marginTop: "28px", display: "flex", gap: "12px", flexWrap: "wrap" }}>
+            <div className="hero-buttons">
             <button
               onClick={() => setPage("Shop")}
               style={{
@@ -220,10 +188,17 @@ export default function Hero({ setPage }) {
             >
               Explore Collection
             </button>
+            </div>
           </div>
         </div>
-      </div>
 
+        <div className="hero-media">
+          <picture style={{ width: "100%", display: "block" }}>
+            <source media="(max-width: 768px)" srcSet={heroImg} />
+            <img className="hero-image" src={heroImg} alt="Nouveau hero" loading="eager" decoding="async" />
+          </picture>
+        </div>
+      </div>
     </section>
   );
 }
