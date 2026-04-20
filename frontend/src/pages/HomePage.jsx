@@ -167,14 +167,7 @@ export default function HomePage({ setPage, setSelectedProduct }) {
               <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at 30% 30%, rgba(212,175,55,0.3), transparent 60%)` }} />
               <NouveauLogo size={180} />
             </div>
-            <div style={{ position:"absolute", bottom:"-20px", left:"-40px", background:THEME.bgCard, padding:"18px 22px", boxShadow:"0 8px 32px rgba(0,0,0,0.08)", borderLeft:`3px solid ${THEME.gold}`, borderRadius:"0 10px 10px 0" }}>
-              <div style={{ fontFamily:"'Playfair Display',serif", fontSize:"26px", color:THEME.gold, fontWeight:900 }}>50k+</div>
-              <div style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"2px", color:THEME.textLight, marginTop:"3px" }}>HAPPY CUSTOMERS</div>
-            </div>
-            <div className="rating-box" style={{ position:"absolute", top:"30px", right:"0", maxWidth:"100%", background:THEME.bgCard, padding:"18px 22px", boxShadow:"0 8px 32px rgba(0,0,0,0.08)", borderLeft:`3px solid ${THEME.crimson}`, borderRadius:"0 10px 10px 0" }}>
-              <div style={{ fontFamily:"'Playfair Display',serif", fontSize:"26px", color:THEME.crimson, fontWeight:900 }}>4.9★</div>
-              <div style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"2px", color:THEME.textLight, marginTop:"3px" }}>AVERAGE RATING</div>
-            </div>
+
           </div>
         </div>
       </div>

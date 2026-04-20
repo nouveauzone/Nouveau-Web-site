@@ -33,16 +33,6 @@ export default function AboutPage({ setPage }) {
           </p>
         </div>
 
-        {/* Stats */}
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:"16px", marginBottom:"56px" }} className="stats-grid">
-          {[["50k+","Happy Customers"],["500+","Products"],["4.9★","Rating"],["100%","Authentic"]].map(([n,l]) => (
-            <div key={l} style={{ textAlign:"center", padding:"28px 12px", background:THEME.bgCard, border:`1px solid ${THEME.border}`, borderRadius:"14px", borderTop:`3px solid ${THEME.crimson}` }}>
-              <div style={{ fontFamily:"'Playfair Display',serif", fontSize:"32px", color:THEME.crimson, fontWeight:900 }}>{n}</div>
-              <div style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", color:THEME.textLight, letterSpacing:"2px", textTransform:"uppercase", marginTop:"6px" }}>{l}</div>
-            </div>
-          ))}
-        </div>
-
         <div style={{ textAlign:"center" }}>
           <BtnPrimary onClick={() => setPage("Shop")} style={{ borderRadius:"99px", padding:"16px 48px" }}>Shop The Collection →</BtnPrimary>
         </div>
