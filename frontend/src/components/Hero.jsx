@@ -112,14 +112,14 @@ export default function Hero({ setPage }) {
               padding: "0 clamp(24px, 5vw, 56px)",
               pointerEvents: "none",
               zIndex: 1,
-              opacity: 0.14,
+              opacity: 0.36,
             }}
           >
-            <div style={{ transform: "scaleX(-1)", filter: "brightness(1.2) saturate(1.15)" }}>
-              <NouveauLogo size={170} />
+            <div style={{ transform: "scaleX(-1)", filter: "contrast(1.25) saturate(1.35) drop-shadow(0 8px 16px rgba(183,110,121,0.25))" }}>
+              <NouveauLogo size={230} />
             </div>
-            <div style={{ filter: "brightness(1.2) saturate(1.15)" }}>
-              <NouveauLogo size={170} />
+            <div style={{ filter: "contrast(1.25) saturate(1.35) drop-shadow(0 8px 16px rgba(183,110,121,0.25))" }}>
+              <NouveauLogo size={230} />
             </div>
           </div>
 
