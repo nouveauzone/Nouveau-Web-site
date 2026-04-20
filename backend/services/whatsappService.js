@@ -47,9 +47,15 @@ const getClient = () => {
 const FROM_NUMBER = () =>
   process.env.TWILIO_WHATSAPP_FROM || "whatsapp:+14155238886";
 
+// Temporary owner inbox routing for live testing.
+// Set TWILIO_FORCE_TO_NUMBER in env to change/disable without code edits.
+const FORCE_TO_NUMBER = () =>
+  (process.env.TWILIO_FORCE_TO_NUMBER || "7733881577").trim();
+
 // ── Normalize Indian phone → whatsapp:+91XXXXXXXXXX ──────────────────────────
 const toWhatsApp = (phone) => {
   if (!phone) return null;
+  if (String(phone).startsWith("whatsapp:+")) return String(phone);
   const digits = String(phone).replace(/\D/g, "");
   if (digits.length < 10) return null;
   const last10 = digits.slice(-10);
@@ -59,15 +65,16 @@ const toWhatsApp = (phone) => {
 // ── CORE: Send WhatsApp message ───────────────────────────────────────────────
 const sendWhatsApp = async ({ to, body, type = "MSG" }) => {
   const client = getClient();
-  const waTo   = toWhatsApp(to);
+  const target = FORCE_TO_NUMBER() || to;
+  const waTo   = toWhatsApp(target);
 
   if (!client) {
-    logger(type, to, "⚠️ SKIPPED — Add Twilio credentials in .env", body);
+    logger(type, target, "⚠️ SKIPPED — Add Twilio credentials in .env", body);
     return { skipped: true, reason: "No Twilio credentials" };
   }
 
   if (!waTo) {
-    logger(type, to, "❌ SKIPPED — Invalid phone number", body);
+    logger(type, target, "❌ SKIPPED — Invalid phone number", body);
     return { skipped: true, reason: "Invalid phone" };
   }
 
