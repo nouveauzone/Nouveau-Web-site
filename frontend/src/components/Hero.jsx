@@ -218,13 +218,6 @@ export default function Hero({ setPage }) {
         </div>
       </div>
 
-      <div style={{ position: "absolute", left: "50%", bottom: "22px", transform: "translateX(-50%)", zIndex: 12 }}>
-        <div style={{ width: "130px", height: "40px", background: "rgba(255,255,255,0.72)", border: `1px solid ${THEME.border}`, borderRadius: "999px", boxShadow: "0 12px 24px rgba(26,26,26,0.08)", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", backdropFilter: "blur(10px)" }}>
-          <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: THEME.crimson, boxShadow: "0 0 0 5px rgba(183,110,121,0.18)" }} />
-          <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: THEME.gold, opacity: 0.7 }} />
-          <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: THEME.borderDark, opacity: 0.7 }} />
-        </div>
-      </div>
     </section>
   );
 }
