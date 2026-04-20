@@ -87,6 +87,32 @@ export default function Hero({ setPage }) {
         }}
       >
         <div
+          style={{
+            position: "absolute",
+            left: "0",
+            top: "50%",
+            transform: "translateY(-50%)",
+            width: "min(700px, 94%)",
+            maxWidth: "720px",
+            height: "clamp(260px, 40vw, 360px)",
+            pointerEvents: "none",
+            zIndex: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "0 clamp(24px, 5vw, 56px)",
+            opacity: 0.2,
+          }}
+        >
+          <div style={{ transform: "scaleX(-1)", filter: "contrast(1.1) saturate(1.2)" }}>
+            <NouveauLogo size={180} />
+          </div>
+          <div style={{ filter: "contrast(1.1) saturate(1.2)" }}>
+            <NouveauLogo size={180} />
+          </div>
+        </div>
+
+        <div
           className="hero-card"
           style={{
             width: "min(700px, 94%)",
@@ -100,29 +126,9 @@ export default function Hero({ setPage }) {
             marginLeft: "0",
             position: "relative",
             overflow: "hidden",
+            zIndex: 3,
           }}
         >
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "0 clamp(24px, 5vw, 56px)",
-              pointerEvents: "none",
-              zIndex: 1,
-              opacity: 0.36,
-            }}
-          >
-            <div style={{ transform: "scaleX(-1)", filter: "contrast(1.25) saturate(1.35) drop-shadow(0 8px 16px rgba(183,110,121,0.25))" }}>
-              <NouveauLogo size={230} />
-            </div>
-            <div style={{ filter: "contrast(1.25) saturate(1.35) drop-shadow(0 8px 16px rgba(183,110,121,0.25))" }}>
-              <NouveauLogo size={230} />
-            </div>
-          </div>
-
           <div style={{ position: "absolute", inset: "auto -60px -70px auto", width: "220px", height: "220px", borderRadius: "50%", background: "radial-gradient(circle, rgba(212,175,55,0.16) 0%, transparent 70%)", pointerEvents: "none", animation: "floatSoft 6s ease-in-out infinite" }} />
 
           <div style={{ width: "64px", height: "2px", background: `linear-gradient(to right, ${THEME.crimson}, ${THEME.gold})`, marginBottom: "16px", animation: "pulseLine 4s ease-in-out infinite", position: "relative", zIndex: 4 }} />
