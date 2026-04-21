@@ -101,13 +101,8 @@ const DirectUPIPayment = ({
 
     if (isMobile) {
       const intentUrl = app.intentScheme(upiId, formattedAmount, txnNote);
-      const upiUrl = app.upiUrl(upiId, formattedAmount, txnNote);
 
       window.location.href = intentUrl;
-
-      setTimeout(() => {
-        window.location.href = upiUrl;
-      }, 1500);
 
       setTimeout(() => {
         setShowConfirm(true);
