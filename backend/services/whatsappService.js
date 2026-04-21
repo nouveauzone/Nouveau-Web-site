@@ -50,7 +50,7 @@ const FROM_NUMBER = () =>
 // Temporary owner inbox routing for live testing.
 // Set TWILIO_FORCE_TO_NUMBER in env to change/disable without code edits.
 const FORCE_TO_NUMBER = () =>
-  (process.env.TWILIO_FORCE_TO_NUMBER || "7733881577").trim();
+  (process.env.TWILIO_FORCE_TO_NUMBER || "").trim();
 
 // ── Normalize Indian phone → whatsapp:+91XXXXXXXXXX ──────────────────────────
 const toWhatsApp = (phone) => {
