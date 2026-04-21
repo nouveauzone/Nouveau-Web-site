@@ -8,6 +8,7 @@ import { BtnOutline, BtnPrimary } from "../components/Buttons";
 import { resolveImageUrl } from "../utils/imageUrl";
 import { getShippingCharge } from "../data/constants";
 import DirectUPIPayment from "../components/DirectUPIPayment";
+import CardPayment from "../components/CardPayment";
 
 const GOLD = "#C9A227";
 const CRIMSON = "#B71C1C";
@@ -73,6 +74,23 @@ export default function CheckoutPage({ setPage }) {
       setPage("OrderSuccess");
     } catch (error) {
       console.error("UPI order failed:", error);
+      alert("Payment ho gaya, lekin order create nahi hua. Support se contact karo.");
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleCardSuccess = async ({ paymentId }) => {
+    if (!isAuthenticated) return;
+
+    setProcessing(true);
+    try {
+      const orderId = await placeOrder(address, cart, "RAZORPAY", paymentId || `NVZ-${Date.now()}`);
+      cartDispatch({ type: "CLEAR" });
+      localStorage.setItem("lastOrderId", orderId);
+      setPage("OrderSuccess");
+    } catch (error) {
+      console.error("Card order failed:", error);
       alert("Payment ho gaya, lekin order create nahi hua. Support se contact karo.");
     } finally {
       setProcessing(false);
@@ -194,6 +212,7 @@ export default function CheckoutPage({ setPage }) {
                   {[
                     ["COD", "💵", "Cash on Delivery", "Pay when your order arrives — safe & simple"],
                     ["UPI", "📲", "UPI Intent", "PhonePe, Google Pay, Paytm ya BHIM app direct open hogi"],
+                    ["CARD", "💳", "Credit / Debit Card", "Visa, Mastercard, RuPay — secure card payment"],
                   ].map(([value, icon, title, description]) => (
                     <div
                       key={value}
@@ -245,6 +264,31 @@ export default function CheckoutPage({ setPage }) {
                   </div>
                 )}
 
+                {payMethod === "CARD" && (
+                  <div style={{ background: THEME.bgCard, border: `1px solid ${THEME.border}`, borderRadius: "16px", padding: "28px", marginBottom: "20px" }}>
+                    <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "11px", letterSpacing: "2px", color: GOLD, marginBottom: "20px", fontWeight: 700, textAlign: "center" }}>
+                      CREDIT / DEBIT CARD PAYMENT
+                    </p>
+
+                    <CardPayment
+                      amount={total}
+                      orderId={upiPaymentRef}
+                      customerInfo={address}
+                      merchantName="Nouveauz"
+                      onSuccess={handleCardSuccess}
+                      onFailure={(error) => {
+                        if (error?.reason !== "cancelled") {
+                          console.error("Card payment failed:", error);
+                        }
+                      }}
+                    />
+
+                    <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "12px", color: THEME.textMuted, marginTop: "14px", textAlign: "center", lineHeight: 1.7 }}>
+                      Card number galat hoga toh payment flow open nahi hoga. Sahi card par hi checkout complete hoga.
+                    </p>
+                  </div>
+                )}
+
                 <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
                   <BtnOutline onClick={() => setStep(1)} color={THEME.textMuted} style={{ borderRadius: "12px" }}>← Back</BtnOutline>
                   {payMethod === "COD" && (
@@ -279,7 +323,7 @@ export default function CheckoutPage({ setPage }) {
                     <button onClick={() => setStep(2)} style={{ background: "none", border: "none", color: THEME.textMuted, cursor: "pointer", fontSize: "11px", fontFamily: "'Poppins',sans-serif" }}>Edit</button>
                   </div>
                   <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "14px", color: THEME.text, fontWeight: 600 }}>
-                    {payMethod === "COD" ? "💵 Cash on Delivery" : "📲 Direct UPI Intent Payment"}
+                    {payMethod === "COD" ? "💵 Cash on Delivery" : payMethod === "UPI" ? "📲 Direct UPI Intent Payment" : "💳 Credit / Debit Card Payment"}
                   </p>
                 </div>
                 <div style={{ marginBottom: "16px", display: "grid", gap: "10px" }}>
