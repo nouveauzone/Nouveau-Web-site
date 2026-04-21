@@ -4,11 +4,14 @@ const validateEnv = () => {
   const missing = required.filter((key) => !process.env[key]);
   if (!missing.length) return;
 
+  const message = `[env] Missing variables: ${missing.join(", ")}`;
+
   if (process.env.NODE_ENV === "production") {
-    throw new Error(`Missing required environment variables: ${missing.join(", ")}`);
+    console.warn(`${message} (server will continue to boot)`);
+    return;
   }
 
-  console.warn(`[env] Missing variables in development: ${missing.join(", ")}`);
+  console.warn(message);
 };
 
 const getPublicBaseUrl = () => {
