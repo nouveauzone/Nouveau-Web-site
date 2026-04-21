@@ -66,9 +66,15 @@ export default function CheckoutPage({ setPage }) {
   const handleUpiSuccess = async ({ reference }) => {
     if (!isAuthenticated) return;
 
+    const normalizedReference = String(reference || '').replace(/\D/g, '');
+    if (!/^\d{12}$/.test(normalizedReference)) {
+      alert("Valid UPI UTR/Ref no. bina order create nahi hoga.");
+      return;
+    }
+
     setProcessing(true);
     try {
-      const orderId = await placeOrder(address, cart, "UPI", reference || upiPaymentRef);
+      const orderId = await placeOrder(address, cart, "UPI", normalizedReference);
       cartDispatch({ type: "CLEAR" });
       localStorage.setItem("lastOrderId", orderId);
       setPage("OrderSuccess");

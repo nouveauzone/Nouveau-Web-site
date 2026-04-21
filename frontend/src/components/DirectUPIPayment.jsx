@@ -85,6 +85,8 @@ const DirectUPIPayment = ({
   const [activeApp, setActiveApp] = useState(null);
   const [copied, setCopied] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [utrNumber, setUtrNumber] = useState('');
+  const [utrError, setUtrError] = useState('');
 
   useEffect(() => {
     setIsMobile(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent));
@@ -119,10 +121,16 @@ const DirectUPIPayment = ({
   };
 
   const handlePaymentDone = () => {
+    const normalizedUtr = String(utrNumber || '').replace(/\D/g, '');
+    if (!/^\d{12}$/.test(normalizedUtr)) {
+      setUtrError('Valid 12-digit UTR/Ref no. enter karo.');
+      return;
+    }
+
     setShowConfirm(false);
-    const paymentReference = `UPI-${String(orderId || Date.now()).replace(/[^A-Za-z0-9_-]/g, '')}`;
-    if (onSuccess) onSuccess({ method: activeApp, upiId, amount, orderId, reference: paymentReference, note: txnNote, merchantName: merchantLabel });
-    if (onPending) onPending({ method: activeApp, status: 'pending_verification', reference: paymentReference, note: txnNote });
+    setUtrError('');
+    if (onSuccess) onSuccess({ method: activeApp, upiId, amount, orderId, reference: normalizedUtr, note: txnNote, merchantName: merchantLabel });
+    if (onPending) onPending({ method: activeApp, status: 'pending_verification', reference: normalizedUtr, note: txnNote });
   };
 
   const styles = {
@@ -264,8 +272,35 @@ const DirectUPIPayment = ({
             <p style={{ margin: '0 0 20px', fontSize: 14, color: '#666' }}>
               ₹{Number(amount).toLocaleString('en-IN')} {UPI_APPS.find((app) => app.id === activeApp)?.name} se
             </p>
+            <div style={{ marginBottom: 12, textAlign: 'left' }}>
+              <label htmlFor="upi-utr" style={{ display: 'block', marginBottom: 6, fontSize: 12, color: '#666' }}>
+                UTR / Ref No (12 digits)
+              </label>
+              <input
+                id="upi-utr"
+                type="text"
+                value={utrNumber}
+                onChange={(event) => {
+                  const value = event.target.value.replace(/\D/g, '').slice(0, 12);
+                  setUtrNumber(value);
+                  if (utrError) setUtrError('');
+                }}
+                inputMode="numeric"
+                placeholder="e.g. 123456789012"
+                style={{
+                  width: '100%',
+                  border: `1.5px solid ${utrError ? '#d32f2f' : '#ddd'}`,
+                  borderRadius: 10,
+                  padding: '12px 13px',
+                  fontSize: 14,
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                }}
+              />
+              {utrError && <p style={{ margin: '6px 0 0', fontSize: 12, color: '#d32f2f' }}>{utrError}</p>}
+            </div>
             <button style={styles.confirmBtn} onClick={handlePaymentDone}>
-              Haan, Payment ho gaya ✓
+              Submit for Verification
             </button>
             <button style={styles.cancelBtn} onClick={() => setShowConfirm(false)}>
               Nahi, dobara try karo

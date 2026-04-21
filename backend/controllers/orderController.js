@@ -15,11 +15,15 @@ exports.createOrder = asyncHandler(async (req, res) => {
   const totals = calculateOrderTotals(items, couponCode);
   const normalizedPaymentMethod = String(paymentMethod || "COD").toUpperCase();
   const isUpiOrder = normalizedPaymentMethod === "UPI";
+  const isRazorpayOrder = normalizedPaymentMethod === "RAZORPAY";
   const normalizedPaymentReference = String(paymentReference || "").trim();
 
-  if (isUpiOrder && !/^[A-Za-z0-9\-_]{8,40}$/.test(normalizedPaymentReference)) {
+  const isValidUpiReference = /^\d{12}$/.test(normalizedPaymentReference);
+  const isValidRazorpayReference = /^[A-Za-z0-9\-_]{8,40}$/.test(normalizedPaymentReference);
+
+  if ((isUpiOrder && !isValidUpiReference) || (isRazorpayOrder && !isValidRazorpayReference)) {
     return res.status(400).json({
-      message: "Valid UPI payment reference is required before placing order.",
+      message: "Valid payment reference is required before placing order.",
     });
   }
 
@@ -30,7 +34,8 @@ exports.createOrder = asyncHandler(async (req, res) => {
     items,
     shippingAddress,
     paymentMethod: normalizedPaymentMethod,
-    paymentId: isUpiOrder ? normalizedPaymentReference : "",
+    paymentStatus: isUpiOrder ? "pending" : "paid",
+    paymentId: (isUpiOrder || isRazorpayOrder) ? normalizedPaymentReference : "",
     orderStatus: initialStatus,
     couponCode:    totals.couponCode,
     subtotal:      totals.subtotal,
