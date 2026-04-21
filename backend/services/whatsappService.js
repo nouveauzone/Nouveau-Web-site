@@ -47,11 +47,6 @@ const getClient = () => {
 const FROM_NUMBER = () =>
   process.env.TWILIO_WHATSAPP_FROM || "whatsapp:+14155238886";
 
-// Temporary owner inbox routing for live testing.
-// Set TWILIO_FORCE_TO_NUMBER in env to change/disable without code edits.
-const FORCE_TO_NUMBER = () =>
-  (process.env.TWILIO_FORCE_TO_NUMBER || "").trim();
-
 // ── Normalize Indian phone → whatsapp:+91XXXXXXXXXX ──────────────────────────
 const toWhatsApp = (phone) => {
   if (!phone) return null;
@@ -65,7 +60,7 @@ const toWhatsApp = (phone) => {
 // ── CORE: Send WhatsApp message ───────────────────────────────────────────────
 const sendWhatsApp = async ({ to, body, type = "MSG" }) => {
   const client = getClient();
-  const target = FORCE_TO_NUMBER() || to;
+  const target = to;
   const waTo   = toWhatsApp(target);
 
   if (!client) {
