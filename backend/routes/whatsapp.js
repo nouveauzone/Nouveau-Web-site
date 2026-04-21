@@ -19,6 +19,7 @@ const {
 } = require("../services/whatsappService");
 
 const router = express.Router();
+const BUSINESS_UPI_ID = (process.env.UPI_ID || "anderontrendzpvtltd@kotak").trim().toLowerCase();
 
 // ── Chatbot reply logic ───────────────────────────────────────────────────────
 const getChatbotReply = async (incomingMsg) => {
@@ -107,7 +108,7 @@ const getChatbotReply = async (incomingMsg) => {
       `  💵 Cash on Delivery (COD)`,
       `  📱 UPI / QR Code (GPay, PhonePe, Paytm)`,
       ``,
-      `💳 UPI ID: *amderontrendzpvtltd@kotak*`,
+      `💳 UPI ID: *${BUSINESS_UPI_ID}*`,
       ``,
       `Payment issue? Reply *SUPPORT* 🌸`,
     ].join("\n");

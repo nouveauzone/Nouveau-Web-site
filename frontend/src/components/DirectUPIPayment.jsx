@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { BUSINESS_UPI_ID, isValidUpiId } from '../config/payment';
 
 // ============================================================
 // NOUVEAUZ — UPI Intent Payment
@@ -76,7 +77,7 @@ const UPI_APPS = [
 const DirectUPIPayment = ({
   amount,
   orderId,
-  upiId = 'amderontrendzpvtltd@kotak',
+  upiId = BUSINESS_UPI_ID,
   merchantName = 'Nouveauz',
   onSuccess,
   onPending,
@@ -95,12 +96,19 @@ const DirectUPIPayment = ({
   const txnNote = `Nouveauz Order ${orderId || Date.now()}`;
   const merchantLabel = merchantName || 'Nouveauz';
   const formattedAmount = Number(amount).toFixed(2);
+  const normalizedUpiId = String(upiId || '').trim().toLowerCase();
+  const upiIdValid = isValidUpiId(normalizedUpiId);
 
   const handleAppClick = (app) => {
+    if (!upiIdValid) {
+      alert('UPI ID invalid hai. Please admin se valid UPI ID update karwaein.');
+      return;
+    }
+
     setActiveApp(app.id);
 
     if (isMobile) {
-      const intentUrl = app.intentScheme(upiId, formattedAmount, txnNote);
+      const intentUrl = app.intentScheme(normalizedUpiId, formattedAmount, txnNote);
 
       window.location.href = intentUrl;
 
@@ -108,7 +116,7 @@ const DirectUPIPayment = ({
         setShowConfirm(true);
       }, 4000);
     } else {
-      navigator.clipboard?.writeText(upiId).then(() => {
+      navigator.clipboard?.writeText(normalizedUpiId).then(() => {
         setCopied(true);
         setTimeout(() => setCopied(false), 3000);
       });
@@ -124,7 +132,7 @@ const DirectUPIPayment = ({
 
     setShowConfirm(false);
     setUtrError('');
-    if (onSuccess) onSuccess({ method: activeApp, upiId, amount, orderId, reference: normalizedUtr, note: txnNote, merchantName: merchantLabel });
+    if (onSuccess) onSuccess({ method: activeApp, upiId: normalizedUpiId, amount, orderId, reference: normalizedUtr, note: txnNote, merchantName: merchantLabel });
     if (onPending) onPending({ method: activeApp, status: 'pending_verification', reference: normalizedUtr, note: txnNote });
   };
 
@@ -235,15 +243,22 @@ const DirectUPIPayment = ({
         <div style={styles.upiIdBox}>
           <div>
             <p style={{ margin: 0, fontSize: 11, color: '#aaa', letterSpacing: '0.05em' }}>UPI ID</p>
-            <p style={{ margin: '2px 0 0', fontSize: 14, fontWeight: 600, color: '#1a1a1a' }}>{upiId}</p>
+            <p style={{ margin: '2px 0 0', fontSize: 14, fontWeight: 600, color: upiIdValid ? '#1a1a1a' : '#d32f2f' }}>{normalizedUpiId || 'Not configured'}</p>
           </div>
           <button
-            onClick={() => { navigator.clipboard?.writeText(upiId); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+            onClick={() => { navigator.clipboard?.writeText(normalizedUpiId); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+            disabled={!upiIdValid}
             style={{ padding: '8px 16px', background: copied ? '#3B6D11' : '#1a1a1a', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, cursor: 'pointer', transition: 'background 0.2s' }}
           >
             {copied ? '✓ Copied!' : 'Copy'}
           </button>
         </div>
+      )}
+
+      {!upiIdValid && (
+        <p style={{ margin: '0 0 12px', fontSize: 12, color: '#d32f2f', textAlign: 'center' }}>
+          Invalid UPI ID configured. Add valid REACT_APP_UPI_ID in frontend env.
+        </p>
       )}
 
       {isMobile && (

@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import apiService from "../services/apiService";
 import CardPayment from "./CardPayment";
 import DirectUPIPayment from "./DirectUPIPayment";
+import { BUSINESS_UPI_ID } from "../config/payment";
 
 const BANKS = [
   { id: "sbi", name: "State Bank of India", short: "SBI" },
@@ -35,7 +36,7 @@ const PaymentPage = ({
   orderId,
   cartItems = [],
   customerInfo = {},
-  upiId = "amderontrendzpvtltd@kotak",
+  upiId = BUSINESS_UPI_ID,
   merchantName = "Nouveauz",
   onSuccess,
   onFailure,

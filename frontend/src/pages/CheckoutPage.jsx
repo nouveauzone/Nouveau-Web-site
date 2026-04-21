@@ -9,6 +9,7 @@ import { resolveImageUrl } from "../utils/imageUrl";
 import { getShippingCharge } from "../data/constants";
 import DirectUPIPayment from "../components/DirectUPIPayment";
 import CardPayment from "../components/CardPayment";
+import { BUSINESS_UPI_ID } from "../config/payment";
 
 const GOLD = "#C9A227";
 const CRIMSON = "#B71C1C";
@@ -258,7 +259,7 @@ export default function CheckoutPage({ setPage }) {
                     <DirectUPIPayment
                       amount={total}
                       orderId={upiPaymentRef}
-                      upiId="amderontrendzpvtltd@kotak"
+                      upiId={BUSINESS_UPI_ID}
                       merchantName="Nouveauz"
                       onSuccess={handleUpiSuccess}
                       onPending={() => {}}
