@@ -14,13 +14,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
       - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
+          username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          port: ${{ secrets.EC2_PORT }}
+          port: 22
           timeout: 60s
           command_timeout: 15m
 
@@ -31,28 +34,19 @@ jobs:
 
             cd /home/ubuntu/Nouveau-Web-site || exit 1
 
-            # =========================
-            # 🔧 FIX PERMISSIONS FIRST
-            # =========================
+            # 🔧 FIX PERMISSIONS
             sudo chown -R ubuntu:ubuntu /home/ubuntu/Nouveau-Web-site
 
-            # =========================
             # 🔐 FIX GIT SAFE DIRECTORY
-            # =========================
             git config --global --add safe.directory /home/ubuntu/Nouveau-Web-site
 
-            # =========================
             # 🔄 SYNC CODE
-            # =========================
             git fetch origin
             git reset --hard origin/main
             git clean -fd
 
-            # =========================
             # 📦 BACKEND
-            # =========================
             cd backend
-
             export NODE_ENV=production
 
             npm install
@@ -63,9 +57,7 @@ jobs:
 
             pm2 save
 
-            # =========================
             # 🔍 BACKEND HEALTH CHECK
-            # =========================
             echo "🔍 Checking backend..."
             if ! curl --max-time 10 -fsS http://127.0.0.1:5000/api/health > /dev/null; then
               echo "❌ Backend health failed"
@@ -73,11 +65,8 @@ jobs:
               exit 1
             fi
 
-            # =========================
             # 🎨 FRONTEND
-            # =========================
             cd ../frontend
-
             npm install
             npm run build
 
@@ -86,15 +75,11 @@ jobs:
               exit 1
             fi
 
-            # =========================
             # 🌐 NGINX DEPLOY
-            # =========================
             sudo mkdir -p /var/www/html
             sudo rsync -a --delete build/ /var/www/html/
 
-            # =========================
             # 🔄 NGINX RELOAD
-            # =========================
             if ! sudo nginx -t; then
               echo "❌ Nginx config error"
               sudo journalctl -u nginx -n 50 --no-pager
@@ -103,9 +88,7 @@ jobs:
 
             sudo systemctl reload nginx
 
-            # =========================
             # 🔍 FINAL CHECK
-            # =========================
             echo "🌐 Checking live site..."
             sleep 5
 
