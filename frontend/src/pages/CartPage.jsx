@@ -41,9 +41,9 @@ export default function CartPage({ setPage }) {
           {/* ITEMS */}
           <div>
             {cart.map((item) => (
-              <div key={`${item._id}-${item.size}`} className="cart-item-mobile" style={{ display: "flex", gap: "20px", padding: "24px 0", borderBottom: `1px solid ${THEME.border}` }}>
-                <div className="cart-item-img" style={{ width: "100px", height: "130px", borderRadius: "12px", overflow: "hidden", background: THEME.bgDark, flexShrink: 0, border: `1px solid ${THEME.border}` }}>
-                  <img src={resolveImageUrl(item.images?.[0], "/ethnic1.jpeg")} alt={item.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              <div key={`${item._id}-${item.size}`} className="cart-item-mobile" style={{ display: "flex", gap: "24px", padding: "32px 0", borderBottom: `1px solid ${THEME.border}` }}>
+                <div className="cart-item-img" style={{ width: "120px", height: "160px", borderRadius: "16px", overflow: "hidden", background: THEME.bgDark, flexShrink: 0, border: `1px solid ${THEME.border}`, boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
+                  <img src={resolveImageUrl(item.images?.[0], "/ethnic1.jpeg")} alt={item.title} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s ease" }} />
                 </div>
 
                 <div style={{ flex: 1 }}>

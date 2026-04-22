@@ -72,8 +72,8 @@ export const GLOBAL_CSS = `
     h2 { font-size: clamp(18px, 5vw, 28px); }
     h3 { font-size: clamp(16px, 4vw, 22px); }
     .products { grid-template-columns: 1fr; }
-    .cart-item-mobile { flex-direction: column; align-items: stretch; }
-    .cart-item-img { width: 100% !important; height: 200px !important; }
+    .cart-item-mobile { flex-direction: row !important; align-items: flex-start !important; gap: 16px !important; }
+    .cart-item-img { width: 100px !important; height: 130px !important; border-radius: 12px !important; }
   }
 
   /* Touch-friendly utility classes (opt-in) */
