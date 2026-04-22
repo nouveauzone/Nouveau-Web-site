@@ -13,6 +13,15 @@ import { BUSINESS_UPI_ID } from "../config/payment";
 
 const GOLD = "#C9A227";
 const CRIMSON = "#B71C1C";
+const ADDRESS_FIELDS = [
+  { key: "name", label: "Full Name", type: "text" },
+  { key: "phone", label: "Phone Number (WhatsApp updates)", type: "tel" },
+  { key: "email", label: "Email Address", type: "email", fullRow: true },
+  { key: "street", label: "Street Address", type: "text", fullRow: true },
+  { key: "city", label: "City", type: "text" },
+  { key: "state", label: "State", type: "text" },
+  { key: "pincode", label: "Pincode", type: "text" },
+];
 
 export default function CheckoutPage({ setPage }) {
   const { cart, dispatch: cartDispatch } = useContext(CartContext);
@@ -181,16 +190,8 @@ export default function CheckoutPage({ setPage }) {
                   }}
                   className="checkout-address-grid"
                 >
-                  {[
-                    ["name", "Full Name", "text", "1fr"],
-                    ["phone", "Phone Number (WhatsApp updates)", "tel", "1fr"],
-                    ["email", "Email Address", "email", "1fr 1fr"],
-                    ["street", "Street Address", "text", "1fr 1fr"],
-                    ["city", "City", "text", "1fr"],
-                    ["state", "State", "text", "1fr"],
-                    ["pincode", "Pincode", "text", "1fr"],
-                  ].map(([key, label, type, cols]) => (
-                    <div key={key} style={{ gridColumn: cols === "1fr 1fr" ? "1/-1" : "auto" }}>
+                  {ADDRESS_FIELDS.map(({ key, label, type, fullRow }) => (
+                    <div key={key} style={{ gridColumn: fullRow ? "1 / span 2" : "auto", width: "100%" }}>
                       <label style={{ fontFamily: "'Poppins',sans-serif", fontSize: "9px", letterSpacing: "2px", color: errors[key] ? CRIMSON : THEME.textMuted, display: "block", marginBottom: "6px", fontWeight: 600, textTransform: "uppercase" }}>
                         {label}{errors[key] && <span style={{ color: CRIMSON, marginLeft: "6px" }}>*</span>}
                       </label>
