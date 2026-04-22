@@ -102,6 +102,13 @@ export default function Providers({ children }) {
     setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 3000);
   };
 
+  const dispatchCart = (action) => {
+    cartDispatch(action);
+    if (action?.type === "ADD") {
+      toast("Added to cart! 🛒");
+    }
+  };
+
   // ── Persist ───────────────────────────────────────────────────────────────
   useEffect(() => { ls.set("nouveau_auth",   authState); }, [authState]);
   useEffect(() => { ls.set("nouveau_cart",   cart);      }, [cart]);
@@ -267,7 +274,7 @@ export default function Providers({ children }) {
 
   return (
     <AuthContext.Provider value={{ ...authState, dispatch:authDispatch }}>
-      <CartContext.Provider value={{ cart, dispatch:cartDispatch }}>
+      <CartContext.Provider value={{ cart, dispatch:dispatchCart }}>
         <WishlistContext.Provider value={{ wishlist, toggleWishlist }}>
           <AppDataContext.Provider value={appData}>
             <ToastContext.Provider value={toast}>

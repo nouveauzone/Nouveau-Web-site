@@ -91,7 +91,6 @@ export default function ProductPage({ product, setPage }) {
   const handleAddToCart = () => {
     cartDispatch({ type:"ADD", item:{ ...product, size:selectedSize, qty } });
     setAddedToCart(true);
-    toast("Added to cart! 🛒");
     setTimeout(() => setAddedToCart(false), 2500);
   };
 

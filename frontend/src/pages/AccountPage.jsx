@@ -211,7 +211,7 @@ export default function AccountPage({ setPage }) {
                   <div style={{ padding:"14px 16px" }}>
                     <p style={{ fontFamily:"'Playfair Display',serif", fontSize:"14px", marginBottom:"6px", color:THEME.text }}>{p.title}</p>
                     <p style={{ fontFamily:"'Poppins',sans-serif", color:THEME.crimson, fontWeight:700, marginBottom:"12px" }}>₹{p.price?.toLocaleString("en-IN")}</p>
-                    <BtnPrimary onClick={() => { cartDispatch({ type:"ADD", item:{...p,size:p.sizes[0]} }); toast("Added to cart! 🛒"); }} style={{ width:"100%", justifyContent:"center", padding:"10px", borderRadius:"10px", fontSize:"11px" }}>
+                    <BtnPrimary onClick={() => { cartDispatch({ type:"ADD", item:{...p,size:p.sizes[0]} }); }} style={{ width:"100%", justifyContent:"center", padding:"10px", borderRadius:"10px", fontSize:"11px" }}>
                       Add to Cart
                     </BtnPrimary>
                   </div>
