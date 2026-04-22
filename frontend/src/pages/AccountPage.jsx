@@ -7,6 +7,7 @@ import { AppDataContext, ToastContext } from "../context/Providers";
 import { THEME } from "../styles/theme";
 import { BtnPrimary, BtnOutline } from "../components/Buttons";
 import API from "../services/apiService";
+import { resolveImageUrl } from "../utils/imageUrl";
 
 const STATUS_STYLE = {
   pending:    { bg:"#fff3cd", color:"#856404" },
@@ -169,7 +170,7 @@ export default function AccountPage({ setPage }) {
                 <div style={{ display:"flex", gap:"10px", flexWrap:"wrap", marginBottom:"14px" }}>
                   {o.items?.slice(0,3).map((item,i) => (
                     <div key={i} style={{ display:"flex", alignItems:"center", gap:"8px", background:THEME.bgDark, borderRadius:"8px", padding:"8px 12px" }}>
-                      <img src={item.image||"/product1.jpeg"} alt={item.title} style={{ width:"36px", height:"44px", objectFit:"cover", borderRadius:"5px" }} onError={e=>e.target.src="/product1.jpeg"} />
+                      <img src={resolveImageUrl(item.image, "/product1.jpeg")} alt={item.title} style={{ width:"36px", height:"44px", objectFit:"cover", borderRadius:"5px" }} onError={e=>e.target.src="/product1.jpeg"} />
                       <div>
                         <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.text, fontWeight:600, maxWidth:"140px", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{item.title}</p>
                         <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"11px", color:THEME.textLight }}>Size: {item.size} · ×{item.qty}</p>
@@ -201,7 +202,7 @@ export default function AccountPage({ setPage }) {
               {wishlist.map(p => (
                 <div key={p._id} style={{ background:THEME.bgCard, border:`1px solid ${THEME.border}`, borderRadius:"14px", overflow:"hidden" }}>
                   <div style={{ position:"relative" }}>
-                    <img src={p.images?.[0]||"/product1.jpeg"} alt={p.title} style={{ width:"100%", aspectRatio:"3/4", objectFit:"cover", display:"block" }} onError={e=>e.target.src="/product1.jpeg"} />
+                    <img src={resolveImageUrl(p.images?.[0], "/product1.jpeg")} alt={p.title} style={{ width:"100%", aspectRatio:"3/4", objectFit:"cover", display:"block" }} onError={e=>e.target.src="/product1.jpeg"} />
                     <button onClick={() => { toggleWishlist(p); toast("Removed from wishlist"); }}
                       style={{ position:"absolute", top:"10px", right:"10px", background:THEME.crimson, border:"none", color:"#fff", cursor:"pointer", padding:"8px", borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center" }}>
                       ❤️

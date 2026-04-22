@@ -1,14 +1,17 @@
-import API from "../config/api";
-
-const API_ROOT = (API || "").replace(/\/api\/?$/, "");
-const BASE_URL = "https://nouveauz.com";
-const DEFAULT_API_ORIGIN = "https://api.nouveauz.com";
-const UPLOADS_ORIGIN = API_ROOT || DEFAULT_API_ORIGIN;
+const BASE_URL = String(
+  process.env.REACT_APP_BASE_URL || process.env.VITE_BASE_URL || "https://nouveauz.com"
+).replace(/\/+$/, "");
 const LOCALHOST_RE = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i;
 
 const CATALOG_IMAGE_RE = /^(ethnic\d+|western\d+|product\d+|nouveau-logo|payment-qr)\.(png|jpe?g|webp|gif|svg)$/i;
 
 const toFileName = (pathValue = "") => String(pathValue).split("/").filter(Boolean).pop() || "";
+
+const toUploadsAbsoluteUrl = (pathValue = "") => {
+  const fileName = toFileName(pathValue);
+  if (!fileName) return "";
+  return `${BASE_URL}/uploads/${fileName}`;
+};
 
 const normalizeUploadsPath = (pathValue = "", fallback = "/ethnic1.jpeg") => {
   const fileName = toFileName(pathValue);
@@ -18,7 +21,7 @@ const normalizeUploadsPath = (pathValue = "", fallback = "/ethnic1.jpeg") => {
     return `/${fileName}`;
   }
 
-  return pathValue.startsWith("/") ? pathValue : `/${pathValue}`;
+  return toUploadsAbsoluteUrl(pathValue);
 };
 
 const toLocalImagePath = (urlValue) => {
@@ -69,7 +72,11 @@ export function resolveImageUrl(src, fallback = "/ethnic1.jpeg") {
       const localPath = toLocalImagePath(value);
       if (localPath) return localPath;
 
-      if (LOCALHOST_RE.test(value) && API_ROOT) {
+      if (LOCALHOST_RE.test(value)) {
+        if (pathName.startsWith("/uploads/")) {
+          return normalizeUploadsPath(pathName, fallback);
+        }
+
         const path = parsed.pathname || "";
         return `${BASE_URL}${path}`;
       }
