@@ -8,12 +8,17 @@ const calculateOrderTotals = (items = [], couponCode = "") => {
   const discountPct = COUPONS[normalizedCoupon] || 0;
   const discount = Math.round((subtotal * discountPct) / 100);
   const shippingCharge = subtotal >= 2999 ? 0 : 99;
-  const total = subtotal - discount + shippingCharge;
+  // GST Calculation
+  const cgst = +(subtotal * 0.025).toFixed(2);
+  const sgst = +(subtotal * 0.025).toFixed(2);
+  const total = subtotal - discount + cgst + sgst + shippingCharge;
 
   return {
     couponCode: normalizedCoupon,
     subtotal,
     discount,
+    cgst,
+    sgst,
     shippingCharge,
     total,
   };

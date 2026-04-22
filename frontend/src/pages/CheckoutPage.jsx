@@ -36,8 +36,10 @@ export default function CheckoutPage({ setPage }) {
   const [upiPaymentRef] = useState(`NVZ-${Date.now()}`);
 
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+  const cgst = +(subtotal * 0.025).toFixed(2);
+  const sgst = +(subtotal * 0.025).toFixed(2);
   const shipping = getShippingCharge(subtotal);
-  const total = subtotal + shipping;
+  const total = subtotal + cgst + sgst + shipping;
 
   const validate = () => {
     const nextErrors = {};
@@ -113,57 +115,82 @@ export default function CheckoutPage({ setPage }) {
     }
   };
 
-  const field = (key) => ({
-    width: "100%",
-    background: THEME.bgCard,
-    border: `1.5px solid ${errors[key] ? CRIMSON : THEME.border}`,
-    color: THEME.text,
-    padding: "13px 16px",
-    fontSize: "14px",
-    outline: "none",
-    fontFamily: "'Poppins',sans-serif",
-    transition: "border-color 0.2s",
-    borderRadius: "10px",
-    lineHeight: 1.3,
-    boxSizing: "border-box",
-  });
+            {step === 3 && (
+              <div>
+                <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "10px", letterSpacing: "3px", color: GOLD, marginBottom: "24px", fontWeight: 700 }}>REVIEW YOUR ORDER</p>
 
-  if (!cart.length) {
-    return (
-      <div style={{ background: THEME.bg, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "20px" }}>
-        <div style={{ fontSize: "48px" }}>🛒</div>
-        <p style={{ fontFamily: "'Playfair Display',serif", fontSize: "28px", color: THEME.textMuted }}>Your cart is empty</p>
-        <BtnPrimary onClick={() => setPage("Shop")} style={{ borderRadius: "99px" }}>Continue Shopping</BtnPrimary>
-      </div>
-    );
-  }
+                <div style={{ background: THEME.bgCard, border: `1px solid ${THEME.border}`, borderRadius: "14px", padding: "20px 24px", marginBottom: "16px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                    <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "10px", letterSpacing: "2px", color: GOLD, fontWeight: 700 }}>DELIVERY ADDRESS</p>
+                    <button onClick={() => setStep(1)} style={{ background: "none", border: "none", color: THEME.textMuted, cursor: "pointer", fontSize: "11px", fontFamily: "'Poppins',sans-serif" }}>Edit</button>
+                  </div>
+                  <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "14px", color: THEME.text, fontWeight: 600 }}>{address.name}</p>
+                  <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: THEME.textMuted, lineHeight: 1.7 }}>{address.street}, {address.city}, {address.state} - {address.pincode}</p>
+                  <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: THEME.textMuted }}>📱 {address.phone}</p>
+                </div>
 
-  if (!isAuthenticated) {
-    return (
-      <div style={{ background: THEME.bg, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "60px 20px" }}>
-        <div style={{ maxWidth: "520px", width: "100%", background: THEME.bgCard, border: `1px solid ${THEME.border}`, borderRadius: "18px", padding: "34px 30px", textAlign: "center" }}>
-          <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "10px", letterSpacing: "3px", color: GOLD, fontWeight: 700, marginBottom: "10px" }}>SECURE CHECKOUT</p>
-          <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: "30px", marginBottom: "10px", color: THEME.text }}>Login Required</h2>
-          <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: THEME.textMuted, lineHeight: 1.7, marginBottom: "24px" }}>
-            Please login first to place your order.
-          </p>
-          <div style={{ display: "flex", justifyContent: "center", gap: "10px", flexWrap: "wrap" }}>
-            <BtnOutline onClick={() => setPage("Cart")} color={THEME.textMuted} style={{ borderRadius: "12px" }}>← Back to Cart</BtnOutline>
-            <BtnPrimary onClick={() => { localStorage.setItem("nouveau_post_auth_page", "Checkout"); setPage("Auth"); }} style={{ borderRadius: "12px" }}>Login to Continue</BtnPrimary>
-          </div>
-        </div>
-      </div>
-    );
-  }
+                <div style={{ background: THEME.bgCard, border: `1px solid ${THEME.border}`, borderRadius: "14px", padding: "20px 24px", marginBottom: "16px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                    <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "10px", letterSpacing: "2px", color: GOLD, fontWeight: 700 }}>PAYMENT METHOD</p>
+                    <button onClick={() => setStep(2)} style={{ background: "none", border: "none", color: THEME.textMuted, cursor: "pointer", fontSize: "11px", fontFamily: "'Poppins',sans-serif" }}>Edit</button>
+                  </div>
+                  <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "14px", color: THEME.text, fontWeight: 600 }}>
+                    {payMethod === "COD" ? "💵 Cash on Delivery" : payMethod === "UPI" ? "📲 Direct UPI Intent Payment" : "💳 Credit / Debit Card Payment"}
+                  </p>
+                </div>
 
-  return (
-    <div style={{ background: THEME.bg, minHeight: "100vh", color: THEME.text }}>
-      <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "60px 40px" }}>
-        <h1 style={{ fontFamily: "'Playfair Display',serif", fontSize: "42px", marginBottom: "8px", color: THEME.text }}>Checkout</h1>
-        <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "12px", color: THEME.textMuted, marginBottom: "40px" }}>Secure checkout — powered by Nouveau™</p>
+                {/* GST Breakdown */}
+                <div style={{ background: THEME.bgCard, border: `1px solid ${THEME.border}`, borderRadius: "14px", padding: "20px 24px", marginBottom: "16px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
+                    <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: THEME.textMuted }}>Subtotal</span>
+                    <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: THEME.text }}>₹{subtotal.toLocaleString("en-IN")}</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
+                    <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: THEME.textMuted }}>CGST 2.5%</span>
+                    <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: THEME.text }}>₹{cgst.toLocaleString("en-IN")}</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
+                    <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: THEME.textMuted }}>SGST 2.5%</span>
+                    <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: THEME.text }}>₹{sgst.toLocaleString("en-IN")}</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
+                    <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: THEME.textMuted }}>Shipping</span>
+                    <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: shipping === 0 ? "#2ecc71" : THEME.text }}>{shipping === 0 ? '🎉 Free' : `₹${shipping}`}</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", paddingTop: "12px", borderTop: `1px solid ${THEME.border}` }}>
+                    <span style={{ fontFamily: "'Playfair Display',serif", fontSize: "16px", fontWeight: 700, color: THEME.text }}>Total</span>
+                    <span style={{ fontFamily: "'Playfair Display',serif", fontSize: "18px", fontWeight: 700, color: GOLD }}>₹{total.toLocaleString("en-IN")}</span>
+                  </div>
+                </div>
 
-        <div style={{ display: "flex", alignItems: "center", marginBottom: "48px", flexWrap: "wrap", gap: "8px" }}>
-          {["Address", "Payment", "Review"].map((label, index) => (
+                <div style={{ marginBottom: "16px", display: "grid", gap: "10px" }}>
+                  {[ ["🔒", "100% Secure Checkout"], ["📲", "Direct UPI Intent"], ["💬", "WhatsApp Order Updates"], ["⚡", "Fast Dispatch"], ["✅", "Authentic Fabrics"]].map(([icon, text]) => (
+                    <div key={text} style={{ background: THEME.bgCard, border: `1px solid ${THEME.border}`, borderRadius: "12px", padding: "12px 16px", display: "flex", gap: "10px", alignItems: "center" }}>
+                      <span style={{ fontSize: "16px" }}>{icon}</span>
+                      <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: "12px", color: THEME.textMuted }}>{text}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div style={{ background: "#25D36610", border: "1px solid #25D36640", borderRadius: "12px", padding: "14px 18px", marginBottom: "16px", display: "flex", gap: "12px", alignItems: "center" }}>
+                  <span style={{ fontSize: "22px" }}>💬</span>
+                  <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "12px", color: "#128C7E" }}>
+                    Order updates will be sent to <strong>{address.phone}</strong> via WhatsApp
+                  </p>
+                </div>
+
+                <div style={{ background: "#fff5f5", border: `1.5px solid ${CRIMSON}40`, borderRadius: "12px", padding: "14px 18px", marginBottom: "24px", display: "flex", gap: "10px", alignItems: "flex-start" }}>
+                  <span style={{ fontSize: "18px", flexShrink: 0 }}>⚠️</span>
+                  <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "11px", color: THEME.textMuted, lineHeight: 1.7 }}>
+                    <strong style={{ color: CRIMSON }}>No Return / No Exchange:</strong> All sales are final. Please verify size and product details before ordering.
+                  </p>
+                </div>
+
+                <BtnPrimary onClick={handleOrder} disabled={processing} style={{ borderRadius: "12px", padding: "16px 48px", width: "100%", justifyContent: "center", fontSize: "12px", letterSpacing: "2px" }}>
+                  {processing ? "Placing Order... 🌸" : `Place Order · ₹${total.toLocaleString("en-IN")}`}
+                </BtnPrimary>
+              </div>
+            )}
             <div key={label} style={{ display: "flex", alignItems: "center" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "10px", cursor: step > index + 1 ? "pointer" : "default" }} onClick={() => step > index + 1 && setStep(index + 1)}>
                 <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: step > index + 1 ? `linear-gradient(135deg,${CRIMSON},${GOLD})` : step === index + 1 ? GOLD : THEME.bgCard, border: step === index + 1 ? "none" : `1px solid ${THEME.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: 700, color: step >= index + 1 ? "#fff" : THEME.textLight, transition: "all 0.3s", fontFamily: "'Poppins',sans-serif" }}>
@@ -399,12 +426,22 @@ export default function CheckoutPage({ setPage }) {
               </div>
 
               <div style={{ borderTop: `1px solid ${THEME.border}`, paddingTop: "16px" }}>
-                {[['Subtotal', `₹${subtotal.toLocaleString("en-IN")}`], ['Shipping', shipping === 0 ? '🎉 Free' : `₹${shipping}`]].map(([label, value]) => (
-                  <div key={label} style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
-                    <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: THEME.textMuted }}>{label}</span>
-                    <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: shipping === 0 && label === "Shipping" ? "#2ecc71" : THEME.text }}>{value}</span>
-                  </div>
-                ))}
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
+                  <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: THEME.textMuted }}>Subtotal</span>
+                  <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: THEME.text }}>₹{subtotal.toLocaleString("en-IN")}</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
+                  <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: THEME.textMuted }}>CGST 2.5%</span>
+                  <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: THEME.text }}>₹{cgst.toLocaleString("en-IN")}</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
+                  <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: THEME.textMuted }}>SGST 2.5%</span>
+                  <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: THEME.text }}>₹{sgst.toLocaleString("en-IN")}</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
+                  <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: THEME.textMuted }}>Shipping</span>
+                  <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: shipping === 0 ? "#2ecc71" : THEME.text }}>{shipping === 0 ? '🎉 Free' : `₹${shipping}`}</span>
+                </div>
                 <div style={{ display: "flex", justifyContent: "space-between", paddingTop: "12px", borderTop: `1px solid ${THEME.border}` }}>
                   <span style={{ fontFamily: "'Playfair Display',serif", fontSize: "16px", fontWeight: 700, color: THEME.text }}>Total</span>
                   <span style={{ fontFamily: "'Playfair Display',serif", fontSize: "18px", fontWeight: 700, color: GOLD }}>₹{total.toLocaleString("en-IN")}</span>
