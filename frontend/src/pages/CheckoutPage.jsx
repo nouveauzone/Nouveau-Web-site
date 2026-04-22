@@ -216,9 +216,6 @@ export default function CheckoutPage({ setPage }) {
 
                 {payMethod === "UPI" && (
                   <div style={{ background: THEME.bgCard, border: `1px solid ${THEME.border}`, borderRadius: "16px", padding: "28px", marginBottom: "20px" }}>
-                    <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "11px", letterSpacing: "2px", color: GOLD, marginBottom: "20px", fontWeight: 700, textAlign: "center" }}>
-                      DIRECT UPI PAYMENT
-                    </p>
 
                     <DirectUPIPayment
                       amount={total}

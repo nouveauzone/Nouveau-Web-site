@@ -99,11 +99,8 @@ const DirectUPIPayment = ({
   const normalizedUpiId = String(upiId || '').trim().toLowerCase();
   const upiIdValid = isValidUpiId(normalizedUpiId);
 
-  // Dynamic QR Code generation using upiqr.com (FREE & RELIABLE)
-  const qrImageSrc = `https://upiqr.in/api/qr?name=${encodeURIComponent(merchantLabel)}&vpa=${normalizedUpiId}&amount=${formattedAmount}&note=${encodeURIComponent(txnNote)}`;
-  const fallbackQrImage = '/upi-qr.png'; // User's static QR
-
-  const [qrLoaded, setQrLoaded] = useState(false);
+  // Using static QR reliably
+  const qrImageSrc = '/payment-qr.jpeg';
 
   const handleAppClick = (app) => {
     if (!upiIdValid) {
@@ -145,102 +142,106 @@ const DirectUPIPayment = ({
   const styles = {
     wrapper: {
       fontFamily: "'Poppins', sans-serif",
+      maxWidth: '400px',
+      margin: '0 auto',
     },
     heading: {
-      fontSize: 11,
+      fontSize: 10,
       fontWeight: 700,
       letterSpacing: '0.15em',
       textTransform: 'uppercase',
       color: '#C9A227', // GOLD
-      marginBottom: 20,
+      marginBottom: 24,
       textAlign: 'center',
     },
     appsGrid: {
       display: 'flex',
       justifyContent: 'center',
-      gap: '12px',
+      gap: '16px',
       flexWrap: 'wrap',
-      marginBottom: 24,
+      marginBottom: 32,
     },
     appIcon: (app, active) => ({
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      gap: 6,
+      gap: 8,
       background: 'none',
       border: 'none',
       cursor: 'pointer',
-      opacity: active ? 1 : 0.8,
+      opacity: active ? 1 : 0.85,
       transform: active ? 'scale(1.1)' : 'scale(1)',
-      transition: 'all 0.2s',
+      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+      padding: '8px',
     }),
     qrCard: {
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
       gap: 16,
-      padding: '24px 20px',
-      borderRadius: 18,
-      border: '1.5px solid #C9A22730',
+      padding: '30px 24px',
+      borderRadius: 20,
+      border: '1px solid #C9A22725',
       background: '#fff',
-      boxShadow: '0 8px 30px rgba(201,162,39,0.06)',
-      margin: '0 auto 24px',
-      maxWidth: '300px',
+      boxShadow: '0 10px 40px rgba(201,162,39,0.05)',
+      marginBottom: 28,
     },
     qrTitle: {
-      fontSize: 13,
+      fontSize: 14,
       fontWeight: 600,
       color: '#1a1a1a',
       margin: 0,
+      letterSpacing: '-0.01em',
     },
     qrImage: {
-      width: '180px',
-      height: '180px',
-      borderRadius: 12,
-      border: '1px solid #eee',
+      width: '200px',
+      height: '200px',
+      borderRadius: 14,
+      border: '1.5px solid #f0f0f0',
       background: '#fff',
-      padding: 10,
+      padding: 12,
+      display: 'block',
     },
     upiIdBox: {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      background: '#f8f9fa',
-      border: '1px solid #e9ecef',
-      borderRadius: 12,
-      padding: '10px 14px',
-      maxWidth: '280px',
-      margin: '0 auto 20px',
+      background: '#f9f9fb',
+      border: '1.2px solid #e9eaef',
+      borderRadius: 14,
+      padding: '12px 16px',
+      marginBottom: 24,
     },
     copyBtn: {
       background: '#1a1a1a',
       color: '#fff',
       border: 'none',
-      borderRadius: 8,
-      padding: '6px 12px',
-      fontSize: 11,
+      borderRadius: 10,
+      padding: '8px 16px',
+      fontSize: 12,
       fontWeight: 600,
       cursor: 'pointer',
       transition: 'all 0.2s',
     },
     toast: {
       position: 'absolute',
-      top: -40,
+      top: -45,
       left: '50%',
       transform: 'translateX(-50%)',
       background: '#2ecc71',
       color: '#fff',
-      padding: '6px 14px',
-      borderRadius: 20,
-      fontSize: 11,
+      padding: '8px 18px',
+      borderRadius: 30,
+      fontSize: 12,
       fontWeight: 600,
-      boxShadow: '0 4px 12px rgba(46,204,113,0.3)',
+      boxShadow: '0 5px 20px rgba(46,204,113,0.3)',
       whiteSpace: 'nowrap',
+      zIndex: 10,
     },
     amountBox: {
       textAlign: 'center',
-      padding: '16px 0',
-      borderTop: '1px dashed #e0e0e0',
+      padding: '20px 0',
+      borderTop: '1px solid #f0f0f0',
       marginTop: 8,
     }
   };
@@ -259,41 +260,36 @@ const DirectUPIPayment = ({
               onClick={() => handleAppClick(app)}
             >
               {app.icon}
-              <span style={{ fontSize: 10, fontWeight: 600, color: '#666' }}>{app.name}</span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: '#444' }}>{app.name}</span>
             </button>
           ))}
         </div>
       )}
 
-      {/* QR Code Section - Premium Design */}
+      {/* QR Code Section */}
       <div style={styles.qrCard}>
         <p style={styles.qrTitle}>Scan & Pay via UPI</p>
-        <div style={{ position: 'relative' }}>
-          <img
-            src={qrImageSrc}
-            alt="Scan to Pay"
-            style={styles.qrImage}
-            onLoad={() => setQrLoaded(true)}
-            onError={(e) => { e.target.src = fallbackQrImage; }}
-          />
-          {!qrLoaded && (
-            <div style={{ position: 'absolute', inset: 0, background: '#f5f5f5', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: '#aaa' }}>
-              Generating QR...
-            </div>
-          )}
-        </div>
-        <p style={{ margin: 0, fontSize: 11, color: '#666', textAlign: 'center', lineHeight: 1.6 }}>
-          Use any UPI app like GPay, PhonePe or Paytm to scan and pay <strong>₹{Number(amount).toLocaleString('en-IN')}</strong>
+        <img
+          src={qrImageSrc}
+          alt="Scan to Pay"
+          style={styles.qrImage}
+          onError={(e) => { 
+            e.target.onerror = null;
+            e.target.src = "https://placehold.co/200x200?text=Scan+QR+to+Pay"; 
+          }}
+        />
+        <p style={{ margin: 0, fontSize: 12, color: '#666', textAlign: 'center', lineHeight: 1.7 }}>
+          Scan with any UPI app like GPay, PhonePe or Paytm to pay <strong>₹{Number(amount).toLocaleString('en-IN')}</strong>
         </p>
       </div>
 
-      {/* UPI ID Display with Copy Button & Toast */}
+      {/* UPI ID Section */}
       <div style={{ position: 'relative' }}>
         {copied && <div style={styles.toast}>✓ UPI ID Copied!</div>}
         <div style={styles.upiIdBox}>
-          <div style={{ flex: 1, minWidth: 0, marginRight: 10 }}>
-            <p style={{ margin: 0, fontSize: 9, color: '#aaa', fontWeight: 700, textTransform: 'uppercase' }}>Merchant UPI ID</p>
-            <p style={{ margin: '2px 0 0', fontSize: 13, fontWeight: 600, color: '#1a1a1a', overflow: 'hidden', textOverflow: 'ellipsis' }}>{normalizedUpiId}</p>
+          <div style={{ flex: 1, minWidth: 0, marginRight: 12 }}>
+            <p style={{ margin: 0, fontSize: 10, color: '#888', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Merchant UPI ID</p>
+            <p style={{ margin: '3px 0 0', fontSize: 14, fontWeight: 600, color: '#1a1a1a', overflow: 'hidden', textOverflow: 'ellipsis' }}>{normalizedUpiId}</p>
           </div>
           <button
             onClick={() => {
