@@ -18,17 +18,23 @@ jobs:
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}   # ✅ use secret (not hardcoded)
+          username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          port: 22
+          port: ${{ secrets.EC2_PORT }}
           timeout: 60s
           command_timeout: 15m
+
           script: |
             set -e
 
             echo "🚀 Starting Deployment..."
 
             cd /home/ubuntu/Nouveau-Web-site || exit 1
+
+            # =========================
+            # 🔐 FIX GIT SAFE DIRECTORY (IMPORTANT)
+            # =========================
+            git config --global --add safe.directory /home/ubuntu/Nouveau-Web-site
 
             # =========================
             # 🔄 SYNC CODE
@@ -54,10 +60,12 @@ jobs:
 
             pm2 save
 
-            # Health check
+            # =========================
+            # 🔍 BACKEND HEALTH CHECK
+            # =========================
             echo "🔍 Checking backend..."
             if ! curl --max-time 10 -fsS http://127.0.0.1:5000/api/health > /dev/null; then
-              echo "⚠️ Backend health failed"
+              echo "❌ Backend health failed"
               pm2 logs backend --lines 50 --nostream || true
               exit 1
             fi
@@ -71,7 +79,7 @@ jobs:
             npm run build
 
             if [ ! -f build/index.html ]; then
-              echo "❌ Build failed"
+              echo "❌ Frontend build failed"
               exit 1
             fi
 
