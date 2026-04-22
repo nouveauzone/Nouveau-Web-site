@@ -85,6 +85,7 @@ const DirectUPIPayment = ({
   const [isMobile, setIsMobile] = useState(false);
   const [activeApp, setActiveApp] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [showQrFallback, setShowQrFallback] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [utrNumber, setUtrNumber] = useState('');
   const [utrError, setUtrError] = useState('');
@@ -98,6 +99,7 @@ const DirectUPIPayment = ({
   const formattedAmount = Number(amount).toFixed(2);
   const normalizedUpiId = String(upiId || '').trim().toLowerCase();
   const upiIdValid = isValidUpiId(normalizedUpiId);
+  const qrImageSrc = '/payment-qr.jpeg';
 
   const handleAppClick = (app) => {
     if (!upiIdValid) {
@@ -115,6 +117,9 @@ const DirectUPIPayment = ({
       setTimeout(() => {
         setShowConfirm(true);
       }, 4000);
+      setTimeout(() => {
+        setShowQrFallback(true);
+      }, 4500);
     } else {
       navigator.clipboard?.writeText(normalizedUpiId).then(() => {
         setCopied(true);
@@ -218,6 +223,42 @@ const DirectUPIPayment = ({
       fontSize: 14,
       cursor: 'pointer',
     },
+    qrCard: {
+      display: 'grid',
+      gap: 12,
+      padding: 16,
+      borderRadius: 14,
+      border: '1px solid #e8eaef',
+      background: '#fafafa',
+      marginTop: 16,
+    },
+    qrImage: {
+      width: '100%',
+      maxWidth: 260,
+      margin: '0 auto',
+      borderRadius: 14,
+      border: '1px solid #e5e7eb',
+      background: '#fff',
+      display: 'block',
+    },
+    qrHint: {
+      margin: 0,
+      fontSize: 12,
+      color: '#666',
+      lineHeight: 1.6,
+      textAlign: 'center',
+    },
+    qrButton: {
+      width: '100%',
+      padding: '12px 14px',
+      background: '#111827',
+      color: '#fff',
+      border: 'none',
+      borderRadius: 10,
+      fontSize: 14,
+      fontWeight: 600,
+      cursor: 'pointer',
+    },
   };
 
   return (
@@ -237,6 +278,27 @@ const DirectUPIPayment = ({
             <span>{app.name}</span>
           </button>
         ))}
+      </div>
+
+      <div style={styles.qrCard}>
+        <button
+          type="button"
+          style={styles.qrButton}
+          onClick={() => setShowQrFallback((value) => !value)}
+        >
+          {showQrFallback ? 'Hide QR fallback' : 'Show QR fallback'}
+        </button>
+
+        {showQrFallback && (
+          <>
+            <img src={qrImageSrc} alt="Nouveauz UPI QR code" style={styles.qrImage} />
+            <p style={styles.qrHint}>
+              Scan this QR with Google Pay, PhonePe, Paytm, or any UPI app.
+              <br />
+              If app opening fails, scan the QR directly and pay the exact amount shown above.
+            </p>
+          </>
+        )}
       </div>
 
       {!isMobile && (
