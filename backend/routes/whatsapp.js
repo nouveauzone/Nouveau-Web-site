@@ -19,7 +19,7 @@ const {
 } = require("../services/whatsappService");
 
 const router = express.Router();
-const BUSINESS_UPI_ID = (process.env.UPI_ID || "anderontrendzpvtltd@kotak").trim().toLowerCase();
+const BUSINESS_UPI_ID = (process.env.UPI_ID || "amdtrendzz@kotak").trim().toLowerCase();
 
 // ── Chatbot reply logic ───────────────────────────────────────────────────────
 const getChatbotReply = async (incomingMsg) => {

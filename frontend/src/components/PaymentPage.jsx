@@ -62,7 +62,7 @@ const PaymentPage = ({
 
   const startNetBanking = async () => {
     if (!selectedBank) {
-      const message = "Bank select karein";
+      const message = "Please select a bank.";
       alert(message);
       handleFailure({ reason: "validation_failed", description: message });
       return;
@@ -77,7 +77,7 @@ const PaymentPage = ({
     }
 
     if (!window.Razorpay) {
-      const message = "Payment system load nahi hua. Page refresh karein aur dobara try karein.";
+      const message = "Payment system did not load. Refresh the page and try again.";
       alert(message);
       handleFailure({ reason: "sdk-missing", description: message });
       return;
@@ -292,7 +292,7 @@ const PaymentPage = ({
               </p>
             ) : null}
             <p style={{ fontSize: 13, color: "#475467", lineHeight: 1.7, marginBottom: 24 }}>
-              Aapko WhatsApp par confirmation aayega. Order 24-48 ghante mein dispatch hoga.
+              You will receive confirmation on WhatsApp. The order is usually dispatched within 24-48 hours.
             </p>
             <a href="/orders" style={{
               display: "inline-block",
@@ -366,7 +366,7 @@ const PaymentPage = ({
           {activeTab === "netbanking" && (
             <div style={{ display: "grid", gap: 16 }}>
               <p style={{ margin: 0, fontSize: 13, color: "#475467", lineHeight: 1.6 }}>
-                Apna bank select karein. Secure Razorpay checkout open hoga aur payment server-side verify hoga.
+                Select your bank. Secure Razorpay checkout will open and payment will be verified on the server.
               </p>
 
               <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 10 }}>

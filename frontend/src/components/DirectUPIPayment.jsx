@@ -126,7 +126,7 @@ const DirectUPIPayment = ({
   const handlePaymentDone = () => {
     const normalizedUtr = String(utrNumber || '').replace(/\D/g, '');
     if (!/^\d{12}$/.test(normalizedUtr)) {
-      setUtrError('Valid 12-digit UTR/Ref no. enter karo.');
+      setUtrError('Please enter a valid 12-digit UTR/Reference number.');
       return;
     }
 
@@ -263,7 +263,7 @@ const DirectUPIPayment = ({
 
       {isMobile && (
         <p style={{ fontSize: 12, color: '#aaa', textAlign: 'center', margin: '4px 0 12px' }}>
-          Button dabao → App seedha khulegi → Pay karo
+          Tap a payment app button to open it and complete payment.
         </p>
       )}
 
@@ -278,9 +278,9 @@ const DirectUPIPayment = ({
         <div style={styles.confirmOverlay} onClick={() => setShowConfirm(false)}>
           <div style={styles.confirmSheet} onClick={(event) => event.stopPropagation()}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>💳</div>
-            <h3 style={{ margin: '0 0 8px', fontSize: 18 }}>Payment ho gaya?</h3>
+            <h3 style={{ margin: '0 0 8px', fontSize: 18 }}>Did you complete the payment?</h3>
             <p style={{ margin: '0 0 20px', fontSize: 14, color: '#666' }}>
-              ₹{Number(amount).toLocaleString('en-IN')} {UPI_APPS.find((app) => app.id === activeApp)?.name} se
+              ₹{Number(amount).toLocaleString('en-IN')} via {UPI_APPS.find((app) => app.id === activeApp)?.name}
             </p>
             <div style={{ marginBottom: 12, textAlign: 'left' }}>
               <label htmlFor="upi-utr" style={{ display: 'block', marginBottom: 6, fontSize: 12, color: '#666' }}>
@@ -313,7 +313,7 @@ const DirectUPIPayment = ({
               Submit for Verification
             </button>
             <button style={styles.cancelBtn} onClick={() => setShowConfirm(false)}>
-              Nahi, dobara try karo
+              Not yet, try again
             </button>
           </div>
         </div>

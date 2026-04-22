@@ -69,7 +69,7 @@ export default function CheckoutPage({ setPage }) {
 
     const normalizedReference = String(reference || '').replace(/\D/g, '');
     if (!/^\d{12}$/.test(normalizedReference)) {
-      alert("Valid UPI UTR/Ref no. bina order create nahi hoga.");
+      alert("Order cannot be created without a valid 12-digit UPI UTR/Reference number.");
       return;
     }
 
@@ -81,7 +81,7 @@ export default function CheckoutPage({ setPage }) {
       setPage("OrderSuccess");
     } catch (error) {
       console.error("UPI order failed:", error);
-      alert("Payment ho gaya, lekin order create nahi hua. Support se contact karo.");
+      alert("Payment was completed but order creation failed. Please contact support.");
     } finally {
       setProcessing(false);
     }
@@ -98,14 +98,14 @@ export default function CheckoutPage({ setPage }) {
       setPage("OrderSuccess");
     } catch (error) {
       console.error("Card order failed:", error);
-      alert("Payment ho gaya, lekin order create nahi hua. Support se contact karo.");
+      alert("Payment was completed but order creation failed. Please contact support.");
     } finally {
       setProcessing(false);
     }
   };
 
   const field = (key) => ({
-    width: "100%",
+                    ["UPI", "📲", "UPI Intent", "PhonePe, Google Pay, Paytm, or BHIM app opens directly"],
     background: THEME.bgCard,
     border: `1.5px solid ${errors[key] ? CRIMSON : THEME.border}`,
     color: THEME.text,
@@ -266,7 +266,7 @@ export default function CheckoutPage({ setPage }) {
                     />
 
                     <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "12px", color: THEME.textMuted, marginTop: "14px", textAlign: "center", lineHeight: 1.7 }}>
-                      Mobile par PhonePe, Google Pay, Paytm aur BHIM direct open honge. Desktop par UPI ID copy hogi.
+                      On mobile, PhonePe, Google Pay, Paytm, and BHIM open directly. On desktop, the UPI ID can be copied.
                     </p>
                   </div>
                 )}
@@ -291,7 +291,7 @@ export default function CheckoutPage({ setPage }) {
                     />
 
                     <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "12px", color: THEME.textMuted, marginTop: "14px", textAlign: "center", lineHeight: 1.7 }}>
-                      Card number galat hoga toh payment flow open nahi hoga. Sahi card par hi checkout complete hoga.
+                      Payment opens only after valid card details are entered.
                     </p>
                   </div>
                 )}

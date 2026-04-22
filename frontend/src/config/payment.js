@@ -1,4 +1,4 @@
-const DEFAULT_UPI_ID = "anderontrendzpvtltd@kotak";
+const DEFAULT_UPI_ID = "amdtrendzz@kotak";
 
 export const BUSINESS_UPI_ID = String(process.env.REACT_APP_UPI_ID || DEFAULT_UPI_ID)
   .trim()

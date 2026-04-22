@@ -5,6 +5,13 @@ const { sendOrderEmail, orderConfirmHTML, shippedEmailHTML } = require("../utils
 const { calculateOrderTotals } = require("../services/pricingService");
 const { normalizeOrderOutput } = require("../utils/imageUrl");
 
+const hasSuspiciousUpiPattern = (value) => {
+  if (!/^\d{12}$/.test(value)) return true;
+  if (/^(\d)\1{11}$/.test(value)) return true;
+  if (value === "123456789012" || value === "012345678901" || value === "987654321098") return true;
+  return false;
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /api/orders/create  — place order (alias for POST /api/orders)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -25,6 +32,25 @@ exports.createOrder = asyncHandler(async (req, res) => {
     return res.status(400).json({
       message: "Valid payment reference is required before placing order.",
     });
+  }
+
+  if (isUpiOrder && hasSuspiciousUpiPattern(normalizedPaymentReference)) {
+    return res.status(400).json({
+      message: "Please enter the exact 12-digit UTR from your UPI app.",
+    });
+  }
+
+  if (isUpiOrder) {
+    const existingOrder = await Order.findOne({
+      paymentMethod: "UPI",
+      paymentId: normalizedPaymentReference,
+    }).lean();
+
+    if (existingOrder) {
+      return res.status(409).json({
+        message: "This UTR has already been used. Please verify and enter the correct UTR.",
+      });
+    }
   }
 
   const initialStatus = isUpiOrder ? "Awaiting Payment Verification" : "Placed";

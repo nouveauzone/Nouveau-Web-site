@@ -42,7 +42,7 @@ const orderCreateValidation = [
     const ref = String(value?.paymentReference || "").trim();
 
     if (method === "UPI" && !/^\d{12}$/.test(ref)) {
-      throw new Error("Valid 12-digit UPI paymentReference is required for UPI orders");
+      throw new Error("A valid 12-digit UPI UTR/Reference number is required for UPI orders.");
     }
 
     if (method === "RAZORPAY" && !/^[A-Za-z0-9\-_]{8,40}$/.test(ref)) {

@@ -152,7 +152,7 @@ const CardPayment = ({
     }
 
     if (!window.Razorpay) {
-      const message = "Payment system load nahi hua. Page refresh karein aur dobara try karein.";
+      const message = "Payment system did not load. Refresh the page and try again.";
       alert(message);
       onFailure?.({ reason: "sdk-missing", description: message });
       return;
