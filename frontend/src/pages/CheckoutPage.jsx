@@ -115,10 +115,10 @@ export default function CheckoutPage({ setPage }) {
     }
   };
 
-  // ...existing code...
-  // Stepper and main grid content structure fix is required above this point.
-        </div>
 
+  return (
+    <div style={{ background: THEME.bg, minHeight: "100vh", color: THEME.text }}>
+      <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "60px 40px" }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: "40px" }} className="cart-sidebar">
           <div>
             {step === 1 && (
@@ -142,7 +142,17 @@ export default function CheckoutPage({ setPage }) {
                         type={type}
                         value={address[key]}
                         onChange={(event) => setAddress((current) => ({ ...current, [key]: event.target.value }))}
-                        style={field(key)}
+                        style={{
+                          width: "100%",
+                          padding: "12px 14px",
+                          background: THEME.bgCard,
+                          border: `1px solid ${errors[key] ? CRIMSON : THEME.border}`,
+                          borderRadius: "8px",
+                          color: THEME.text,
+                          fontFamily: "'Poppins',sans-serif",
+                          fontSize: "13px",
+                          transition: "border-color 0.2s",
+                        }}
                         onFocus={(event) => { event.target.style.borderColor = GOLD; }}
                         onBlur={(event) => { event.target.style.borderColor = errors[key] ? CRIMSON : THEME.border; }}
                       />
