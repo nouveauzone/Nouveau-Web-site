@@ -20,10 +20,9 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}   # ✅ use secret (not hardcoded)
           key: ${{ secrets.EC2_SSH_KEY }}
-          port: ${{ secrets.EC2_PORT }}       # ✅ important
+          port: 22
           timeout: 60s
           command_timeout: 15m
-
           script: |
             set -e
 
