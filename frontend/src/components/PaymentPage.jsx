@@ -101,7 +101,8 @@ const PaymentPage = ({
           email: customerInfo.email || "",
           contact: customerInfo.phone || "",
         },
-        method: { netbanking: true, card: false, upi: false, wallet: false },
+        method: { netbanking: true, upi: true, card: false, wallet: false },
+        upi: { vpa: upiId, timeout: 120 },
         theme: { color: "#111827" },
         modal: {
           backdropclose: false,
