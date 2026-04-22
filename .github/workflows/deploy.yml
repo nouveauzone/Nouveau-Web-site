@@ -18,10 +18,13 @@ jobs:
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ubuntu
+          username: ${{ secrets.EC2_USER }}   # ✅ use secret (not hardcoded)
           key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
+          port: ${{ secrets.EC2_PORT }}       # ✅ important
+          timeout: 60s
+          command_timeout: 15m
 
+          script: |
             set -e
 
             echo "🚀 Starting Deployment..."
@@ -44,7 +47,7 @@ jobs:
 
             export NODE_ENV=production
 
-            npm install --production
+            npm ci --only=production
 
             pm2 describe backend > /dev/null \
               && pm2 restart backend \
@@ -53,9 +56,11 @@ jobs:
             pm2 save
 
             # Health check
+            echo "🔍 Checking backend..."
             if ! curl --max-time 10 -fsS http://127.0.0.1:5000/api/health > /dev/null; then
               echo "⚠️ Backend health failed"
-              pm2 logs backend --lines 100 --nostream || true
+              pm2 logs backend --lines 50 --nostream || true
+              exit 1
             fi
 
             # =========================
@@ -63,7 +68,7 @@ jobs:
             # =========================
             cd ../frontend
 
-            npm install
+            npm ci
             npm run build
 
             if [ ! -f build/index.html ]; then
@@ -82,7 +87,7 @@ jobs:
             # =========================
             if ! sudo nginx -t; then
               echo "❌ Nginx config error"
-              sudo journalctl -u nginx -n 100 --no-pager
+              sudo journalctl -u nginx -n 50 --no-pager
               exit 1
             fi
 
@@ -91,12 +96,13 @@ jobs:
             # =========================
             # 🔍 FINAL CHECK
             # =========================
-            sleep 3
+            echo "🌐 Checking live site..."
+            sleep 5
 
             STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://nouveauz.com || echo "000")
 
             if [[ ! "$STATUS" =~ ^(2|3) ]]; then
-              echo "❌ Site down after deploy"
+              echo "❌ Site down after deploy (HTTP $STATUS)"
               exit 1
             fi
 
