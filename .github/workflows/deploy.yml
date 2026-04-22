@@ -14,17 +14,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Setup SSH
-        run: |
-          echo "${{ secrets.EC2_SSH_KEY }}" | tr -d '\r' > key.pem
-          chmod 600 key.pem
-
-      - name: Deploy to EC2
-        run: |
-          ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
 
             set -e
 
@@ -32,94 +28,76 @@ jobs:
 
             cd /home/ubuntu/Nouveau-Web-site || exit 1
 
-            # Sync repo
+            # =========================
+            # 🔄 SYNC CODE
+            # =========================
             git fetch origin
             git reset --hard origin/main
             git clean -fd
 
-            # Fix permissions
             sudo chown -R ubuntu:ubuntu /home/ubuntu/Nouveau-Web-site
 
             # =========================
             # 📦 BACKEND
             # =========================
             cd backend
+
+            export NODE_ENV=production
+
             npm install --production
 
-            # IMPORTANT: no delete, only restart
-            pm2 restart backend || pm2 start server.js --name backend
+            pm2 describe backend > /dev/null \
+              && pm2 restart backend \
+              || pm2 start server.js --name backend
+
             pm2 save
 
-            # Quick backend smoke check
-            if ! curl --max-time 12 -fsS http://127.0.0.1:5000/api/health > /dev/null; then
-              echo "⚠️ Backend health check failed, continuing frontend deploy"
-              pm2 status || true
-              pm2 logs backend --lines 120 --nostream || true
+            # Health check
+            if ! curl --max-time 10 -fsS http://127.0.0.1:5000/api/health > /dev/null; then
+              echo "⚠️ Backend health failed"
+              pm2 logs backend --lines 100 --nostream || true
             fi
 
             # =========================
             # 🎨 FRONTEND
             # =========================
             cd ../frontend
+
             npm install
             npm run build
 
             if [ ! -f build/index.html ]; then
-              echo "❌ Frontend build missing build/index.html"
+              echo "❌ Build failed"
               exit 1
             fi
 
             # =========================
-            # 🔄 NGINX
+            # 🌐 NGINX DEPLOY
             # =========================
-            echo "📁 Updating Nginx files..."
-
             sudo mkdir -p /var/www/html
             sudo rsync -a --delete build/ /var/www/html/
 
             # =========================
-            # 🔄 RESTART NGINX
+            # 🔄 NGINX RELOAD
             # =========================
-            # Validate config before reload
             if ! sudo nginx -t; then
-              echo "❌ nginx config test failed"
-              sudo journalctl -u nginx -n 120 --no-pager || true
+              echo "❌ Nginx config error"
+              sudo journalctl -u nginx -n 100 --no-pager
               exit 1
             fi
 
-            echo "🔄 Reloading Nginx..."
             sudo systemctl reload nginx
 
-            # Nginx + site smoke checks to catch hidden 500s
+            # =========================
+            # 🔍 FINAL CHECK
+            # =========================
+            sleep 3
 
-            SITE_CODE=$(curl --max-time 12 -sS -o /tmp/nouveau-site-check.html -w "%{http_code}" -H "Host: nouveauz.com" http://127.0.0.1/ || echo "000")
-            if [[ ! "$SITE_CODE" =~ ^(2|3) ]]; then
-              echo "❌ Nginx localhost site check failed with HTTP $SITE_CODE"
-              sudo systemctl status nginx --no-pager || true
-              sudo journalctl -u nginx -n 120 --no-pager || true
-              tail -n 60 /tmp/nouveau-site-check.html || true
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://nouveauz.com || echo "000")
+
+            if [[ ! "$STATUS" =~ ^(2|3) ]]; then
+              echo "❌ Site down after deploy"
               exit 1
             fi
 
-            # Public domain check with short retries to catch transient startup issues
-            PUBLIC_CODE="000"
-            for i in {1..8}; do
-              PUBLIC_CODE=$(curl --max-time 12 -sS -o /tmp/nouveau-public-check.html -w "%{http_code}" https://nouveauz.com/ || echo "000")
-              if [[ "$PUBLIC_CODE" =~ ^(2|3) ]]; then
-                break
-              fi
-              echo "⚠️ Public check attempt $i failed with HTTP $PUBLIC_CODE"
-              sleep 4
-            done
-
-            if [[ ! "$PUBLIC_CODE" =~ ^(2|3) ]]; then
-              echo "❌ Public domain check failed with HTTP $PUBLIC_CODE"
-              sudo systemctl status nginx --no-pager || true
-              sudo journalctl -u nginx -n 120 --no-pager || true
-              tail -n 60 /tmp/nouveau-public-check.html || true
-              exit 1
-            fi
-
-            echo "✅ Deployment Complete!"
-
-          EOF
+            echo "✅ Deployment Successful!"
