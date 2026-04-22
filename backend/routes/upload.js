@@ -10,6 +10,10 @@ const router = express.Router();
 
 // ── If Cloudinary is configured, use it; else save locally ──────────────────
 const useCloudinary = process.env.CLOUDINARY_NAME && process.env.CLOUDINARY_NAME !== "your_cloud_name";
+const imageFileFilter = (req, file, cb) => {
+  if (String(file?.mimetype || "").startsWith("image/")) return cb(null, true);
+  return cb(new Error("Only image files are allowed"));
+};
 
 let upload;
 if (useCloudinary) {
@@ -22,7 +26,7 @@ if (useCloudinary) {
     cloudinary,
     params: { folder:"nouveau", allowed_formats:["jpg","jpeg","png","webp"], transformation:[{ width:800, crop:"limit" }] },
   });
-  upload = multer({ storage, limits:{ fileSize:5*1024*1024 } });
+  upload = multer({ storage, fileFilter: imageFileFilter, limits:{ fileSize:5*1024*1024 } });
 } else {
   // Local storage fallback
   const uploadDir = path.join(__dirname, "../uploads");
@@ -31,7 +35,7 @@ if (useCloudinary) {
     destination: uploadDir,
     filename: (req, file, cb) => cb(null, Date.now()+"-"+file.originalname.replace(/\s/g,"_")),
   });
-  upload = multer({ storage, limits:{ fileSize:5*1024*1024 } });
+  upload = multer({ storage, fileFilter: imageFileFilter, limits:{ fileSize:5*1024*1024 } });
 }
 
 // POST /api/upload — upload images (admin only)
@@ -41,7 +45,13 @@ router.post("/", protect, admin, upload.array("images", 5), (req, res) => {
     const rawItems = req.files.map((f) => (useCloudinary ? f.path : `uploads/${f.filename}`));
     const paths = rawItems.map((item) => normalizeImagePathForStorage(item)).filter(Boolean);
     const urls = paths.map((item) => toPublicImageUrl(item)).filter(Boolean);
-    res.json({ paths, urls, message:"Upload successful" });
+    res.json({
+      paths,
+      urls,
+      image: paths[0] || "",
+      imageUrl: urls[0] || "",
+      message:"Upload successful",
+    });
   } catch (err) { res.status(500).json({ message:err.message }); }
 });
 

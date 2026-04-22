@@ -3,6 +3,7 @@ import { AuthContext }     from "./AuthContext";
 import { CartContext }     from "./CartContext";
 import { WishlistContext } from "./WishlistContext";
 import { getShippingCharge } from "../data/constants";
+import { AUTH_EXPIRED_EVENT } from "../services/apiService";
 
 export const AppDataContext = createContext(null);
 export const ToastContext   = createContext(null);
@@ -106,6 +107,15 @@ export default function Providers({ children }) {
   useEffect(() => { ls.set("nouveau_cart",   cart);      }, [cart]);
   useEffect(() => { ls.set("nouveau_wish",   wishlist);  }, [wishlist]);
   useEffect(() => { ls.set("nouveau_all_orders", allOrders); }, [allOrders]);
+
+  useEffect(() => {
+    const handleAuthExpired = () => {
+      authDispatch({ type:"LOGOUT" });
+    };
+
+    window.addEventListener(AUTH_EXPIRED_EVENT, handleAuthExpired);
+    return () => window.removeEventListener(AUTH_EXPIRED_EVENT, handleAuthExpired);
+  }, []);
 
   // ── On login: try to load orders from backend, merge with local ───────────
   useEffect(() => {

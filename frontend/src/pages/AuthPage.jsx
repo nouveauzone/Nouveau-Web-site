@@ -46,7 +46,20 @@ export default function AuthPage({ setPage }) {
       } else {
         res = await API.register({ name: form.name, email: form.email, password: form.password });
       }
-      dispatch({ type:"LOGIN", payload:{ _id:res._id||res.user?._id, name:res.name||res.user?.name, email:res.email||res.user?.email, role:res.role||res.user?.role||"user", token:res.token }, token:res.token });
+      const authPayload = {
+        user: {
+          _id: res._id || res.user?._id,
+          name: res.name || res.user?.name,
+          email: res.email || res.user?.email,
+          role: res.role || res.user?.role || "user",
+          token: res.token,
+        },
+        token: res.token,
+        isAuthenticated: true,
+      };
+      try { localStorage.setItem("nouveau_auth", JSON.stringify(authPayload)); } catch {}
+
+      dispatch({ type:"LOGIN", payload:authPayload.user, token:authPayload.token });
       goAfterAuth();
     } catch (err) {
       // Try local demo login

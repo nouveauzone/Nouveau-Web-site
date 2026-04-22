@@ -1,185 +1,159 @@
+import axios from "axios";
 import API from "../config/api";
 import { PRODUCTS as INITIAL_PRODUCTS } from "../data/products";
 
 const normalizeProduct = (product) => ({
-	...product,
-	images: Array.isArray(product?.images) && product.images.length ? product.images : ["/ethnic1.jpeg"],
-	price: Number(product?.price) || 0,
-	originalPrice: Number(product?.originalPrice) || Number(product?.price) || 0,
-	stock: product?.stock != null ? Number(product.stock) : 10,
-	rating: Number(product?.rating) || 0,
-	discount: Number(product?.discount) || 0,
+  ...product,
+  images: Array.isArray(product?.images) && product.images.length ? product.images : ["/ethnic1.jpeg"],
+  price: Number(product?.price) || 0,
+  originalPrice: Number(product?.originalPrice) || Number(product?.price) || 0,
+  stock: product?.stock != null ? Number(product.stock) : 10,
+  rating: Number(product?.rating) || 0,
+  discount: Number(product?.discount) || 0,
 });
 
 const normalizeFallback = (value) => {
-	const raw = String(value || "").trim();
-	if (!raw) return "";
-	if (raw === "/api") return "";
-	if (raw.startsWith("/")) return "";
+  const raw = String(value || "").trim();
+  if (!raw || raw === "/api" || raw.startsWith("/")) return "";
 
-	let normalized = raw.replace(/\/+$/, "");
+  let normalized = raw.replace(/\/+$/, "");
+  if (typeof window !== "undefined" && window.location.protocol === "https:" && normalized.startsWith("http://")) {
+    normalized = normalized.replace(/^http:\/\//i, "https://");
+  }
 
-	if (typeof window !== "undefined" && window.location.protocol === "https:" && normalized.startsWith("http://")) {
-		normalized = normalized.replace(/^http:\/\//i, "https://");
-	}
-
-	return normalized.replace(/\/api$/i, "");
+  return normalized.replace(/\/api$/i, "");
 };
 
 const API_FALLBACK = normalizeFallback(process.env.REACT_APP_API_FALLBACK_URL || process.env.VITE_API_FALLBACK_URL);
+const AUTH_EXPIRED_EVENT = "nouveau:auth-expired";
 
-const buildApiUrl = (base, path) => `${base}/api${path}`;
+const buildApiBase = (base) => {
+  const normalized = String(base || "").replace(/\/+$/, "");
+  return normalized ? `${normalized}/api` : "/api";
+};
 
-const isLikelyServerFailure = (status) => status === 502 || status === 503 || status === 504 || status >= 520 || status === 500;
+const isLikelyServerFailure = (status) => status === 404 || status === 500 || status === 502 || status === 503 || status === 504 || status >= 520;
 
-const isSameOriginRequest = (requestUrl) => {
-    try {
-        const current = typeof window !== "undefined" ? window.location.origin : "";
-        if (!current) return false;
-        const requested = new URL(requestUrl, current || undefined).origin;
-        return requested === current;
-    } catch {
-        return false;
+const isSameOriginBase = (baseURL) => {
+  if (!baseURL) return true;
+  if (baseURL.startsWith("/")) return true;
+
+  try {
+    const currentOrigin = typeof window !== "undefined" ? window.location.origin : "";
+    if (!currentOrigin) return false;
+    return new URL(baseURL, currentOrigin).origin === currentOrigin;
+  } catch {
+    return false;
+  }
+};
+
+const getStoredAuth = () => {
+  try {
+    return JSON.parse(localStorage.getItem("nouveau_auth") || "{}");
+  } catch {
+    return {};
+  }
+};
+
+const clearStoredAuth = () => {
+  try {
+    localStorage.removeItem("nouveau_auth");
+  } catch {}
+};
+
+const emitAuthExpired = (message = "Session expired. Please login again.") => {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent(AUTH_EXPIRED_EVENT, { detail: { message } }));
+};
+
+const createClient = (baseURL) => {
+  const client = axios.create({
+    baseURL,
+    timeout: 20000,
+    withCredentials: false,
+  });
+
+  client.interceptors.request.use((config) => {
+    const token = getStoredAuth()?.token;
+    if (token) {
+      config.headers = config.headers || {};
+      config.headers.Authorization = `Bearer ${token}`;
     }
+    return config;
+  });
+
+  return client;
 };
 
-const shouldRetryWithFallback = (requestUrl, res) => {
-	if (!API_FALLBACK) return false;
-	if (!(res.status === 404 || isLikelyServerFailure(res.status))) return false;
+const primaryClient = createClient(buildApiBase(API));
+const fallbackClient = API_FALLBACK ? createClient(buildApiBase(API_FALLBACK)) : null;
 
-	const current = typeof window !== "undefined" ? window.location.origin : "";
-	return Boolean(current) && isSameOriginRequest(requestUrl) && API_FALLBACK !== current;
+const requestWithClient = async (client, config) => {
+  const response = await client.request(config);
+  return response.data;
 };
 
-const getAuthHeader = () => {
-	try {
-		const auth = JSON.parse(localStorage.getItem("nouveau_auth") || "{}");
-		return auth?.token ? { Authorization: `Bearer ${auth.token}` } : {};
-	} catch {
-		return {};
-	}
+const shouldRetryWithFallback = (error, client) => {
+  if (!fallbackClient) return false;
+  if (!error?.response) return false;
+  if (client !== primaryClient) return false;
+  if (!isLikelyServerFailure(Number(error.response.status))) return false;
+  return isSameOriginBase(primaryClient.defaults.baseURL || "");
 };
 
-const request = async (path, options = {}) => {
-	const primaryUrl = buildApiUrl(API, path);
-	let res;
+const request = async (config) => {
+  try {
+    return await requestWithClient(primaryClient, config);
+  } catch (error) {
+    if (shouldRetryWithFallback(error, primaryClient)) {
+      return requestWithClient(fallbackClient, config);
+    }
 
-	try {
-		res = await fetch(primaryUrl, {
-			headers: { "Content-Type": "application/json", ...getAuthHeader(), ...options.headers },
-			...options,
-		});
-	} catch (err) {
-		if (API_FALLBACK && isSameOriginRequest(primaryUrl)) {
-			res = await fetch(buildApiUrl(API_FALLBACK, path), {
-				headers: { "Content-Type": "application/json", ...getAuthHeader(), ...options.headers },
-				...options,
-			});
-		} else {
-			throw err;
-		}
-	}
+    const status = Number(error?.response?.status || 0);
+    const message = error?.response?.data?.message || error?.message || "Request failed";
 
-	if (shouldRetryWithFallback(primaryUrl, res)) {
-		res = await fetch(buildApiUrl(API_FALLBACK, path), {
-			headers: { "Content-Type": "application/json", ...getAuthHeader(), ...options.headers },
-			...options,
-		});
-	}
+    if (status === 401) {
+      clearStoredAuth();
+      emitAuthExpired(message || "Token invalid or expired");
+    }
 
-	if (!res.ok) {
-		const err = await res.json().catch(() => ({ message: res.statusText }));
-		throw new Error(err.message || "Request failed");
-	}
-
-	return res.json();
-};
-
-const requestFormData = async (path, formData, options = {}) => {
-	const primaryUrl = buildApiUrl(API, path);
-	let res;
-
-	try {
-		res = await fetch(primaryUrl, {
-			method: options.method || "POST",
-			headers: { ...getAuthHeader(), ...options.headers },
-			body: formData,
-		});
-	} catch (err) {
-		if (API_FALLBACK && isSameOriginRequest(primaryUrl)) {
-			res = await fetch(buildApiUrl(API_FALLBACK, path), {
-				method: options.method || "POST",
-				headers: { ...getAuthHeader(), ...options.headers },
-				body: formData,
-			});
-		} else {
-			throw err;
-		}
-	}
-
-	if (shouldRetryWithFallback(primaryUrl, res)) {
-		res = await fetch(buildApiUrl(API_FALLBACK, path), {
-			method: options.method || "POST",
-			headers: { ...getAuthHeader(), ...options.headers },
-			body: formData,
-		});
-	}
-
-	if (!res.ok) {
-		const err = await res.json().catch(() => ({ message: res.statusText }));
-		throw new Error(err.message || "Request failed");
-	}
-
-	return res.json();
+    throw new Error(message);
+  }
 };
 
 const apiService = {
-	register: (data) => request("/auth/register", { method: "POST", body: JSON.stringify(data) }),
-	login: (data) => request("/auth/login", { method: "POST", body: JSON.stringify(data) }),
-	getMe: () => request("/auth/me"),
+  register: (data) => request({ url: "/auth/register", method: "POST", data }),
+  login: (data) => request({ url: "/auth/login", method: "POST", data }),
+  getMe: () => request({ url: "/auth/me", method: "GET" }),
 
-	getProducts: (params = {}) => {
-		const q = new URLSearchParams(params).toString();
-		return request(`/products${q ? `?${q}` : ""}`, { cache: "no-store" }).catch(() => {
-			return INITIAL_PRODUCTS.map(normalizeProduct);
-		});
-	},
-	getProduct: (id) => request(`/products/${id}`),
-	createProduct: (data) => request("/products", { method: "POST", body: JSON.stringify(data) }),
-	updateProduct: (id, data) => request(`/products/${id}`, { method: "PUT", body: JSON.stringify(data) }),
-	deleteProduct: (id) => request(`/products/${id}`, { method: "DELETE" }),
-	addReview: (id, data) => request(`/reviews/${id}`, { method: "POST", body: JSON.stringify(data) }),
-	uploadImages: (formData) => requestFormData("/upload", formData),
+  getProducts: (params = {}) => {
+    return request({ url: "/products", method: "GET", params }).catch(() => INITIAL_PRODUCTS.map(normalizeProduct));
+  },
+  getProduct: (id) => request({ url: `/products/${id}`, method: "GET" }),
+  createProduct: (data) => request({ url: "/products", method: "POST", data }),
+  updateProduct: (id, data) => request({ url: `/products/${id}`, method: "PUT", data }),
+  deleteProduct: (id) => request({ url: `/products/${id}`, method: "DELETE" }),
+  addReview: (id, data) => request({ url: `/reviews/${id}`, method: "POST", data }),
+  uploadImages: (formData) => request({ url: "/upload", method: "POST", data: formData }),
 
-	placeOrder: (data) => request("/orders", { method: "POST", body: JSON.stringify(data) }),
-	getMyOrders: () => request("/orders/my"),
-	getOrder: (id) => request(`/orders/${id}`),
-	getAllOrders: (params = {}) => {
-		const q = new URLSearchParams(params).toString();
-		return request(`/orders/all${q ? `?${q}` : ""}`);
-	},
-	trackOrder: (trackingId) => request(`/orders/track/${trackingId}`),
-	updateOrderStatus: (id, status, message) => request(`/orders/update/${id}`, { method: "PUT", body: JSON.stringify({ status, message }) }),
-	deleteOrder: (id) => request(`/orders/${id}`, { method: "DELETE" }),
+  placeOrder: (data) => request({ url: "/orders", method: "POST", data }),
+  getMyOrders: () => request({ url: "/orders/my", method: "GET" }),
+  getOrder: (id) => request({ url: `/orders/${id}`, method: "GET" }),
+  getAllOrders: (params = {}) => request({ url: "/orders/all", method: "GET", params }),
+  trackOrder: (trackingId) => request({ url: `/orders/track/${trackingId}`, method: "GET" }),
+  updateOrderStatus: (id, status, message) => request({ url: `/orders/update/${id}`, method: "PUT", data: { status, message } }),
+  deleteOrder: (id) => request({ url: `/orders/${id}`, method: "DELETE" }),
 
-	getAllUsers: (params = {}) => {
-		const q = new URLSearchParams(params).toString();
-		return request(`/users${q ? `?${q}` : ""}`);
-	},
-	deleteUser: (id) => request(`/users/${id}`, { method: "DELETE" }),
+  getAllUsers: (params = {}) => request({ url: "/users", method: "GET", params }),
+  deleteUser: (id) => request({ url: `/users/${id}`, method: "DELETE" }),
 
-	updateProfile: (data) => request("/users/profile", { method: "PUT", body: JSON.stringify(data) }),
-	addAddress: (data) => request("/users/addresses", { method: "POST", body: JSON.stringify(data) }),
-	deleteAddress: (addressId) => request(`/users/addresses/${addressId}`, { method: "DELETE" }),
+  updateProfile: (data) => request({ url: "/auth/profile", method: "PUT", data }),
+  addAddress: (data) => request({ url: "/auth/addresses", method: "POST", data }),
+  deleteAddress: (addressId) => request({ url: `/auth/addresses/${addressId}`, method: "DELETE" }),
 
-	getMonthlyViews: (month) => {
-		const q = month ? `?month=${encodeURIComponent(month)}` : "";
-		return request(`/metrics/views${q}`);
-	},
-	incrementMonthlyViews: (month) => request("/metrics/views", {
-		method: "POST",
-		body: JSON.stringify(month ? { month } : {}),
-	}),
+  getMonthlyViews: (month) => request({ url: "/metrics/views", method: "GET", params: month ? { month } : {} }),
+  incrementMonthlyViews: (month) => request({ url: "/metrics/views", method: "POST", data: month ? { month } : {} }),
 };
 
+export { AUTH_EXPIRED_EVENT };
 export default apiService;

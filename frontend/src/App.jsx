@@ -5,6 +5,7 @@ import { THEME } from "./styles/theme";
 import { GLOBAL_CSS } from "./styles/globalStyles";
 import "./styles/storefront.css";
 import { AuthContext } from "./context/AuthContext";
+import { AUTH_EXPIRED_EVENT } from "./services/apiService";
 
 const HomePage        = lazy(() => import("./pages/HomePage"));
 const ShopPage        = lazy(() => import("./pages/ShopPage"));
@@ -42,6 +43,16 @@ export default function App() {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [page]);
+
+  useEffect(() => {
+    const handleAuthExpired = () => {
+      setPage("Auth");
+      setSelectedProduct(null);
+    };
+
+    window.addEventListener(AUTH_EXPIRED_EVENT, handleAuthExpired);
+    return () => window.removeEventListener(AUTH_EXPIRED_EVENT, handleAuthExpired);
+  }, []);
 
   const renderPage = () => {
     switch (page) {
