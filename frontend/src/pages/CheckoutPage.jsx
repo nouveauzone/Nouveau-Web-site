@@ -191,16 +191,6 @@ export default function CheckoutPage({ setPage }) {
                 </BtnPrimary>
               </div>
             )}
-            <div key={label} style={{ display: "flex", alignItems: "center" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", cursor: step > index + 1 ? "pointer" : "default" }} onClick={() => step > index + 1 && setStep(index + 1)}>
-                <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: step > index + 1 ? `linear-gradient(135deg,${CRIMSON},${GOLD})` : step === index + 1 ? GOLD : THEME.bgCard, border: step === index + 1 ? "none" : `1px solid ${THEME.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: 700, color: step >= index + 1 ? "#fff" : THEME.textLight, transition: "all 0.3s", fontFamily: "'Poppins',sans-serif" }}>
-                  {step > index + 1 ? "✓" : index + 1}
-                </div>
-                <span style={{ fontSize: "10px", letterSpacing: "2px", color: step >= index + 1 ? THEME.text : THEME.textLight, fontFamily: "'Poppins',sans-serif", fontWeight: step >= index + 1 ? 600 : 400, textTransform: "uppercase" }}>{label}</span>
-              </div>
-              {index < 2 && <div style={{ width: "48px", height: "1.5px", background: step > index + 1 ? GOLD : THEME.border, margin: "0 12px", transition: "all 0.3s" }} />}
-            </div>
-          ))}
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: "40px" }} className="cart-sidebar">
