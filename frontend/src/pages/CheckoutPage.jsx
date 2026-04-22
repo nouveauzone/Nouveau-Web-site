@@ -58,7 +58,7 @@ export default function CheckoutPage({ setPage }) {
       setPage("OrderSuccess");
     } catch (error) {
       console.error("Order failed:", error);
-      alert("Order fail ho gaya. Dobara try karo.");
+      alert("Order placement failed. Please try again.");
     } finally {
       setProcessing(false);
     }
@@ -105,7 +105,6 @@ export default function CheckoutPage({ setPage }) {
   };
 
   const field = (key) => ({
-                    ["UPI", "📲", "UPI Intent", "PhonePe, Google Pay, Paytm, or BHIM app opens directly"],
     background: THEME.bgCard,
     border: `1.5px solid ${errors[key] ? CRIMSON : THEME.border}`,
     color: THEME.text,
@@ -173,7 +172,7 @@ export default function CheckoutPage({ setPage }) {
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
                   {[
                     ["name", "Full Name", "text", "1fr"],
-                    ["phone", "Phone Number (WhatsApp updates aayenge)", "tel", "1fr"],
+                    ["phone", "Phone Number (WhatsApp updates)", "tel", "1fr"],
                     ["email", "Email Address", "email", "1fr 1fr"],
                     ["street", "Street Address", "text", "1fr 1fr"],
                     ["city", "City", "text", "1fr"],
@@ -218,7 +217,7 @@ export default function CheckoutPage({ setPage }) {
                 <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginBottom: "28px" }}>
                   {[
                     ["COD", "💵", "Cash on Delivery", "Pay when your order arrives — safe & simple"],
-                    ["UPI", "📲", "UPI Intent", "PhonePe, Google Pay, Paytm ya BHIM app direct open hogi"],
+                    ["UPI", "📲", "UPI Intent", "PhonePe, Google Pay, Paytm, or BHIM app opens directly"],
                     ["CARD", "💳", "Credit / Debit Card", "Visa, Mastercard, RuPay — secure card payment"],
                   ].map(([value, icon, title, description]) => (
                     <div

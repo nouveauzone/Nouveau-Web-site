@@ -4,7 +4,7 @@ import { BUSINESS_UPI_ID, isValidUpiId } from '../config/payment';
 // ============================================================
 // NOUVEAUZ — UPI Intent Payment
 // PhonePe / GPay / Paytm button click → seedha app open
-// Mobile par kaam karta hai (desktop par UPI ID copy hoti hai)
+// Works best on mobile (desktop users can copy the UPI ID)
 // ============================================================
 
 const UPI_APPS = [
