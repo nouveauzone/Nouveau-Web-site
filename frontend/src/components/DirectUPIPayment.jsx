@@ -99,8 +99,7 @@ const DirectUPIPayment = ({
   const formattedAmount = Number(amount).toFixed(2);
   const normalizedUpiId = String(upiId || '').trim().toLowerCase();
   const upiIdValid = isValidUpiId(normalizedUpiId);
-  const qrPayload = `upi://pay?pa=${normalizedUpiId}&pn=${encodeURIComponent(merchantLabel)}&am=${formattedAmount}&cu=INR&tn=${encodeURIComponent(txnNote)}`;
-  const qrImageSrc = `https://api.qrserver.com/v1/create-qr-code/?size=360x360&margin=8&data=${encodeURIComponent(qrPayload)}`;
+  const qrImageSrc = '/payment-qr.jpeg';
 
   const handleAppClick = (app) => {
     if (!upiIdValid) {
@@ -292,16 +291,7 @@ const DirectUPIPayment = ({
 
         {showQrFallback && (
           <>
-            <img
-              src={qrImageSrc}
-              alt="Nouveauz UPI QR code"
-              style={styles.qrImage}
-              onError={(event) => {
-                if (event.currentTarget.dataset.fallback === '1') return;
-                event.currentTarget.dataset.fallback = '1';
-                event.currentTarget.src = '/payment-qr.jpeg';
-              }}
-            />
+            <img src={qrImageSrc} alt="Nouveauz UPI QR code" style={styles.qrImage} />
             <p style={styles.qrHint}>
               Scan this QR with Google Pay, PhonePe, Paytm, or any UPI app.
               <br />
