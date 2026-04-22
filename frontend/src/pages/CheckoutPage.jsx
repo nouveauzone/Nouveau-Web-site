@@ -115,82 +115,8 @@ export default function CheckoutPage({ setPage }) {
     }
   };
 
-            {step === 3 && (
-              <div>
-                <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "10px", letterSpacing: "3px", color: GOLD, marginBottom: "24px", fontWeight: 700 }}>REVIEW YOUR ORDER</p>
-
-                <div style={{ background: THEME.bgCard, border: `1px solid ${THEME.border}`, borderRadius: "14px", padding: "20px 24px", marginBottom: "16px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-                    <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "10px", letterSpacing: "2px", color: GOLD, fontWeight: 700 }}>DELIVERY ADDRESS</p>
-                    <button onClick={() => setStep(1)} style={{ background: "none", border: "none", color: THEME.textMuted, cursor: "pointer", fontSize: "11px", fontFamily: "'Poppins',sans-serif" }}>Edit</button>
-                  </div>
-                  <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "14px", color: THEME.text, fontWeight: 600 }}>{address.name}</p>
-                  <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: THEME.textMuted, lineHeight: 1.7 }}>{address.street}, {address.city}, {address.state} - {address.pincode}</p>
-                  <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: THEME.textMuted }}>📱 {address.phone}</p>
-                </div>
-
-                <div style={{ background: THEME.bgCard, border: `1px solid ${THEME.border}`, borderRadius: "14px", padding: "20px 24px", marginBottom: "16px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                    <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "10px", letterSpacing: "2px", color: GOLD, fontWeight: 700 }}>PAYMENT METHOD</p>
-                    <button onClick={() => setStep(2)} style={{ background: "none", border: "none", color: THEME.textMuted, cursor: "pointer", fontSize: "11px", fontFamily: "'Poppins',sans-serif" }}>Edit</button>
-                  </div>
-                  <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "14px", color: THEME.text, fontWeight: 600 }}>
-                    {payMethod === "COD" ? "💵 Cash on Delivery" : payMethod === "UPI" ? "📲 Direct UPI Intent Payment" : "💳 Credit / Debit Card Payment"}
-                  </p>
-                </div>
-
-                {/* GST Breakdown */}
-                <div style={{ background: THEME.bgCard, border: `1px solid ${THEME.border}`, borderRadius: "14px", padding: "20px 24px", marginBottom: "16px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
-                    <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: THEME.textMuted }}>Subtotal</span>
-                    <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: THEME.text }}>₹{subtotal.toLocaleString("en-IN")}</span>
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
-                    <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: THEME.textMuted }}>CGST 2.5%</span>
-                    <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: THEME.text }}>₹{cgst.toLocaleString("en-IN")}</span>
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
-                    <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: THEME.textMuted }}>SGST 2.5%</span>
-                    <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: THEME.text }}>₹{sgst.toLocaleString("en-IN")}</span>
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
-                    <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: THEME.textMuted }}>Shipping</span>
-                    <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: shipping === 0 ? "#2ecc71" : THEME.text }}>{shipping === 0 ? '🎉 Free' : `₹${shipping}`}</span>
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", paddingTop: "12px", borderTop: `1px solid ${THEME.border}` }}>
-                    <span style={{ fontFamily: "'Playfair Display',serif", fontSize: "16px", fontWeight: 700, color: THEME.text }}>Total</span>
-                    <span style={{ fontFamily: "'Playfair Display',serif", fontSize: "18px", fontWeight: 700, color: GOLD }}>₹{total.toLocaleString("en-IN")}</span>
-                  </div>
-                </div>
-
-                <div style={{ marginBottom: "16px", display: "grid", gap: "10px" }}>
-                  {[ ["🔒", "100% Secure Checkout"], ["📲", "Direct UPI Intent"], ["💬", "WhatsApp Order Updates"], ["⚡", "Fast Dispatch"], ["✅", "Authentic Fabrics"]].map(([icon, text]) => (
-                    <div key={text} style={{ background: THEME.bgCard, border: `1px solid ${THEME.border}`, borderRadius: "12px", padding: "12px 16px", display: "flex", gap: "10px", alignItems: "center" }}>
-                      <span style={{ fontSize: "16px" }}>{icon}</span>
-                      <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: "12px", color: THEME.textMuted }}>{text}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <div style={{ background: "#25D36610", border: "1px solid #25D36640", borderRadius: "12px", padding: "14px 18px", marginBottom: "16px", display: "flex", gap: "12px", alignItems: "center" }}>
-                  <span style={{ fontSize: "22px" }}>💬</span>
-                  <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "12px", color: "#128C7E" }}>
-                    Order updates will be sent to <strong>{address.phone}</strong> via WhatsApp
-                  </p>
-                </div>
-
-                <div style={{ background: "#fff5f5", border: `1.5px solid ${CRIMSON}40`, borderRadius: "12px", padding: "14px 18px", marginBottom: "24px", display: "flex", gap: "10px", alignItems: "flex-start" }}>
-                  <span style={{ fontSize: "18px", flexShrink: 0 }}>⚠️</span>
-                  <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "11px", color: THEME.textMuted, lineHeight: 1.7 }}>
-                    <strong style={{ color: CRIMSON }}>No Return / No Exchange:</strong> All sales are final. Please verify size and product details before ordering.
-                  </p>
-                </div>
-
-                <BtnPrimary onClick={handleOrder} disabled={processing} style={{ borderRadius: "12px", padding: "16px 48px", width: "100%", justifyContent: "center", fontSize: "12px", letterSpacing: "2px" }}>
-                  {processing ? "Placing Order... 🌸" : `Place Order · ₹${total.toLocaleString("en-IN")}`}
-                </BtnPrimary>
-              </div>
-            )}
+  // ...existing code...
+  // Stepper and main grid content structure fix is required above this point.
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: "40px" }} className="cart-sidebar">
