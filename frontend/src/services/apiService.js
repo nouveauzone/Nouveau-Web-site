@@ -135,6 +135,8 @@ const apiService = {
   deleteProduct: (id) => request({ url: `/products/${id}`, method: "DELETE" }),
   addReview: (id, data) => request({ url: `/reviews/${id}`, method: "POST", data }),
   uploadImages: (formData) => request({ url: "/upload", method: "POST", data: formData }),
+  createRazorpayOrder: (data) => request({ url: "/payments/razorpay/create-order", method: "POST", data }),
+  verifyRazorpayPayment: (data) => request({ url: "/payments/razorpay/verify", method: "POST", data }),
 
   placeOrder: (data) => request({ url: "/orders", method: "POST", data }),
   getMyOrders: () => request({ url: "/orders/my", method: "GET" }),
