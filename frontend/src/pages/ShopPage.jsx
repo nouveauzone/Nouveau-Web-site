@@ -102,7 +102,7 @@ export default function ShopPage({ setPage, setSelectedProduct, initialCategory 
   return (
     <div style={{ background: THEME.bg, minHeight: "100vh" }}>
       <style>{`
-        .sp-layout { display: flex; gap: 28px; max-width: 1400px; margin: 0 auto; padding: clamp(20px,4vw,36px) clamp(16px,5vw,40px); }
+        .sp-layout { display: flex; gap: 28px; max-width: 1400px; margin: 0 auto; padding: 40px var(--container-padding); }
         .sp-sidebar { width: 220px; flex-shrink: 0; }
         .sp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(clamp(140px,36vw,250px),1fr)); gap: clamp(10px,2.5vw,18px); }
         @media(max-width:768px){
@@ -120,7 +120,7 @@ export default function ShopPage({ setPage, setSelectedProduct, initialCategory 
       `}</style>
 
       {/* ── HEADER ─────────────────────────────────────────────────────────── */}
-      <div style={{ background: `linear-gradient(135deg,${THEME.crimson},${THEME.crimsonDark})`, padding: "clamp(32px,7vw,60px) clamp(16px,5vw,40px) clamp(20px,4vw,36px)", position: "relative", overflow: "hidden" }}>
+      <div style={{ background: `linear-gradient(135deg,${THEME.crimson},${THEME.crimsonDark})`, padding: "clamp(40px, 8vw, 80px) var(--container-padding)", position: "relative", overflow: "hidden" }}>
         <div style={{ position:"absolute", right:0, bottom:"-30px", opacity:0.06 }}>
           <img src="/nouveau-logo.png" alt="" style={{ width:"200px", height:"260px", objectFit:"contain", filter:"brightness(10)" }}/>
         </div>

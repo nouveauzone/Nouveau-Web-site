@@ -118,8 +118,8 @@ export default function CheckoutPage({ setPage }) {
 
   return (
     <div style={{ background: THEME.bg, minHeight: "100vh", color: THEME.text }}>
-      <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "60px 40px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: "40px" }} className="cart-sidebar">
+      <div className="resp-container" style={{ maxWidth: "1200px", margin: "0 auto", padding: "60px var(--container-padding)" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: "clamp(30px, 5vw, 60px)" }} className="cart-sidebar">
           <div>
             {step === 1 && (
               <div>
@@ -127,9 +127,9 @@ export default function CheckoutPage({ setPage }) {
                 <div
                   style={{
                     display: "grid",
-                    gridTemplateColumns: "repeat(2, minmax(240px, 1fr))",
+                    gridTemplateColumns: "repeat(2, 1fr)",
                     columnGap: "20px",
-                    rowGap: "14px",
+                    rowGap: "16px",
                   }}
                   className="checkout-address-grid"
                 >
@@ -142,19 +142,19 @@ export default function CheckoutPage({ setPage }) {
                         type={type}
                         value={address[key]}
                         onChange={(event) => setAddress((current) => ({ ...current, [key]: event.target.value }))}
+                        className="checkout-input"
                         style={{
                           width: "100%",
-                          padding: "12px 14px",
+                          padding: "14px",
                           background: THEME.bgCard,
                           border: `1px solid ${errors[key] ? CRIMSON : THEME.border}`,
-                          borderRadius: "8px",
+                          borderRadius: "10px",
                           color: THEME.text,
                           fontFamily: "'Poppins',sans-serif",
-                          fontSize: "13px",
-                          transition: "border-color 0.2s",
+                          fontSize: "14px",
+                          transition: "all 0.2s",
                         }}
-                        onFocus={(event) => { event.target.style.borderColor = GOLD; }}
-                        onBlur={(event) => { event.target.style.borderColor = errors[key] ? CRIMSON : THEME.border; }}
+                        placeholder={label}
                       />
                     </div>
                   ))}
@@ -325,7 +325,7 @@ export default function CheckoutPage({ setPage }) {
           </div>
 
           <div>
-            <div style={{ background: THEME.bgCard, border: `1px solid ${THEME.border}`, borderRadius: "16px", padding: "24px", position: "sticky", top: "100px" }}>
+            <div style={{ background: THEME.bgCard, border: `1px solid ${THEME.border}`, borderRadius: "16px", padding: "clamp(16px, 5vw, 24px)", position: "sticky", top: "100px" }}>
               <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "10px", letterSpacing: "3px", color: GOLD, marginBottom: "20px", fontWeight: 700 }}>ORDER SUMMARY</p>
 
               <div style={{ maxHeight: "280px", overflowY: "auto", marginBottom: "20px", paddingRight: "4px" }}>

@@ -5,9 +5,11 @@
   --sf-text: #1a1a1a;
   --sf-muted: #555555;
   --sf-border: #eadbd2;
-  --sf-radius: 14px;
-  --sf-shadow-soft: 0 8px 24px rgba(63, 38, 33, 0.08);
-  --sf-shadow-hover: 0 14px 34px rgba(63, 38, 33, 0.16);
+  --sf-radius: 16px;
+  --sf-shadow-soft: 0 8px 32px rgba(63, 38, 33, 0.05);
+  --sf-shadow-hover: 0 16px 48px rgba(63, 38, 33, 0.12);
+  --sf-glass-bg: rgba(255, 255, 255, 0.85);
+  --sf-btn-shadow: 0 4px 12px rgba(183, 110, 121, 0.2);
 }
 
 .sf-shell {
@@ -74,9 +76,14 @@
   position: sticky;
   top: 0;
   z-index: 120;
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(10px);
+  background: var(--sf-glass-bg);
+  backdrop-filter: blur(12px) saturate(180%);
   border-bottom: 1px solid var(--sf-border);
+  transition: all 0.3s ease;
+}
+
+.sf-navbar:hover {
+  background: rgba(255, 255, 255, 0.98);
 }
 
 .sf-navbar-inner {
@@ -526,6 +533,11 @@
   background: linear-gradient(135deg, #b71c1c, #8b0000);
   color: #fff;
   border-color: #8b0000;
+  box-shadow: 0 4px 14px rgba(139, 0, 0, 0.2);
+}
+
+.sf-btn-primary:active {
+  transform: scale(0.96);
 }
 
 .sf-state {

@@ -33,16 +33,16 @@ export default function CartPage({ setPage }) {
 
   return (
     <div style={{ background: THEME.bg, minHeight: "100vh", color: THEME.text }}>
-      <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "60px 40px" }}>
-        <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: "36px", marginBottom: "40px" }}>Shopping Bag</h1>
+      <div className="resp-container" style={{ maxWidth: "1200px", margin: "0 auto", padding: "60px var(--container-padding)" }}>
+        <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(28px, 5vw, 36px)", marginBottom: "40px" }}>Shopping Bag</h1>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 350px", gap: "60px" }} className="cart-grid-mobile">
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 350px", gap: "clamp(30px, 5vw, 60px)" }} className="cart-grid-mobile">
           
           {/* ITEMS */}
           <div>
             {cart.map((item) => (
-              <div key={`${item._id}-${item.size}`} style={{ display: "flex", gap: "20px", padding: "24px 0", borderBottom: `1px solid ${THEME.border}` }}>
-                <div style={{ width: "100px", height: "130px", borderRadius: "8px", overflow: "hidden", background: THEME.bgDark, flexShrink: 0 }}>
+              <div key={`${item._id}-${item.size}`} className="cart-item-mobile" style={{ display: "flex", gap: "20px", padding: "24px 0", borderBottom: `1px solid ${THEME.border}` }}>
+                <div className="cart-item-img" style={{ width: "100px", height: "130px", borderRadius: "12px", overflow: "hidden", background: THEME.bgDark, flexShrink: 0, border: `1px solid ${THEME.border}` }}>
                   <img src={resolveImageUrl(item.images?.[0], "/ethnic1.jpeg")} alt={item.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 </div>
 
@@ -86,7 +86,7 @@ export default function CartPage({ setPage }) {
 
           {/* SUMMARY */}
           <div>
-            <div style={{ padding: "30px", background: THEME.bgCard, border: `1px solid ${THEME.border}`, borderRadius: "16px", position: "sticky", top: "100px" }}>
+            <div style={{ padding: "clamp(20px, 5vw, 30px)", background: THEME.bgCard, border: `1px solid ${THEME.border}`, borderRadius: "16px", position: "sticky", top: "100px" }}>
               <h2 style={{ fontFamily: "'Poppins', sans-serif", fontSize: "18px", fontWeight: 700, marginBottom: "24px" }}>Order Summary</h2>
               
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "12px", color: THEME.textMuted }}>
