@@ -280,12 +280,48 @@ export default function Providers({ children }) {
             <ToastContext.Provider value={toast}>
               {children}
               {/* Toast UI */}
-              <div style={{ position:"fixed", bottom:"28px", left:"50%", transform:"translateX(-50%)", zIndex:9999, display:"flex", flexDirection:"column", gap:"10px", alignItems:"center", pointerEvents:"none" }}>
-                {toasts.map(t => (
-                  <div key={t.id} style={{ background:t.type==="error"?"#7a1420":t.type==="warning"?"#6b4800":"#FFFFFF", color:"#fff", padding:"13px 28px", fontSize:"13px", letterSpacing:"1px", fontFamily:"'Poppins',sans-serif", fontWeight:600, borderRadius:"99px", boxShadow:"0 8px 32px rgba(0,0,0,0.2)", borderLeft:`4px solid ${t.type==="error"?"#ff6b6b":t.type==="warning"?"#f9ca24":"#D4AF37"}`, whiteSpace:"nowrap", animation:"fadeUp 0.3s ease" }}>
-                    {t.type==="success"?"✦ ":t.type==="error"?"✕ ":"⚠ "}{t.msg}
-                  </div>
-                ))}
+              <style>{`
+                @keyframes toastSlideIn {
+                  from { opacity: 0; transform: translateY(20px); }
+                  to { opacity: 1; transform: translateY(0); }
+                }
+                @keyframes toastSlideOut {
+                  from { opacity: 1; transform: translateY(0); }
+                  to { opacity: 0; transform: translateY(20px); }
+                }
+              `}</style>
+              <div style={{ position:"fixed", bottom:"28px", left:"50%", transform:"translateX(-50%)", zIndex:9999, display:"flex", flexDirection:"column", gap:"12px", alignItems:"center", pointerEvents:"none" }}>
+                {toasts.map((t, idx) => {
+                  const isSuccess = t.type === "success";
+                  const isError = t.type === "error";
+                  const isWarning = t.type === "warning";
+                  
+                  return (
+                    <div key={t.id} style={{
+                      background: isError ? "#c71f3e" : isWarning ? "#d97706" : "#D4AF37",
+                      color: "#fff",
+                      padding: "14px 32px",
+                      fontSize: "14px",
+                      letterSpacing: "0.5px",
+                      fontFamily: "'Poppins', sans-serif",
+                      fontWeight: 600,
+                      borderRadius: "8px",
+                      boxShadow: "0 12px 40px rgba(0,0,0,0.25)",
+                      whiteSpace: "nowrap",
+                      animation: "toastSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
+                      backdropFilter: "blur(10px)",
+                      border: `1px solid ${isError ? "#ff6b7a" : isWarning ? "#f59e0b" : "#E5C158"}`,
+                    }}>
+                      <span style={{ fontSize: "18px" }}>
+                        {isSuccess ? "🛒" : isError ? "❌" : "⚠️"}
+                      </span>
+                      <span>{t.msg}</span>
+                    </div>
+                  );
+                })}
               </div>
             </ToastContext.Provider>
           </AppDataContext.Provider>
