@@ -35,6 +35,7 @@ export const GLOBAL_CSS = `
   @media(max-width: 768px) {
     body { font-size: 14px; }
     .grid-2col { grid-template-columns: 1fr !important; }
+    .checkout-address-grid { grid-template-columns: 1fr !important; }
     .hide-mobile { display: none !important; }
     .show-mobile { display: block !important; }
     .stats-grid { grid-template-columns: 1fr 1fr !important; }

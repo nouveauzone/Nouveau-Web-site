@@ -105,6 +105,7 @@ export default function CheckoutPage({ setPage }) {
   };
 
   const field = (key) => ({
+    width: "100%",
     background: THEME.bgCard,
     border: `1.5px solid ${errors[key] ? CRIMSON : THEME.border}`,
     color: THEME.text,
@@ -114,6 +115,8 @@ export default function CheckoutPage({ setPage }) {
     fontFamily: "'Poppins',sans-serif",
     transition: "border-color 0.2s",
     borderRadius: "10px",
+    lineHeight: 1.3,
+    boxSizing: "border-box",
   });
 
   if (!cart.length) {
@@ -169,7 +172,15 @@ export default function CheckoutPage({ setPage }) {
             {step === 1 && (
               <div>
                 <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "10px", letterSpacing: "3px", color: GOLD, marginBottom: "24px", fontWeight: 700 }}>DELIVERY ADDRESS</p>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(2, minmax(240px, 1fr))",
+                    columnGap: "20px",
+                    rowGap: "14px",
+                  }}
+                  className="checkout-address-grid"
+                >
                   {[
                     ["name", "Full Name", "text", "1fr"],
                     ["phone", "Phone Number (WhatsApp updates)", "tel", "1fr"],
