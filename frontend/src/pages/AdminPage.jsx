@@ -338,6 +338,14 @@ export default function AdminPage({ setPage }) {
     }
   }, [selectedUser]);
 
+  function getOrderCustomer(order) { return getOrderCustomerName(order); }
+  function getOrderEmail(order) { return getOrderCustomerEmail(order); }
+  function getOrderStatus(order) { return order?.orderStatus || order?.status || "Placed"; }
+  function getOrderStage(order) { return getSimpleOrderStatus(order); }
+  function getOrderCity(order) { return order?.city || order?.shippingAddress?.city || "—"; }
+  function getOrderAmountLabel(order) { return `₹${getOrderAmount(order).toLocaleString("en-IN")}`; }
+  function getOrderDate(order) { return getOrderDateLabel(order); }
+
   const handleAdminLogin = async () => {
     try {
       const res = await API.login({ email: creds.email, password: creds.pass });
@@ -582,14 +590,6 @@ export default function AdminPage({ setPage }) {
   const twoCol = isMobile ? "1fr" : "1fr 1fr";
   const dashboardSplit = isMobile ? "1fr" : "2fr 1fr";
   const fourCol = isMobile ? "1fr" : "repeat(4, 1fr)";
-
-  const getOrderCustomer = (order) => getOrderCustomerName(order);
-  const getOrderEmail = (order) => getOrderCustomerEmail(order);
-  const getOrderStatus = (order) => order?.orderStatus || order?.status || "Placed";
-  const getOrderStage = (order) => getSimpleOrderStatus(order);
-  const getOrderCity = (order) => order?.city || order?.shippingAddress?.city || "—";
-  const getOrderAmountLabel = (order) => `₹${getOrderAmount(order).toLocaleString("en-IN")}`;
-  const getOrderDate = (order) => getOrderDateLabel(order);
 
   return (
     <div style={{ background:THEME.bgDark, minHeight:"100vh", display:"flex", flexDirection:isMobile?"column":"row" }}>
