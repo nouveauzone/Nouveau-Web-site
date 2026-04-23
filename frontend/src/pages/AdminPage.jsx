@@ -321,6 +321,23 @@ export default function AdminPage({ setPage }) {
 
   useEffect(() => { if (isAdminAuthenticated) loadData(); }, [isAdminAuthenticated]);
 
+  useEffect(() => {
+    setOrderPage(1);
+  }, [orderSearch, orderFilter]);
+
+  useEffect(() => {
+    setUserPage(1);
+  }, [userSearch]);
+
+  useEffect(() => {
+    if (!selectedUser) {
+      setSelectedUserDetail(null);
+      setSelectedUserOrders([]);
+      setSelectedUserStats(null);
+      setSelectedUserLoading(false);
+    }
+  }, [selectedUser]);
+
   const handleAdminLogin = async () => {
     try {
       const res = await API.login({ email: creds.email, password: creds.pass });
@@ -426,23 +443,6 @@ export default function AdminPage({ setPage }) {
   const visibleOrders = filteredOrders.slice((orderPage - 1) * ADMIN_ORDER_PAGE_SIZE, orderPage * ADMIN_ORDER_PAGE_SIZE);
   const visibleUsers = filteredUsers.slice((userPage - 1) * ADMIN_USER_PAGE_SIZE, userPage * ADMIN_USER_PAGE_SIZE);
   const selectedUserComputed = selectedUser ? buildUserOrderSummary(selectedUser, allOrders) : null;
-
-  useEffect(() => {
-    setOrderPage(1);
-  }, [orderSearch, orderFilter]);
-
-  useEffect(() => {
-    setUserPage(1);
-  }, [userSearch]);
-
-  useEffect(() => {
-    if (!selectedUser) {
-      setSelectedUserDetail(null);
-      setSelectedUserOrders([]);
-      setSelectedUserStats(null);
-      setSelectedUserLoading(false);
-    }
-  }, [selectedUser]);
 
   const handleSelectUser = async (userItem) => {
     setSelectedUser(userItem);
