@@ -990,14 +990,21 @@ export default function AdminPage({ setPage }) {
                     </div>
                   </div>
                   <div style={{ display:"grid", gridTemplateColumns:isMobile?"1fr":"repeat(2, minmax(0, 1fr))", gap:"10px", marginBottom:"14px" }}>
-                    {[
-                      { label: "Email", value: selectedUserDetail?.email || selectedUser.email },
-                      { label: "Phone", value: selectedUserDetail?.phone || selectedUser.phone || "—" },
-                      { label: "City", value: selectedUserStats?.city || selectedUserComputed?.city || selectedUserDetail?.addresses?.[0]?.city || selectedUser.addresses?.[0]?.city || "—" },
-                      { label: "State", value: selectedUserStats?.state || selectedUserComputed?.state || selectedUserDetail?.addresses?.[0]?.state || selectedUser.addresses?.[0]?.state || "—" },
-                      { label: "Member Since", value: selectedUserDetail?.createdAt ? new Date(selectedUserDetail.createdAt).toLocaleDateString("en-IN",{month:"short",year:"numeric"}) : selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString("en-IN",{month:"short",year:"numeric"}) : "—" },
-                      { label: "Role", value: (selectedUserDetail?.role || selectedUser.role || "user").toUpperCase() },
-                    ].map((item) => (
+                    {(() => {
+                      const primaryAddress = selectedUserDetail?.addresses?.[0] || selectedUser.addresses?.[0] || null;
+                      const savedAddress = primaryAddress ? [primaryAddress.street, primaryAddress.city, primaryAddress.state, primaryAddress.pincode].filter(Boolean).join(", ") : "—";
+                      return [
+                        { label: "Email", value: selectedUserDetail?.email || selectedUser.email },
+                        { label: "Phone", value: selectedUserDetail?.phone || selectedUser.phone || "—" },
+                        { label: "City", value: selectedUserStats?.city || selectedUserComputed?.city || selectedUserDetail?.addresses?.[0]?.city || selectedUser.addresses?.[0]?.city || "—" },
+                        { label: "State", value: selectedUserStats?.state || selectedUserComputed?.state || selectedUserDetail?.addresses?.[0]?.state || selectedUser.addresses?.[0]?.state || "—" },
+                        { label: "Saved Address", value: savedAddress },
+                        { label: "Member Since", value: selectedUserDetail?.createdAt ? new Date(selectedUserDetail.createdAt).toLocaleDateString("en-IN",{month:"short",year:"numeric"}) : selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString("en-IN",{month:"short",year:"numeric"}) : "—" },
+                        { label: "Last Login", value: selectedUserDetail?.lastLogin ? new Date(selectedUserDetail.lastLogin).toLocaleString("en-IN", { day:"numeric", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" }) : "—" },
+                        { label: "Login Count", value: Number(selectedUserDetail?.loginCount ?? selectedUser.loginCount ?? 0).toLocaleString("en-IN") },
+                        { label: "Role", value: (selectedUserDetail?.role || selectedUser.role || "user").toUpperCase() },
+                      ];
+                    })().map((item) => (
                       <div key={item.label} style={{ background:THEME.bg, borderRadius:"8px", padding:"12px 14px" }}>
                         <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"9px", letterSpacing:"2px", color:THEME.textLight, marginBottom:"3px" }}>{item.label.toUpperCase()}</p>
                         <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"13px", color:THEME.text, fontWeight:600, wordBreak:"break-all" }}>{item.value}</p>

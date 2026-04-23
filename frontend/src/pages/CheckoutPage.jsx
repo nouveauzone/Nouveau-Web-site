@@ -116,12 +116,26 @@ export default function CheckoutPage({ setPage }) {
   };
 
 
+  if (!isAuthenticated) {
+    return (
+      <div style={{ background: THEME.bg, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "60px 20px" }}>
+        <div style={{ maxWidth: "520px", width: "100%", background: THEME.bgCard, border: `1px solid ${THEME.border}`, borderRadius: "18px", padding: "34px 30px", textAlign: "center" }}>
+          <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "10px", letterSpacing: "3px", color: GOLD, fontWeight: 700, marginBottom: "10px" }}>SECURE CHECKOUT</p>
+          <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: "30px", marginBottom: "10px", color: THEME.text }}>Login Required</h2>
+          <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: THEME.textMuted, lineHeight: 1.7, marginBottom: "24px" }}>
+            Please login first to place your order.
+          </p>
+          <div style={{ display: "flex", justifyContent: "center", gap: "10px", flexWrap: "wrap" }}>
+            <BtnOutline onClick={() => setPage("Home")} color={THEME.textMuted} style={{ borderRadius: "12px" }}>← Back to Store</BtnOutline>
+            <BtnPrimary onClick={() => { localStorage.setItem("nouveau_post_auth_page", "Checkout"); setPage("Auth"); }} style={{ borderRadius: "12px" }}>Login to Continue</BtnPrimary>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ background: THEME.bg, minHeight: "100vh", color: THEME.text }}>
-<<<<<<< HEAD
-      <div className="resp-container" style={{ maxWidth: "1200px", margin: "0 auto", padding: "60px var(--container-padding)" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: "clamp(30px, 5vw, 60px)" }} className="cart-sidebar">
-=======
       <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "60px clamp(16px, 4vw, 40px)" }}>
         <h1 style={{ fontFamily: "'Playfair Display',serif", fontSize: "42px", marginBottom: "8px", color: THEME.text }}>Checkout</h1>
         <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "12px", color: THEME.textMuted, marginBottom: "40px" }}>Secure checkout — powered by Nouveau™</p>
@@ -141,7 +155,6 @@ export default function CheckoutPage({ setPage }) {
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: "40px" }} className="cart-sidebar">
->>>>>>> 8864255 (Improve mobile checkout and contact layouts)
           <div>
             {step === 1 && (
               <div>
