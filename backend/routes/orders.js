@@ -24,12 +24,7 @@ const orderCreateValidation = [
   body("items.*.price").isFloat({ gt: 0 }).withMessage("Item price must be positive"),
   body("items.*.qty").isInt({ min: 1 }).withMessage("Item qty must be >= 1"),
   body("paymentMethod").optional().isIn(["COD", "UPI", "RAZORPAY", "cod", "upi", "razorpay"]).withMessage("Unsupported payment method"),
-  body("paymentReference")
-    .optional({ checkFalsy: true })
-    .isString()
-    .trim()
-    .isLength({ min: 8, max: 40 })
-    .withMessage("paymentReference must be 8-40 characters"),
+
   body("shippingAddress.name").trim().notEmpty(),
   body("shippingAddress.phone").trim().notEmpty(),
   body("shippingAddress.email").isEmail(),
