@@ -37,6 +37,8 @@ const ls = {
   set: (k, v)   => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
 };
 
+const asArray = (value) => (Array.isArray(value) ? value : []);
+
 const hydrateAuthState = () => {
   const raw = ls.get("nouveau_auth", { user:null, token:null, isAuthenticated:false });
   const hasUser = Boolean(raw?.user?._id);
@@ -47,7 +49,7 @@ const hydrateAuthState = () => {
 
 // ── GLOBAL shared orders store (single source of truth) ──────────────────────
 // Both checkout (placeOrder) and admin panel read/write this same array
-const loadStoredOrders = () => ls.get("nouveau_all_orders", []);
+const loadStoredOrders = () => asArray(ls.get("nouveau_all_orders", []));
 
 const normalizeOrder = (order, fallback = {}) => {
   const shippingAddress = order?.shippingAddress || fallback.shippingAddress || {};
@@ -83,15 +85,20 @@ const normalizeOrder = (order, fallback = {}) => {
 
 export default function Providers({ children }) {
   const [authState, authDispatch] = useReducer(authReducer, hydrateAuthState());
-  const [cart,      cartDispatch] = useReducer(cartReducer, ls.get("nouveau_cart", []));
-  const [wishlist,  setWishlist]  = useState(() => ls.get("nouveau_wish", []));
+  const [cart,      cartDispatch] = useReducer(cartReducer, asArray(ls.get("nouveau_cart", [])));
+  const [wishlist,  setWishlist]  = useState(() => asArray(ls.get("nouveau_wish", [])));
 
   // ── ALL orders — shared between checkout, account, admin, track ────────────
-  const [allOrders, setAllOrders] = useState(() => loadStoredOrders());
+  const [allOrders, setAllOrders] = useState(() => asArray(loadStoredOrders()));
 
   // ── Registered users (local — syncs with backend when available) ──────────
   const [localUsers, setLocalUsers] = useState(() => {
-    try { return JSON.parse(localStorage.getItem("nouveau_demo_users") || "[]"); } catch { return []; }
+    try {
+      const parsed = JSON.parse(localStorage.getItem("nouveau_demo_users") || "[]");
+      return asArray(parsed);
+    } catch {
+      return [];
+    }
   });
 
   // ── Toast ─────────────────────────────────────────────────────────────────

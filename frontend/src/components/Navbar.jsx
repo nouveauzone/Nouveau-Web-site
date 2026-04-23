@@ -12,7 +12,9 @@ export default function Navbar({ page, setPage }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [query, setQuery] = useState("");
 
-  const cartCount = useMemo(() => cart.reduce((sum, item) => sum + item.qty, 0), [cart]);
+  const safeCart = Array.isArray(cart) ? cart : [];
+  const safeWishlist = Array.isArray(wishlist) ? wishlist : [];
+  const cartCount = useMemo(() => safeCart.reduce((sum, item) => sum + Number(item?.qty || 0), 0), [safeCart]);
   const isAdmin = isAuthenticated && user?.role === "admin";
 
   const desktopLinks = isAdmin
@@ -91,7 +93,7 @@ export default function Navbar({ page, setPage }) {
 
             <button type="button" className="sf-icon-btn" onClick={() => setPage("Wishlist")} aria-label="Open wishlist">
               <Icons.Heart />
-              {wishlist.length > 0 && <span className="sf-badge">{wishlist.length}</span>}
+              {safeWishlist.length > 0 && <span className="sf-badge">{safeWishlist.length}</span>}
             </button>
 
             <button type="button" className="sf-icon-btn" onClick={() => setPage("Cart")} aria-label="Open cart">
