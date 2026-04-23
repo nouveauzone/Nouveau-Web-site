@@ -1,6 +1,7 @@
 import { memo, useContext, useMemo } from "react";
 import { WishlistContext } from "../context/WishlistContext";
 import { CartContext } from "../context/CartContext";
+import { CurrencyContext } from "../context/CurrencyContext";
 import Icons from "./Icons";
 import StarRating from "./StarRating";
 import { resolveImageUrl } from "../utils/imageUrl";
@@ -16,6 +17,7 @@ const safeText = (value, fallback = "") => {
 function ProductCard({ product, setPage, setSelectedProduct }) {
   const { wishlist, toggleWishlist } = useContext(WishlistContext);
   const { dispatch: cartDispatch } = useContext(CartContext);
+  const { formatPrice } = useContext(CurrencyContext);
 
   const wished = wishlist.some((item) => item._id === product._id);
   const safeStock = Number(product.stock) || 0;
@@ -88,8 +90,8 @@ function ProductCard({ product, setPage, setSelectedProduct }) {
         <p className="sf-product-sub">{subtitle}</p>
 
         <div className="sf-product-price">
-          <span className="sf-product-price-current">Rs {price.toLocaleString("en-IN")}</span>
-          {hasDiscount && <span className="sf-product-price-original">Rs {originalPrice.toLocaleString("en-IN")}</span>}
+          <span className="sf-product-price-current">{formatPrice(price)}</span>
+          {hasDiscount && <span className="sf-product-price-original">{formatPrice(originalPrice)}</span>}
         </div>
 
         <div className="sf-product-actions">

@@ -4,6 +4,7 @@ import { CartContext } from "../context/CartContext";
 import { WishlistContext } from "../context/WishlistContext";
 import { AuthContext } from "../context/AuthContext";
 import { ToastContext } from "../context/Providers";
+import { CurrencyContext } from "../context/CurrencyContext";
 import { THEME } from "../styles/theme";
 import Icons from "../components/Icons";
 import StarRating from "../components/StarRating";
@@ -64,6 +65,7 @@ export default function ProductPage({ product, setPage }) {
   const { dispatch: cartDispatch } = useContext(CartContext);
   const { wishlist, toggleWishlist } = useContext(WishlistContext);
   const { isAuthenticated, user }    = useContext(AuthContext);
+  const { formatPrice }              = useContext(CurrencyContext);
   const toast = useContext(ToastContext);
 
   if (!product) return null;
@@ -178,11 +180,11 @@ export default function ProductPage({ product, setPage }) {
 
             {/* Price */}
             <div style={{ display:"flex", alignItems:"baseline", gap:"14px", margin:"14px 0 18px" }}>
-              <span style={{ color:THEME.crimson, fontSize:"32px", fontWeight:700, fontFamily:"'Poppins',sans-serif" }}>₹{safePrice.toLocaleString("en-IN")}</span>
+              <span style={{ color:THEME.crimson, fontSize:"32px", fontWeight:700, fontFamily:"'Poppins',sans-serif" }}>{formatPrice(safePrice)}</span>
               {safeOriginalPrice > safePrice && (
                 <>
-                  <span style={{ color:THEME.textLight, textDecoration:"line-through", fontSize:"18px" }}>₹{safeOriginalPrice.toLocaleString("en-IN")}</span>
-                  <span style={{ color:"#2d6a4f", fontSize:"13px", fontWeight:700, fontFamily:"'Poppins',sans-serif" }}>Save ₹{(safeOriginalPrice - safePrice).toLocaleString("en-IN")}</span>
+                  <span style={{ color:THEME.textLight, textDecoration:"line-through", fontSize:"18px" }}>{formatPrice(safeOriginalPrice)}</span>
+                  <span style={{ color:"#2d6a4f", fontSize:"13px", fontWeight:700, fontFamily:"'Poppins',sans-serif" }}>Save {formatPrice(safeOriginalPrice - safePrice)}</span>
                 </>
               )}
             </div>
@@ -251,7 +253,7 @@ export default function ProductPage({ product, setPage }) {
 
             {/* Trust badges */}
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"10px", marginTop:"24px" }}>
-              {[["🚚",`Free Shipping ₹${SHIPPING_FREE_THRESHOLD.toLocaleString("en-IN")}+`],["✅","Authentic Fabric"],["⚡","Fast Dispatch"],["🔒","Secure Payment"]].map(([icon,t]) => (
+              {[["🚚",`Free Shipping ${formatPrice(SHIPPING_FREE_THRESHOLD)}+`],["✅","Authentic Fabric"],["⚡","Fast Dispatch"],["🔒","Secure Payment"]].map(([icon,t]) => (
                 <div key={t} style={{ display:"flex", alignItems:"center", gap:"8px", padding:"10px 12px", background:THEME.bgDark, border:`1px solid ${THEME.border}`, borderRadius:"10px" }}>
                   <span style={{ fontSize:"14px" }}>{icon}</span>
                   <span style={{ fontSize:"11px", color:THEME.textMuted, fontFamily:"'Poppins',sans-serif" }}>{t}</span>

@@ -1,5 +1,6 @@
 import { useContext } from "react";
 import { CartContext } from "../context/CartContext";
+import { CurrencyContext } from "../context/CurrencyContext";
 import { THEME } from "../styles/theme";
 import { BtnOutline, BtnPrimary } from "../components/Buttons";
 import Footer from "../components/Footer";
@@ -11,6 +12,7 @@ const CRIMSON = "#B71C1C";
 
 export default function CartPage({ setPage }) {
   const { cart, dispatch } = useContext(CartContext);
+  const { formatPrice } = useContext(CurrencyContext);
 
   const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
   const shipping = getShippingCharge(subtotal);
@@ -55,7 +57,7 @@ export default function CartPage({ setPage }) {
                   <div style={{ flex: 1 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
                       <p style={{ fontFamily: "'Poppins', sans-serif", fontSize: "16px", fontWeight: 600 }}>{item.title}</p>
-                      <p style={{ fontFamily: "'Poppins', sans-serif", fontSize: "16px", fontWeight: 700, color: GOLD }}>₹{(item.price * item.qty).toLocaleString("en-IN")}</p>
+                      <p style={{ fontFamily: "'Poppins', sans-serif", fontSize: "16px", fontWeight: 700, color: GOLD }}>{formatPrice(item.price * item.qty)}</p>
                     </div>
                     
                     <p style={{ fontSize: "13px", color: THEME.textMuted, marginBottom: "12px" }}>Size: {item.size}</p>
@@ -104,17 +106,17 @@ export default function CartPage({ setPage }) {
               
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "12px", color: THEME.textMuted }}>
                 <span>Subtotal</span>
-                <span>₹{subtotal.toLocaleString("en-IN")}</span>
+                <span>{formatPrice(subtotal)}</span>
               </div>
 
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "12px", color: THEME.textMuted }}>
                 <span>Shipping</span>
-                <span style={{ color: shipping === 0 ? "#2ecc71" : THEME.text }}>{shipping === 0 ? "FREE" : `₹${shipping}`}</span>
+                <span style={{ color: shipping === 0 ? "#2ecc71" : THEME.text }}>{shipping === 0 ? "FREE" : formatPrice(shipping)}</span>
               </div>
 
               {shipping > 0 && (
                 <p style={{ fontSize: "12px", color: THEME.textMuted, marginBottom: "20px", fontStyle: "italic" }}>
-                  Add ₹{(SHIPPING_FREE_THRESHOLD - subtotal).toLocaleString("en-IN")} more for free shipping
+                  Add {formatPrice(Math.max(0, SHIPPING_FREE_THRESHOLD - subtotal))} more for free shipping
                 </p>
               )}
 
@@ -126,7 +128,7 @@ export default function CartPage({ setPage }) {
 
               <div style={{ display: "flex", justifyContent: "space-between", margin: "24px 0", paddingTop: "20px", borderTop: `1px solid ${THEME.border}` }}>
                 <span style={{ fontWeight: 700, fontSize: "18px" }}>Total</span>
-                <span style={{ fontWeight: 800, fontSize: "22px", color: GOLD }}>₹{total.toLocaleString("en-IN")}</span>
+                <span style={{ fontWeight: 800, fontSize: "22px", color: GOLD }}>{formatPrice(total)}</span>
               </div>
 
               <BtnPrimary onClick={() => setPage("Checkout")} style={{ width: "100%", justifyContent: "center", borderRadius: "12px", padding: "16px" }}>

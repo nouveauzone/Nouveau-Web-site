@@ -3,6 +3,7 @@ import Footer from "../components/Footer";
 import { CartContext } from "../context/CartContext";
 import { AppDataContext } from "../context/Providers";
 import { AuthContext } from "../context/AuthContext";
+import { CurrencyContext } from "../context/CurrencyContext";
 import { THEME } from "../styles/theme";
 import { BtnOutline, BtnPrimary } from "../components/Buttons";
 import { resolveImageUrl } from "../utils/imageUrl";
@@ -27,6 +28,7 @@ export default function CheckoutPage({ setPage }) {
   const { cart, dispatch: cartDispatch } = useContext(CartContext);
   const { placeOrder } = useContext(AppDataContext);
   const { isAuthenticated } = useContext(AuthContext);
+  const { formatPrice } = useContext(CurrencyContext);
   const [isMobile, setIsMobile] = useState(() => (typeof window !== "undefined" ? window.innerWidth < 768 : false));
 
   const [step, setStep] = useState(1);
@@ -361,7 +363,7 @@ export default function CheckoutPage({ setPage }) {
                 </div>
 
                 <BtnPrimary onClick={handleOrder} disabled={processing} style={{ borderRadius: "12px", padding: "16px 48px", width: "100%", justifyContent: "center", fontSize: "12px", letterSpacing: "2px" }}>
-                  {processing ? "Placing Order... 🌸" : `Place Order · ₹${total.toLocaleString("en-IN")}`}
+                  {processing ? "Placing Order... 🌸" : `Place Order · ${formatPrice(total)}`}
                 </BtnPrimary>
               </div>
             )}
@@ -385,7 +387,7 @@ export default function CheckoutPage({ setPage }) {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "12px", fontWeight: 600, color: THEME.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: "3px" }}>{item.title || item.name}</p>
                       <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "10px", color: THEME.textMuted }}>Size: {item.size} · Qty: {item.qty}</p>
-                      <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: GOLD, fontWeight: 700, marginTop: "4px" }}>₹{(item.price * item.qty).toLocaleString("en-IN")}</p>
+                      <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: GOLD, fontWeight: 700, marginTop: "4px" }}>{formatPrice(item.price * item.qty)}</p>
                     </div>
                   </div>
                 ))}
@@ -394,23 +396,23 @@ export default function CheckoutPage({ setPage }) {
               <div style={{ borderTop: `1px solid ${THEME.border}`, paddingTop: "16px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
                   <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: THEME.textMuted }}>Subtotal</span>
-                  <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: THEME.text }}>₹{subtotal.toLocaleString("en-IN")}</span>
+                  <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: THEME.text }}>{formatPrice(subtotal)}</span>
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
                   <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: THEME.textMuted }}>CGST 2.5%</span>
-                  <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: THEME.text }}>₹{cgst.toLocaleString("en-IN")}</span>
+                  <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: THEME.text }}>{formatPrice(cgst)}</span>
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
                   <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: THEME.textMuted }}>SGST 2.5%</span>
-                  <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: THEME.text }}>₹{sgst.toLocaleString("en-IN")}</span>
+                  <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: THEME.text }}>{formatPrice(sgst)}</span>
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
                   <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: THEME.textMuted }}>Shipping</span>
-                  <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: shipping === 0 ? "#2ecc71" : THEME.text }}>{shipping === 0 ? '🎉 Free' : `₹${shipping}`}</span>
+                  <span style={{ fontFamily: "'Poppins',sans-serif", fontSize: "13px", color: shipping === 0 ? "#2ecc71" : THEME.text }}>{shipping === 0 ? '🎉 Free' : formatPrice(shipping)}</span>
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", paddingTop: "12px", borderTop: `1px solid ${THEME.border}` }}>
                   <span style={{ fontFamily: "'Playfair Display',serif", fontSize: "16px", fontWeight: 700, color: THEME.text }}>Total</span>
-                  <span style={{ fontFamily: "'Playfair Display',serif", fontSize: "18px", fontWeight: 700, color: GOLD }}>₹{total.toLocaleString("en-IN")}</span>
+                  <span style={{ fontFamily: "'Playfair Display',serif", fontSize: "18px", fontWeight: 700, color: GOLD }}>{formatPrice(total)}</span>
                 </div>
               </div>
 

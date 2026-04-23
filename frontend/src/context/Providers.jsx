@@ -2,6 +2,7 @@ import { useReducer, useState, useEffect, createContext } from "react";
 import { AuthContext }     from "./AuthContext";
 import { CartContext }     from "./CartContext";
 import { WishlistContext } from "./WishlistContext";
+import { CurrencyProvider } from "./CurrencyContext";
 import { getShippingCharge } from "../data/constants";
 import { AUTH_EXPIRED_EVENT } from "../services/apiService";
 
@@ -294,6 +295,7 @@ export default function Providers({ children }) {
   };
 
   return (
+    <CurrencyProvider>
     <AuthContext.Provider value={{ ...authState, dispatch:authDispatch }}>
       <CartContext.Provider value={{ cart, dispatch:dispatchCart }}>
         <WishlistContext.Provider value={{ wishlist, toggleWishlist }}>
@@ -349,5 +351,6 @@ export default function Providers({ children }) {
         </WishlistContext.Provider>
       </CartContext.Provider>
     </AuthContext.Provider>
+    </CurrencyProvider>
   );
 }
