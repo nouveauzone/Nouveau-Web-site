@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import Footer from "../components/Footer";
 import { CartContext } from "../context/CartContext";
 import { AppDataContext } from "../context/Providers";
@@ -27,6 +27,7 @@ export default function CheckoutPage({ setPage }) {
   const { cart, dispatch: cartDispatch } = useContext(CartContext);
   const { placeOrder } = useContext(AppDataContext);
   const { isAuthenticated } = useContext(AuthContext);
+  const [isMobile, setIsMobile] = useState(() => (typeof window !== "undefined" ? window.innerWidth < 768 : false));
 
   const [step, setStep] = useState(1);
   const [address, setAddress] = useState({ name: "", phone: "", email: "", street: "", city: "", state: "", pincode: "" });
@@ -34,6 +35,13 @@ export default function CheckoutPage({ setPage }) {
   const [processing, setProcessing] = useState(false);
   const [errors, setErrors] = useState({});
   const [upiPaymentRef] = useState(`NVZ-${Date.now()}`);
+
+  useEffect(() => {
+    const updateViewport = () => setIsMobile(window.innerWidth < 768);
+    updateViewport();
+    window.addEventListener("resize", updateViewport);
+    return () => window.removeEventListener("resize", updateViewport);
+  }, []);
 
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
   const cgst = +(subtotal * 0.025).toFixed(2);
@@ -154,7 +162,7 @@ export default function CheckoutPage({ setPage }) {
           ))}
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: "40px" }} className="cart-sidebar">
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 320px", gap: isMobile ? "24px" : "40px" }} className="cart-sidebar">
           <div>
             {step === 1 && (
               <div>
@@ -162,7 +170,7 @@ export default function CheckoutPage({ setPage }) {
                 <div
                   style={{
                     display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                    gridTemplateColumns: isMobile ? "1fr" : "repeat(2, minmax(0, 1fr))",
                     columnGap: "20px",
                     rowGap: "16px",
                   }}

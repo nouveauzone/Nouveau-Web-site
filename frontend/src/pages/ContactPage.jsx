@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { THEME } from "../styles/theme";
 import { BtnPrimary } from "../components/Buttons";
 import OrnamentDivider from "../components/OrnamentDivider";
@@ -16,6 +16,14 @@ export default function ContactPage({ setPage }) {
   const [form, setForm]       = useState({ name:"", email:"", subject:"", message:"" });
   const [status, setStatus]   = useState("idle"); // idle | sending | sent | error
   const [errorMsg, setErrorMsg] = useState("");
+  const [isMobile, setIsMobile] = useState(() => (typeof window !== "undefined" ? window.innerWidth < 768 : false));
+
+  useEffect(() => {
+    const updateViewport = () => setIsMobile(window.innerWidth < 768);
+    updateViewport();
+    window.addEventListener("resize", updateViewport);
+    return () => window.removeEventListener("resize", updateViewport);
+  }, []);
 
   const handleSubmit = async () => {
     // Basic validation
@@ -80,7 +88,7 @@ export default function ContactPage({ setPage }) {
       </div>
 
       <div style={{ maxWidth:"1100px", margin:"0 auto", padding:"60px clamp(16px, 4vw, 40px)" }}>
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1.6fr", gap:"60px", alignItems:"start" }} className="grid-2col">
+        <div style={{ display:"grid", gridTemplateColumns:isMobile ? "1fr" : "1fr 1.6fr", gap:isMobile ? "28px" : "60px", alignItems:"start" }} className="grid-2col">
 
           {/* Contact Info */}
           <div>
@@ -146,7 +154,7 @@ export default function ContactPage({ setPage }) {
                 )}
 
                 {/* Name + Email */}
-                <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(220px, 1fr))", gap:"16px", marginBottom:"16px" }}>
+                <div style={{ display:"grid", gridTemplateColumns:isMobile ? "1fr" : "repeat(2, minmax(0, 1fr))", gap:"16px", marginBottom:"16px" }}>
                   {[["name","Full Name *","text"],["email","Email Address *","email"]].map(([key,label,type]) => (
                     <div key={key}>
                       <label style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"2px", color:THEME.crimson, display:"block", marginBottom:"8px", fontWeight:600 }}>
