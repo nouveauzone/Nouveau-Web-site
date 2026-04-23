@@ -10,6 +10,19 @@ export default class AppErrorBoundary extends Component {
 
   componentDidCatch(error, info) {
     console.error("App Error:", error, info);
+
+    const message = String(error?.message || error || "");
+    const isChunkOrCacheError = /(ChunkLoadError|Loading chunk [0-9]+ failed|Failed to fetch dynamically imported module|Importing a module script failed)/i.test(message);
+
+    // One-time self-recovery for stale cached assets after a deployment.
+    if (isChunkOrCacheError && typeof window !== "undefined") {
+      const retryKey = "nouveau_chunk_retry_once";
+      const retried = window.sessionStorage.getItem(retryKey) === "1";
+      if (!retried) {
+        window.sessionStorage.setItem(retryKey, "1");
+        window.location.reload();
+      }
+    }
   }
 
   render() {
