@@ -20,9 +20,10 @@ function authReducer(state, action) {
 function cartReducer(state, action) {
   switch (action.type) {
     case "ADD": {
+      const addQty = action.item.qty || 1;
       const ex = state.find(i => i._id===action.item._id && i.size===action.item.size);
-      if (ex) return state.map(i => i._id===action.item._id && i.size===action.item.size ? {...i, qty:i.qty+1} : i);
-      return [...state, {...action.item, qty:1}];
+      if (ex) return state.map(i => i._id===action.item._id && i.size===action.item.size ? {...i, qty:i.qty+addQty} : i);
+      return [...state, {...action.item, qty:addQty}];
     }
     case "REMOVE":     return state.filter(i => !(i._id===action.id && i.size===action.size));
     case "UPDATE_QTY": return state.map(i => i._id===action.id && i.size===action.size ? {...i, qty:action.qty} : i);
