@@ -96,12 +96,12 @@ export default function AccountPage({ setPage }) {
   };
 
   const fStyle = { width:"100%", background:THEME.bg, border:`1px solid ${THEME.border}`, color:THEME.text, padding:"12px 14px", fontSize:"14px", outline:"none", fontFamily:"'Poppins',sans-serif", borderRadius:"10px" };
-  const visibleOrders = myOrders.filter(o => {
-    const orderEmail = (o.email || o.shippingAddress?.email || "").toLowerCase();
-    const orderName = (o.customer || o.shippingAddress?.name || "").toLowerCase();
+  const visibleOrders = allOrders.filter(o => {
+    const orderEmail = String(o.userEmail || o.email || o.shippingAddress?.email || "").toLowerCase();
+    const orderName = String(o.customer || o.shippingAddress?.name || "").toLowerCase();
+    const orderUser = String(o.userId || o.user?._id || o.user || "");
     return (
-      o.user === user?._id ||
-      o.user?._id === user?._id ||
+      orderUser === String(user?._id || "") ||
       orderEmail === currentUserEmail ||
       orderName === currentUserName
     );

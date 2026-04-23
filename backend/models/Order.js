@@ -18,6 +18,8 @@ const statusHistorySchema = new mongoose.Schema({
 const orderSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    userEmail: { type: String, default: "" },
     items: [orderItemSchema],
 
     // ── Tracking ────────────────────────────────────────────────────────────

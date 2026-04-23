@@ -59,7 +59,9 @@ const normalizeOrder = (order, fallback = {}) => {
   return {
     ...order,
     _id: order?._id || fallback._id,
-    user: order?.user?._id || order?.user || fallback.user || "",
+    user: order?.user?._id || order?.user || order?.userId || fallback.user || "",
+    userId: order?.userId || order?.user?._id || order?.user || fallback.user || "",
+    userEmail: order?.userEmail || order?.email || shippingAddress.email || fallback.email || "",
     email: order?.email || shippingAddress.email || fallback.email || "",
     customer: order?.customer || shippingAddress.name || fallback.customer || "",
     phone: order?.phone || shippingAddress.phone || fallback.phone || "",
@@ -188,6 +190,8 @@ export default function Providers({ children }) {
       const orderData = {
         items: items.map(i => ({ product:i._id, title:i.title, image:i.images?.[0]||"", price:i.price, size:i.size, qty:i.qty })),
         shippingAddress: address,
+        userId: authState.user?._id,
+        userEmail: authState.user?.email,
         paymentMethod: paymentMethod || "COD",
         paymentReference,
         subtotal, shippingCharge, total,
@@ -252,13 +256,14 @@ export default function Providers({ children }) {
   // ── My orders = orders belonging to current user ──────────────────────────
   const myOrders = allOrders.filter(o => {
     if (!authState.user) return false;
-    // match by user id or by email
+    const userId = String(authState.user._id || "");
+    const userEmail = String(authState.user.email || "").toLowerCase();
+    const orderEmail = String(o.userEmail || o.email || o.shippingAddress?.email || "").toLowerCase();
+    const orderUser = String(o.userId || o.user?._id || o.user || "");
     return (
-      o.user === authState.user._id ||
-      o.user?._id === authState.user._id ||
-      o.customer === authState.user.name ||
-      o.email === authState.user.email ||
-      o.shippingAddress?.email === authState.user.email
+      orderUser === userId ||
+      orderEmail === userEmail ||
+      String(o.customer || "").toLowerCase() === String(authState.user.name || "").toLowerCase()
     );
   });
 

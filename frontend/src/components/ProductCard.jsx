@@ -18,6 +18,8 @@ function ProductCard({ product, setPage, setSelectedProduct }) {
   const { dispatch: cartDispatch } = useContext(CartContext);
 
   const wished = wishlist.some((item) => item._id === product._id);
+  const safeStock = Number(product.stock) || 0;
+  const isOutOfStock = safeStock <= 0;
 
   const { title, subtitle, category, image, price, originalPrice, rating, reviewCount, hasDiscount } = useMemo(() => {
     const nextTitle = safeText(product.title, "Nouveau Signature Piece");
@@ -48,6 +50,7 @@ function ProductCard({ product, setPage, setSelectedProduct }) {
   };
 
   const addToCart = () => {
+    if (isOutOfStock) return;
     cartDispatch({ type: "ADD", item: { ...product, size: product.sizes?.[0] || "Free Size" } });
   };
 
@@ -64,6 +67,7 @@ function ProductCard({ product, setPage, setSelectedProduct }) {
           }}
         />
 
+        {isOutOfStock && <span className="sf-out-stock">Out of Stock</span>}
         <button
           type="button"
           className="sf-wishlist-btn"
@@ -90,7 +94,7 @@ function ProductCard({ product, setPage, setSelectedProduct }) {
 
         <div className="sf-product-actions">
           <button type="button" className="sf-btn" onClick={goToProduct}>View</button>
-          <button type="button" className="sf-btn sf-btn-primary" onClick={addToCart}>Quick Add</button>
+          <button type="button" className="sf-btn sf-btn-primary" onClick={addToCart} disabled={isOutOfStock} style={isOutOfStock ? { opacity: 0.55, cursor: "not-allowed" } : {}}>{isOutOfStock ? "Out of Stock" : "Quick Add"}</button>
         </div>
       </div>
     </article>

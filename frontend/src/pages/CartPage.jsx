@@ -40,41 +40,54 @@ export default function CartPage({ setPage }) {
           
           {/* ITEMS */}
           <div>
-            {cart.map((item) => (
-              <div key={`${item._id}-${item.size}`} className="cart-item-mobile" style={{ display: "flex", gap: "24px", padding: "32px 0", borderBottom: `1px solid ${THEME.border}` }}>
-                <div className="cart-item-img" style={{ width: "120px", height: "160px", borderRadius: "16px", overflow: "hidden", background: THEME.bgDark, flexShrink: 0, border: `1px solid ${THEME.border}`, boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
-                  <img src={resolveImageUrl(item.images?.[0], "/ethnic1.jpeg")} alt={item.title} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s ease" }} />
-                </div>
-
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                    <p style={{ fontFamily: "'Poppins', sans-serif", fontSize: "16px", fontWeight: 600 }}>{item.title}</p>
-                    <p style={{ fontFamily: "'Poppins', sans-serif", fontSize: "16px", fontWeight: 700, color: GOLD }}>₹{(item.price * item.qty).toLocaleString("en-IN")}</p>
+            {cart.map((item) => {
+              const stock = Number(item.stock);
+              const hasStockInfo = Number.isFinite(stock);
+              const outOfStock = hasStockInfo && stock <= 0;
+              const lowStock = hasStockInfo && stock > 0 && item.qty > stock;
+              const canIncrease = !hasStockInfo || item.qty < stock;
+              return (
+                <div key={`${item._id}-${item.size}`} className="cart-item-mobile" style={{ display: "flex", gap: "24px", padding: "32px 0", borderBottom: `1px solid ${THEME.border}` }}>
+                  <div className="cart-item-img" style={{ width: "120px", height: "160px", borderRadius: "16px", overflow: "hidden", background: THEME.bgDark, flexShrink: 0, border: `1px solid ${THEME.border}`, boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
+                    <img src={resolveImageUrl(item.images?.[0], "/ethnic1.jpeg")} alt={item.title} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s ease" }} />
                   </div>
-                  
-                  <p style={{ fontSize: "13px", color: THEME.textMuted, marginBottom: "12px" }}>Size: {item.size}</p>
 
-                  <div style={{ display: "flex", alignItems: "center", gap: "16px", marginTop: "auto" }}>
-                    <div style={{ display: "flex", alignItems: "center", background: "#f5f5f5", borderRadius: "8px", padding: "4px" }}>
-                      <button 
-                        style={{ background: "none", border: "none", padding: "8px 12px", cursor: "pointer", fontSize: "18px" }}
-                        onClick={() => item.qty > 1 ? dispatch({ type: "UPDATE_QTY", id: item._id, size: item.size, qty: item.qty - 1 }) : dispatch({ type: "REMOVE", id: item._id, size: item.size })}
-                      >-</button>
-                      <span style={{ minWidth: "30px", textAlign: "center", fontWeight: 600 }}>{item.qty}</span>
-                      <button 
-                        style={{ background: "none", border: "none", padding: "8px 12px", cursor: "pointer", fontSize: "18px" }}
-                        onClick={() => dispatch({ type: "UPDATE_QTY", id: item._id, size: item.size, qty: item.qty + 1 })}
-                      >+</button>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                      <p style={{ fontFamily: "'Poppins', sans-serif", fontSize: "16px", fontWeight: 600 }}>{item.title}</p>
+                      <p style={{ fontFamily: "'Poppins', sans-serif", fontSize: "16px", fontWeight: 700, color: GOLD }}>₹{(item.price * item.qty).toLocaleString("en-IN")}</p>
                     </div>
+                    
+                    <p style={{ fontSize: "13px", color: THEME.textMuted, marginBottom: "12px" }}>Size: {item.size}</p>
+                    {hasStockInfo && (
+                      <div style={{ marginBottom: "12px", display: "inline-flex", alignItems: "center", gap: "8px", padding: "6px 10px", borderRadius: "99px", background: outOfStock ? "#f8d7da" : lowStock ? "#fff3cd" : "#e8f5e9", color: outOfStock ? "#721c24" : lowStock ? "#856404" : "#1f6f43", fontSize: "11px", fontFamily: "'Poppins',sans-serif", fontWeight: 700 }}>
+                        {outOfStock ? "Out of Stock" : lowStock ? `Only ${stock} left` : `${stock} in stock`}
+                      </div>
+                    )}
 
-                    <button 
-                      onClick={() => dispatch({ type: "REMOVE", id: item._id, size: item.size })}
-                      style={{ background: "none", border: "none", color: CRIMSON, fontSize: "13px", cursor: "pointer", textDecoration: "underline" }}
-                    >Remove</button>
+                    <div style={{ display: "flex", alignItems: "center", gap: "16px", marginTop: "auto" }}>
+                      <div style={{ display: "flex", alignItems: "center", background: "#f5f5f5", borderRadius: "8px", padding: "4px" }}>
+                        <button 
+                          style={{ background: "none", border: "none", padding: "8px 12px", cursor: "pointer", fontSize: "18px" }}
+                          onClick={() => item.qty > 1 ? dispatch({ type: "UPDATE_QTY", id: item._id, size: item.size, qty: item.qty - 1 }) : dispatch({ type: "REMOVE", id: item._id, size: item.size })}
+                        >-</button>
+                        <span style={{ minWidth: "30px", textAlign: "center", fontWeight: 600 }}>{item.qty}</span>
+                        <button 
+                          disabled={!canIncrease}
+                          style={{ background: "none", border: "none", padding: "8px 12px", cursor: canIncrease ? "pointer" : "not-allowed", fontSize: "18px", opacity: canIncrease ? 1 : 0.4 }}
+                          onClick={() => canIncrease && dispatch({ type: "UPDATE_QTY", id: item._id, size: item.size, qty: item.qty + 1 })}
+                        >+</button>
+                      </div>
+
+                      <button 
+                        onClick={() => dispatch({ type: "REMOVE", id: item._id, size: item.size })}
+                        style={{ background: "none", border: "none", color: CRIMSON, fontSize: "13px", cursor: "pointer", textDecoration: "underline" }}
+                      >Remove</button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
 
             <div style={{ marginTop: "30px" }}>
               <button 

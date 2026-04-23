@@ -74,6 +74,8 @@ exports.createOrder = asyncHandler(async (req, res) => {
 
   const order = await Order.create({
     user: req.user._id,
+    userId: req.user._id,
+    userEmail: req.user.email,
     items,
     shippingAddress,
     paymentMethod: normalizedPaymentMethod,
@@ -243,7 +245,18 @@ exports.updateOrderStatus = asyncHandler(async (req, res) => {
 // GET /api/orders/my  — user's own orders
 // ─────────────────────────────────────────────────────────────────────────────
 exports.getMyOrders = asyncHandler(async (req, res) => {
-  const orders = await Order.find({ user: req.user._id }).sort({ createdAt: -1 });
+  const userId = req.user._id;
+  const userEmail = String(req.user.email || "").toLowerCase();
+  const orders = await Order.find({
+    $or: [
+      { user: userId },
+      { userId },
+      ...(userEmail ? [
+        { userEmail: userEmail },
+        { "shippingAddress.email": userEmail },
+      ] : []),
+    ],
+  }).sort({ createdAt: -1 });
   res.json(orders.map((order) => normalizeOrderOutput(order.toObject())));
 });
 

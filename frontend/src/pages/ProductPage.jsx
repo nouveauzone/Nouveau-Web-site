@@ -81,6 +81,7 @@ export default function ProductPage({ product, setPage }) {
   const safeOriginalPrice = Number(product.originalPrice) || safePrice;
   const safeDiscount = Number(product.discount) || 0;
   const safeStock = Number(product.stock) || 0;
+  const isOutOfStock = safeStock <= 0;
 
   const wished = wishlist.some(w => w._id === product._id);
   const avgRating = reviews.length
@@ -203,6 +204,7 @@ export default function ProductPage({ product, setPage }) {
 
             {/* Qty */}
             <div style={{ display:"flex", alignItems:"center", gap:"16px", marginBottom:"24px" }}>
+              {isOutOfStock && <span style={{ background:"#f8d7da", color:"#721c24", padding:"6px 12px", borderRadius:"99px", fontSize:"11px", fontFamily:"'Poppins',sans-serif", fontWeight:700, letterSpacing:"1px", textTransform:"uppercase" }}>Out of Stock</span>}
               <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"3px", color:THEME.crimson, fontWeight:700 }}>QTY</p>
               <div style={{ display:"flex", alignItems:"center", border:`1px solid ${THEME.border}`, borderRadius:"10px", overflow:"hidden" }}>
                 <button onClick={() => setQty(q => Math.max(1, q-1))} style={{ background:"none", border:"none", color:THEME.text, padding:"10px 16px", cursor:"pointer", fontSize:"18px" }}>−</button>
@@ -218,13 +220,14 @@ export default function ProductPage({ product, setPage }) {
             <div style={{ display:"flex", gap:"10px", marginBottom:"12px" }}>
               <BtnPrimary
                 onClick={handleAddToCart}
+                disabled={isOutOfStock}
                 style={{
                   flex:1,
                   justifyContent:"center",
                   borderRadius:"12px",
                   ...(addedToCart ? { background: THEME.crimsonDark } : {}),
                 }}>
-                {addedToCart ? "✓ Added to Cart!" : "Add to Cart 🛍️"}
+                {isOutOfStock ? "Out of Stock" : addedToCart ? "✓ Added to Cart!" : "Add to Cart 🛍️"}
               </BtnPrimary>
               <button onClick={() => { toggleWishlist(product); toast(wished ? "Removed from wishlist" : "Saved to wishlist ❤️"); }}
                 style={{
@@ -242,8 +245,8 @@ export default function ProductPage({ product, setPage }) {
                 <Icons.Heart filled={wished} />
               </button>
             </div>
-            <BtnOutline onClick={() => { handleAddToCart(); setPage("Checkout"); }} color={THEME.gold} style={{ width:"100%", justifyContent:"center", borderRadius:"12px" }}>
-              Buy Now ⚡
+            <BtnOutline onClick={() => { if (!isOutOfStock) { handleAddToCart(); setPage("Checkout"); } }} color={THEME.gold} style={{ width:"100%", justifyContent:"center", borderRadius:"12px", opacity: isOutOfStock ? 0.55 : 1, pointerEvents: isOutOfStock ? "none" : "auto" }}>
+              {isOutOfStock ? "Out of Stock" : "Buy Now ⚡"}
             </BtnOutline>
 
             {/* Trust badges */}
