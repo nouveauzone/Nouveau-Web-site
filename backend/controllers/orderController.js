@@ -8,24 +8,8 @@ const { normalizeOrderOutput } = require("../utils/imageUrl");
 
 const hasSuspiciousUpiPattern = (value) => {
   if (!/^\d{12}$/.test(value)) return true;
-
-  const uniqueDigits = new Set(value.split("")).size;
-  if (uniqueDigits <= 2) return true;
-
-  const isSequential = (() => {
-    let asc = true;
-    let desc = true;
-    for (let index = 1; index < value.length; index += 1) {
-      const prev = Number(value[index - 1]);
-      const curr = Number(value[index]);
-      if (curr !== prev + 1) asc = false;
-      if (curr !== prev - 1) desc = false;
-    }
-    return asc || desc;
-  })();
-
-  if (isSequential) return true;
-  if (/^(\d)\1{11}$/.test(value)) return true;
+  // Minimal basic sanity checks (avoid overly aggressive pattern matching that blocks valid test/real UTRs)
+  if (/^(\d)\1{11}$/.test(value)) return true; // e.g. 111111111111
   if (value === "123456789012" || value === "012345678901" || value === "987654321098") return true;
   return false;
 };
