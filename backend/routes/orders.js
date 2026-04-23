@@ -25,7 +25,7 @@ const orderCreateValidation = [
   body("items.*.qty").isInt({ min: 1 }).withMessage("Item qty must be >= 1"),
   body("paymentMethod").optional().isIn(["COD", "UPI", "RAZORPAY", "cod", "upi", "razorpay"]).withMessage("Unsupported payment method"),
   body("paymentReference")
-    .optional()
+    .optional({ checkFalsy: true })
     .isString()
     .trim()
     .isLength({ min: 8, max: 40 })
