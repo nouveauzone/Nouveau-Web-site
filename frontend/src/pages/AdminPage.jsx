@@ -192,12 +192,18 @@ const buildUserOrderSummary = (user, orders = []) => {
 
   const totalSpend = matchedOrders.reduce((sum, order) => sum + getOrderAmount(order), 0);
   const lastOrder = matchedOrders[0] || null;
+  const latestPhone = lastOrder?.phone || lastOrder?.shippingAddress?.phone || user?.phone || "—";
+  const latestCity = lastOrder?.city || lastOrder?.shippingAddress?.city || user?.addresses?.[0]?.city || "—";
+  const latestState = lastOrder?.state || lastOrder?.shippingAddress?.state || user?.addresses?.[0]?.state || "—";
 
   return {
     totalOrders: matchedOrders.length,
     totalSpend,
     lastOrderDate: lastOrder ? getOrderDateLabel(lastOrder) : "—",
     lastOrderRaw: lastOrder?.createdAt || lastOrder?.dateRaw || null,
+    phone: latestPhone,
+    city: latestCity,
+    state: latestState,
     orders: matchedOrders,
   };
 };
@@ -456,6 +462,9 @@ export default function AdminPage({ setPage }) {
         totalOrders: computed.totalOrders,
         totalSpend: computed.totalSpend,
         lastOrderDate: computed.lastOrderRaw,
+        phone: computed.phone,
+        city: computed.city,
+        state: computed.state,
       });
     } finally {
       setSelectedUserLoading(false);
@@ -984,8 +993,8 @@ export default function AdminPage({ setPage }) {
                     {[
                       { label: "Email", value: selectedUserDetail?.email || selectedUser.email },
                       { label: "Phone", value: selectedUserDetail?.phone || selectedUser.phone || "—" },
-                      { label: "City", value: selectedUserDetail?.addresses?.[0]?.city || selectedUser.addresses?.[0]?.city || "—" },
-                      { label: "State", value: selectedUserDetail?.addresses?.[0]?.state || selectedUser.addresses?.[0]?.state || "—" },
+                      { label: "City", value: selectedUserStats?.city || selectedUserComputed?.city || selectedUserDetail?.addresses?.[0]?.city || selectedUser.addresses?.[0]?.city || "—" },
+                      { label: "State", value: selectedUserStats?.state || selectedUserComputed?.state || selectedUserDetail?.addresses?.[0]?.state || selectedUser.addresses?.[0]?.state || "—" },
                       { label: "Member Since", value: selectedUserDetail?.createdAt ? new Date(selectedUserDetail.createdAt).toLocaleDateString("en-IN",{month:"short",year:"numeric"}) : selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString("en-IN",{month:"short",year:"numeric"}) : "—" },
                       { label: "Role", value: (selectedUserDetail?.role || selectedUser.role || "user").toUpperCase() },
                     ].map((item) => (
@@ -1043,7 +1052,7 @@ export default function AdminPage({ setPage }) {
                 <table style={{ width:"100%", borderCollapse:"collapse" }}>
                   <thead>
                     <tr style={{ background:THEME.bgDark }}>
-                      {["Customer","Email","Orders","Last Order","Total Spend","Phone","Role","Actions"].map(h=>(
+                      {["Customer","Email","Orders","Last Order","Total Spend","Phone","Location","Role","Actions"].map(h=>(
                         <th key={h} style={{ padding:"11px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"9px", letterSpacing:"2px", textTransform:"uppercase", color:THEME.textLight, textAlign:"left", borderBottom:`1px solid ${THEME.border}`, whiteSpace:"nowrap" }}>{h}</th>
                       ))}
                     </tr>
@@ -1067,6 +1076,7 @@ export default function AdminPage({ setPage }) {
                         <td style={{ padding:"13px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textMuted, whiteSpace:"nowrap" }}>{summary.lastOrderDate}</td>
                         <td style={{ padding:"13px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textMuted, whiteSpace:"nowrap", fontWeight:700 }}>₹{summary.totalSpend.toLocaleString("en-IN")}</td>
                         <td style={{ padding:"13px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textMuted, whiteSpace:"nowrap" }}>{u.phone||"—"}</td>
+                        <td style={{ padding:"13px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textMuted, whiteSpace:"nowrap" }}>{summary.city !== "—" ? `${summary.city}, ${summary.state}` : "—"}</td>
                         <td style={{ padding:"13px 14px" }}><span style={{ background:u.role==="admin"?`${THEME.crimson}15`:`${THEME.gold}15`, color:u.role==="admin"?THEME.crimson:THEME.goldDark, padding:"3px 10px", borderRadius:"99px", fontSize:"10px", fontFamily:"'Poppins',sans-serif", fontWeight:700 }}>{u.role?.toUpperCase()||"USER"}</span></td>
                         <td style={{ padding:"13px 14px" }}>
                           <div style={{ display:"flex", gap:"5px" }}>

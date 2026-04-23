@@ -44,6 +44,8 @@ router.get(
 
     const orderTotal = orders.reduce((sum, order) => sum + Number(order.total || 0), 0);
     const lastOrder = orders[0] || null;
+    const lastShipping = lastOrder?.shippingAddress || {};
+    const primaryAddress = Array.isArray(user.addresses) && user.addresses.length ? user.addresses[0] : {};
 
     res.json({
       user,
@@ -52,6 +54,9 @@ router.get(
         totalOrders: orders.length,
         totalSpend: orderTotal,
         lastOrderDate: lastOrder?.createdAt || null,
+        phone: lastShipping.phone || user.phone || "",
+        city: lastShipping.city || primaryAddress.city || "",
+        state: lastShipping.state || primaryAddress.state || "",
       },
     });
   })
