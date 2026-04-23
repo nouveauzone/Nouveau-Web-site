@@ -10,7 +10,7 @@ const CRIMSON = "#B71C1C";
 export default function AuthPage({ setPage }) {
   const { dispatch } = useContext(AuthContext);
   const [isLogin, setIsLogin] = useState(true);
-  const [form,    setForm]    = useState({ name:"", email:"", password:"", confirm:"" });
+  const [form,    setForm]    = useState({ name:"", email:"", password:"", confirm:"", phone:"", city:"", state:"" });
   const [errors,  setErrors]  = useState({});
   const [loading, setLoading] = useState(false);
   const [apiErr,  setApiErr]  = useState("");
@@ -19,6 +19,9 @@ export default function AuthPage({ setPage }) {
     const e = {};
     if (!isLogin && !form.name.trim())     e.name     = "Required";
     if (!form.email.trim())                e.email    = "Required";
+    if (!isLogin && !form.phone.trim())    e.phone    = "Required";
+    if (!isLogin && !form.city.trim())     e.city     = "Required";
+    if (!isLogin && !form.state.trim())    e.state    = "Required";
     if (!form.password)                    e.password = "Required";
     if (!isLogin && form.password !== form.confirm) e.confirm = "Passwords don't match";
     setErrors(e);
@@ -44,7 +47,7 @@ export default function AuthPage({ setPage }) {
       if (isLogin) {
         res = await API.login({ email: form.email, password: form.password });
       } else {
-        res = await API.register({ name: form.name, email: form.email, password: form.password });
+        res = await API.register({ name: form.name, email: form.email, password: form.password, phone: form.phone, city: form.city, state: form.state });
       }
       const authPayload = {
         user: {
@@ -126,6 +129,13 @@ export default function AuthPage({ setPage }) {
 
             {!isLogin && inp("name","Full Name","text","Your name")}
             {inp("email","Email","email","your@email.com")}
+            {!isLogin && (
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"10px" }}>
+                {inp("phone","Phone","tel","10-digit number")}
+                {inp("city","City","text","e.g. Mumbai")}
+              </div>
+            )}
+            {!isLogin && inp("state","State","text","e.g. Maharashtra")}
             {inp("password","Password","password",isLogin?"Enter password":"Min 6 characters")}
             {!isLogin && inp("confirm","Confirm Password","password","Re-enter password")}
 

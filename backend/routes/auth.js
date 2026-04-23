@@ -28,14 +28,22 @@ router.post(
     body("email").trim().isEmail().withMessage("Valid email is required"),
     body("password").isLength({ min: 6 }).withMessage("Password must be at least 6 characters"),
     body("phone").optional().isLength({ max: 20 }),
+    body("city").optional().isString().trim(),
+    body("state").optional().isString().trim(),
     validate,
   ],
   asyncHandler(async (req, res) => {
-    const { name, email, password, phone } = req.body;
+    const { name, email, password, phone, city, state } = req.body;
     if (!name || !email || !password) return res.status(400).json({ message:"All fields required" });
     if (password.length < 6) return res.status(400).json({ message:"Password must be at least 6 characters" });
     if (await User.findOne({ email })) return res.status(400).json({ message:"Email already registered" });
-    const user = await User.create({ name, email, password, phone:phone||"" });
+    
+    let addresses = [];
+    if (city || state) {
+      addresses = [{ city: city || "", state: state || "", street: "Not provided", pincode: "000000", isDefault: true }];
+    }
+    
+    const user = await User.create({ name, email, password, phone:phone||"", addresses });
     // Send welcome email
     try {
       await sendOrderEmail({
