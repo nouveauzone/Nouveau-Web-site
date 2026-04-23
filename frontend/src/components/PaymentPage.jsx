@@ -4,6 +4,7 @@ import CardPayment from "./CardPayment";
 import DirectUPIPayment from "./DirectUPIPayment";
 import { AuthContext } from "../context/AuthContext";
 import { BUSINESS_UPI_ID } from "../config/payment";
+import { loadRazorpayScript } from "../utils/loadRazorpay";
 
 const BANKS = [
   { id: "sbi", name: "State Bank of India", short: "SBI" },
@@ -78,16 +79,10 @@ const PaymentPage = ({
       return;
     }
 
-    if (!window.Razorpay) {
-      const message = "Payment system did not load. Refresh the page and try again.";
-      alert(message);
-      handleFailure({ reason: "sdk-missing", description: message });
-      return;
-    }
-
     setBankLoading(true);
 
     try {
+      await loadRazorpayScript();
       const gatewayOrder = await apiService.createRazorpayOrder({ amount: amountNumber });
       const verificationOrderId = isMongoId(orderId) ? orderId : undefined;
 

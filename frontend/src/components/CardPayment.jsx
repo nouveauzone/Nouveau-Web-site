@@ -1,6 +1,7 @@
 import { useContext, useMemo, useState } from "react";
 import apiService from "../services/apiService";
 import { AuthContext } from "../context/AuthContext";
+import { loadRazorpayScript } from "../utils/loadRazorpay";
 
 const DEFAULT_MERCHANT = "Nouveauz";
 
@@ -160,16 +161,10 @@ const CardPayment = ({
       return;
     }
 
-    if (!window.Razorpay) {
-      const message = "Payment system did not load. Refresh the page and try again.";
-      alert(message);
-      onFailure?.({ reason: "sdk-missing", description: message });
-      return;
-    }
-
     setLoading(true);
 
     try {
+      await loadRazorpayScript();
       const gatewayOrder = await apiService.createRazorpayOrder({ amount: Number(amount) });
       const verificationOrderId = getOrderIdForVerification(orderId);
 

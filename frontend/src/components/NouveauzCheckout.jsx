@@ -1,5 +1,6 @@
 import { useState } from "react";
 import apiService from "../services/apiService";
+import { loadRazorpayScript } from "../utils/loadRazorpay";
 
 const METHOD_BADGES = ["UPI", "PhonePe", "GPay", "Cards", "NetBanking", "Wallets"];
 
@@ -32,16 +33,10 @@ export default function NouveauzCheckout({ amount, cartItems = [], customerInfo 
       return;
     }
 
-    if (!window.Razorpay) {
-      const message = "Payment system did not load. Refresh the page and try again.";
-      alert(message);
-      onFailure?.({ reason: "sdk-missing", description: message });
-      return;
-    }
-
     setLoading(true);
 
     try {
+      await loadRazorpayScript();
       const gatewayOrder = await apiService.createRazorpayOrder({ amount: Number(amount) });
 
       const options = {
