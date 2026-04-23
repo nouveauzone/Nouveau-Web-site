@@ -10,6 +10,7 @@ const compression = require("compression");
 const rateLimit = require("express-rate-limit");
 const mongoSanitize = require("express-mongo-sanitize");
 const hpp = require("hpp");
+const morgan = require("morgan");
 const { validateEnv } = require("./config/env");
 const { notFound, errorHandler } = require("./middleware/error");
 const { bootstrapAdminUser } = require("./utils/bootstrap");
@@ -74,6 +75,7 @@ io.on("connection", (socket) => {
 // ── Middleware ──────────────────────────────────────────────────────────────
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
+app.use(morgan("dev")); // Production-level request logging
 app.use(helmet({
   // Frontend runs on a different origin (localhost:3000) in dev.
   // Allow static resources like product images to be embedded cross-origin.
@@ -104,7 +106,7 @@ app.use(express.json({ limit:"10mb" }));
 // Twilio webhook needs urlencoded body
 app.use("/api/whatsapp/webhook", express.urlencoded({ extended: false }));
 app.use(express.urlencoded({ extended:true, limit:"10mb" }));
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/uploads", express.static("uploads"));
 
 // ── DB ──────────────────────────────────────────────────────────────────────
 mongoose.connect(process.env.MONGO_URI || "mongodb://localhost:27017/nouveau")

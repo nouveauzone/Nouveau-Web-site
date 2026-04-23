@@ -1,4 +1,5 @@
 const Order   = require("../models/Order");
+const Product = require("../models/Product");
 const { sendOrderConfirmation, sendPaymentSuccess, sendStatusUpdate } = require("../services/whatsappService");
 const asyncHandler = require("../utils/asyncHandler");
 const { sendOrderEmail, orderConfirmHTML, shippedEmailHTML } = require("../utils/email");
@@ -33,10 +34,11 @@ const hasSuspiciousUpiPattern = (value) => {
 // POST /api/orders/create  — place order (alias for POST /api/orders)
 // ─────────────────────────────────────────────────────────────────────────────
 exports.createOrder = asyncHandler(async (req, res) => {
-  const { items, shippingAddress, paymentMethod, paymentReference, couponCode } = req.body;
-  if (!items?.length) return res.status(400).json({ message: "No items in order" });
+  const { items, products, shippingAddress, paymentMethod, paymentReference, couponCode } = req.body;
+  const orderArray = products || items;
+  if (!orderArray?.length) return res.status(400).json({ message: "No items in order" });
 
-  const totals = calculateOrderTotals(items, couponCode);
+  const totals = calculateOrderTotals(orderArray, couponCode);
   const normalizedPaymentMethod = String(paymentMethod || "COD").toUpperCase();
   const isUpiOrder = normalizedPaymentMethod === "UPI";
   const isRazorpayOrder = normalizedPaymentMethod === "RAZORPAY";
@@ -73,10 +75,9 @@ exports.createOrder = asyncHandler(async (req, res) => {
   const initialStatus = isUpiOrder ? "Awaiting Payment Verification" : "Placed";
 
   const order = await Order.create({
-    user: req.user._id,
     userId: req.user._id,
     userEmail: req.user.email,
-    items,
+    products: orderArray,
     shippingAddress,
     paymentMethod: normalizedPaymentMethod,
     paymentStatus: isUpiOrder ? "pending" : "paid",
@@ -86,8 +87,17 @@ exports.createOrder = asyncHandler(async (req, res) => {
     subtotal:      totals.subtotal,
     discount:      totals.discount,
     shippingCharge:totals.shippingCharge,
-    total:         totals.total,
+    totalAmount:   totals.total,
   });
+
+  // ── Auto Stock Management ──
+  for (const item of orderArray) {
+    // If the schema ref is populated appropriately, 'item.product' holds the ID
+    const productId = item.product || item._id; 
+    if (productId) {
+      await Product.findByIdAndUpdate(productId, { $inc: { stock: -(item.qty || 1) } }).catch(e => console.log("Stock decrement error:", e.message));
+    }
+  }
 
   // Confirm only after payment verification for UPI orders.
   if (!isUpiOrder) {
@@ -106,8 +116,8 @@ exports.createOrder = asyncHandler(async (req, res) => {
         customerName: shippingAddress?.name || req.user?.name || "Customer",
         trackingId:   order.trackingId,
         orderId:      order._id,
-        total:        order.total,
-        items:        order.items || [],
+        total:        order.totalAmount || order.total,
+        items:        order.products || order.items || [],
       }).catch(e => console.log("WhatsApp order confirm error:", e.message));
 
       if (isRazorpayOrder) {
@@ -116,7 +126,7 @@ exports.createOrder = asyncHandler(async (req, res) => {
           customerName: shippingAddress?.name || req.user?.name || "Customer",
           trackingId: order.trackingId,
           orderId: order._id,
-          paidAmount: order.total,
+          paidAmount: order.totalAmount,
           paymentId: normalizedPaymentReference || order.paymentId,
           paymentMethod: "Razorpay",
         }).catch(e => console.log("WhatsApp payment success error:", e.message));
@@ -141,7 +151,7 @@ exports.createOrder = asyncHandler(async (req, res) => {
 exports.trackOrder = asyncHandler(async (req, res) => {
   const { trackingId } = req.params;
   const order = await Order.findOne({ trackingId })
-    .populate("user", "name email")
+    .populate("userId", "name email")
     .lean();
 
   if (!order) return res.status(404).json({ message: `No order found with tracking ID: ${trackingId}` });
@@ -203,8 +213,8 @@ exports.updateOrderStatus = asyncHandler(async (req, res) => {
         customerName: order.shippingAddress?.name || "Customer",
         trackingId:   order.trackingId,
         orderId:      order._id,
-        total:        order.total,
-        items:        order.items || [],
+        total:        order.totalAmount,
+        items:        order.products || order.items || [],
       }).catch(e => console.log("WhatsApp order confirm error:", e.message));
 
       sendPaymentSuccess({
@@ -212,7 +222,7 @@ exports.updateOrderStatus = asyncHandler(async (req, res) => {
         customerName: order.shippingAddress?.name || "Customer",
         trackingId: order.trackingId,
         orderId: order._id,
-        paidAmount: order.total,
+        paidAmount: order.totalAmount,
         paymentId: order.paymentId,
         paymentMethod: "UPI",
       }).catch(e => console.log("WhatsApp payment success error:", e.message));
@@ -237,7 +247,7 @@ exports.updateOrderStatus = asyncHandler(async (req, res) => {
       .catch(e => console.log("WhatsApp status update error:", e.message));
   }
 
-  const populated = await Order.findById(order._id).populate("user", "name email");
+  const populated = await Order.findById(order._id).populate("userId", "name email");
   res.json(normalizeOrderOutput(populated.toObject()));
 });
 
@@ -249,7 +259,6 @@ exports.getMyOrders = asyncHandler(async (req, res) => {
   const userEmail = String(req.user.email || "").toLowerCase();
   const orders = await Order.find({
     $or: [
-      { user: userId },
       { userId },
       ...(userEmail ? [
         { userEmail: userEmail },
@@ -264,9 +273,9 @@ exports.getMyOrders = asyncHandler(async (req, res) => {
 // GET /api/orders/:id  — single order by _id (user or admin)
 // ─────────────────────────────────────────────────────────────────────────────
 exports.getOrderById = asyncHandler(async (req, res) => {
-  const order = await Order.findById(req.params.id).populate("user", "name email");
+  const order = await Order.findById(req.params.id).populate("userId", "name email");
   if (!order) return res.status(404).json({ message: "Order not found" });
-  if (order.user._id.toString() !== req.user._id.toString() && req.user.role !== "admin")
+  if (order.userId._id.toString() !== req.user._id.toString() && req.user.role !== "admin")
     return res.status(403).json({ message: "Not authorized" });
   res.json(normalizeOrderOutput(order.toObject()));
 });
@@ -282,7 +291,7 @@ exports.getAllOrders = asyncHandler(async (req, res) => {
       .sort({ createdAt: -1 })
       .skip((page - 1) * +limit)
       .limit(+limit)
-      .populate("user", "name email"),
+      .populate("userId", "name email"),
     Order.countDocuments(q),
   ]);
   res.json({ orders: orders.map((order) => normalizeOrderOutput(order.toObject())), total });

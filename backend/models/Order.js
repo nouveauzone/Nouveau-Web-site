@@ -17,10 +17,9 @@ const statusHistorySchema = new mongoose.Schema({
 
 const orderSchema = new mongoose.Schema(
   {
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     userEmail: { type: String, default: "" },
-    items: [orderItemSchema],
+    products: [orderItemSchema],
 
     // ── Tracking ────────────────────────────────────────────────────────────
     trackingId: {
@@ -57,7 +56,7 @@ const orderSchema = new mongoose.Schema(
     subtotal:       { type: Number, default: 0 },
     discount:       { type: Number, default: 0 },
     shippingCharge: { type: Number, default: 0 },
-    total:          { type: Number, default: 0 },
+    totalAmount:    { type: Number, default: 0 },
     couponCode:     { type: String, default: "" },
     emailSent:      { type: Boolean, default: false },
 
@@ -82,7 +81,7 @@ orderSchema.pre("save", function (next) {
   next();
 });
 
-orderSchema.index({ user: 1, createdAt: -1 });
+orderSchema.index({ userId: 1, createdAt: -1 });
 orderSchema.index({ trackingId: 1 });
 orderSchema.index({ orderStatus: 1, createdAt: -1 });
 

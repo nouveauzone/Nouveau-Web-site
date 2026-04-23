@@ -35,7 +35,7 @@ const normalizeImagePathForStorage = (src) => {
 
 const toPublicImageUrl = (src) => {
   const raw = String(src || "").trim();
-  if (!raw) return "";
+  if (!raw) return "/product1.jpeg";
 
   if (raw.startsWith("data:") || raw.startsWith("blob:")) return raw;
 
@@ -87,8 +87,9 @@ const normalizeProductOutput = (product = {}) => {
 const normalizeOrderOutput = (order = {}) => {
   if (!order || typeof order !== "object") return order;
 
-  const items = Array.isArray(order.items)
-    ? order.items.map((item) => ({
+  const rawItems = order.products || order.items || [];
+  const normalizedItems = Array.isArray(rawItems)
+    ? rawItems.map((item) => ({
         ...item,
         image: toPublicImageUrl(item?.image || ""),
       }))
@@ -96,7 +97,13 @@ const normalizeOrderOutput = (order = {}) => {
 
   return {
     ...order,
-    items,
+    // Provide both new and old properties for seamless backwards compatibility
+    products: normalizedItems,
+    items: normalizedItems,
+    userId: order.userId || order.user?._id || order.user,
+    user: order.userId || order.user,
+    totalAmount: order.totalAmount !== undefined ? order.totalAmount : order.total,
+    total: order.totalAmount !== undefined ? order.totalAmount : order.total,
   };
 };
 
