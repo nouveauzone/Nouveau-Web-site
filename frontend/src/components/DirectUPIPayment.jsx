@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
+import { AuthContext } from '../context/AuthContext';
 import { BUSINESS_UPI_ID, isValidUpiId } from '../config/payment';
 
 // ============================================================
@@ -40,6 +41,7 @@ const DirectUPIPayment = ({
   onSuccess,
   onPending,
 }) => {
+  const { isAuthenticated } = useContext(AuthContext);
   const [isMobile, setIsMobile] = useState(false);
   const [activeApp, setActiveApp] = useState(null);
   const [copied, setCopied] = useState(false);
@@ -60,6 +62,13 @@ const DirectUPIPayment = ({
   const upiLink = `upi://pay?pa=${normalizedUpiId}&pn=Nouveauz&am=${formattedAmount}&cu=INR`;
 
   const handleAppClick = (app) => {
+    if (!isAuthenticated) {
+      const message = 'Please login first to use UPI payment.';
+      alert(message);
+      if (onPending) onPending({ method: app?.id, status: 'auth_required', note: txnNote });
+      return;
+    }
+
     if (!upiIdValid) {
       alert('Configured UPI ID is invalid. Please contact support.');
       return;
@@ -80,6 +89,11 @@ const DirectUPIPayment = ({
   };
 
   const handlePaymentDone = () => {
+    if (!isAuthenticated) {
+      setUtrError('Please login first to continue.');
+      return;
+    }
+
     const normalizedUtr = String(utrNumber || '').replace(/\D/g, '');
     if (!/^\d{12}$/.test(normalizedUtr)) {
       setUtrError('Please enter a valid 12-digit UTR/Reference number.');
@@ -115,6 +129,15 @@ const DirectUPIPayment = ({
     confirmBtn: { width: '100%', background: '#C9A227', color: '#fff', border: 'none', borderRadius: 12, padding: '16px', fontSize: 16, fontWeight: 600, cursor: 'pointer', marginBottom: 12 },
     cancelBtn: { width: '100%', background: 'none', color: '#888', border: 'none', padding: '12px', fontSize: 14, cursor: 'pointer' },
   };
+
+  if (!isAuthenticated) {
+    return (
+      <div style={{ padding: '20px', borderRadius: '16px', border: '1px solid #f1d99a', background: '#fff8e8', textAlign: 'center' }}>
+        <p style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: '#7a5a00' }}>Login required for UPI payment</p>
+        <p style={{ margin: '8px 0 0', fontSize: '12px', color: '#8a6d3b' }}>Please sign in before opening PhonePe, GPay, or Paytm.</p>
+      </div>
+    );
+  }
 
   return (
     <div style={styles.wrapper}>

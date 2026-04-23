@@ -5,6 +5,7 @@ const crypto = require("crypto");
 const axios = require("axios");
 const Order = require("../models/Order");
 const { protect } = require("../middleware/auth");
+const { sendPaymentSuccess } = require("../services/whatsappService");
 const asyncHandler = require("../utils/asyncHandler");
 const validate = require("../middleware/validate");
 
@@ -81,6 +82,19 @@ payRouter.post(
           order.orderStatus = "Placed";
         }
         await order.save();
+
+        const phone = order.shippingAddress?.phone;
+        if (phone) {
+          sendPaymentSuccess({
+            phone,
+            customerName: order.shippingAddress?.name || req.user?.name || "Customer",
+            trackingId: order.trackingId,
+            orderId: order._id,
+            paidAmount: order.total,
+            paymentId: razorpay_payment_id,
+            paymentMethod: "Razorpay",
+          }).catch((error) => console.log("WhatsApp payment success error:", error.message));
+        }
       }
     }
 

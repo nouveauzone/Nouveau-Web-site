@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useContext, useMemo, useState } from "react";
 import apiService from "../services/apiService";
+import { AuthContext } from "../context/AuthContext";
 
 const DEFAULT_MERCHANT = "Nouveauz";
 
@@ -99,6 +100,7 @@ const CardPayment = ({
   onSuccess,
   onFailure,
 }) => {
+  const { isAuthenticated } = useContext(AuthContext);
   const [cardName, setCardName] = useState(customerInfo.name || "");
   const [cardNumber, setCardNumber] = useState("");
   const [expiry, setExpiry] = useState("");
@@ -130,6 +132,13 @@ const CardPayment = ({
   };
 
   const handleSubmit = async () => {
+    if (!isAuthenticated) {
+      const message = "Please login first to use card payment.";
+      alert(message);
+      onFailure?.({ reason: "auth_required", description: message });
+      return;
+    }
+
     const nextErrors = validate();
     setTouched({ cardName: true, cardNumber: true, expiry: true, cvv: true });
     setErrors(nextErrors);
@@ -239,6 +248,15 @@ const CardPayment = ({
   };
 
   const cardErrors = errors;
+
+  if (!isAuthenticated) {
+    return (
+      <div style={{ padding: "20px", borderRadius: "16px", border: "1px solid #f1d99a", background: "#fff8e8", textAlign: "center" }}>
+        <p style={{ margin: 0, fontSize: "14px", fontWeight: 700, color: "#7a5a00" }}>Login required for card payment</p>
+        <p style={{ margin: "8px 0 0", fontSize: "12px", color: "#8a6d3b" }}>Please sign in before continuing to Razorpay.</p>
+      </div>
+    );
+  }
 
   return (
     <div style={{ display: "grid", gap: 16 }}>

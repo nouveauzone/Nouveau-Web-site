@@ -1,5 +1,5 @@
 const Order   = require("../models/Order");
-const { sendOrderConfirmation, sendStatusUpdate } = require("../services/whatsappService");
+const { sendOrderConfirmation, sendPaymentSuccess, sendStatusUpdate } = require("../services/whatsappService");
 const asyncHandler = require("../utils/asyncHandler");
 const { sendOrderEmail, orderConfirmHTML, shippedEmailHTML } = require("../utils/email");
 const { calculateOrderTotals } = require("../services/pricingService");
@@ -107,6 +107,18 @@ exports.createOrder = asyncHandler(async (req, res) => {
         total:        order.total,
         items:        order.items || [],
       }).catch(e => console.log("WhatsApp order confirm error:", e.message));
+
+      if (isRazorpayOrder) {
+        sendPaymentSuccess({
+          phone,
+          customerName: shippingAddress?.name || req.user?.name || "Customer",
+          trackingId: order.trackingId,
+          orderId: order._id,
+          paidAmount: order.total,
+          paymentId: normalizedPaymentReference || order.paymentId,
+          paymentMethod: "Razorpay",
+        }).catch(e => console.log("WhatsApp payment success error:", e.message));
+      }
     }
   }
 
@@ -192,6 +204,16 @@ exports.updateOrderStatus = asyncHandler(async (req, res) => {
         total:        order.total,
         items:        order.items || [],
       }).catch(e => console.log("WhatsApp order confirm error:", e.message));
+
+      sendPaymentSuccess({
+        phone,
+        customerName: order.shippingAddress?.name || "Customer",
+        trackingId: order.trackingId,
+        orderId: order._id,
+        paidAmount: order.total,
+        paymentId: order.paymentId,
+        paymentMethod: "UPI",
+      }).catch(e => console.log("WhatsApp payment success error:", e.message));
     }
   }
 

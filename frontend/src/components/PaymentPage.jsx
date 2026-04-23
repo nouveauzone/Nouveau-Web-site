@@ -1,7 +1,8 @@
-import React, { useMemo, useState } from "react";
+import React, { useContext, useMemo, useState } from "react";
 import apiService from "../services/apiService";
 import CardPayment from "./CardPayment";
 import DirectUPIPayment from "./DirectUPIPayment";
+import { AuthContext } from "../context/AuthContext";
 import { BUSINESS_UPI_ID } from "../config/payment";
 
 const BANKS = [
@@ -41,6 +42,7 @@ const PaymentPage = ({
   onSuccess,
   onFailure,
 }) => {
+  const { isAuthenticated } = useContext(AuthContext);
   const [activeTab, setActiveTab] = useState("upi");
   const [paid, setPaid] = useState(false);
   const [paymentData, setPaymentData] = useState(null);
@@ -167,6 +169,15 @@ const PaymentPage = ({
     { id: "card", label: "Card", icon: "💳" },
     { id: "netbanking", label: "Net Banking", icon: "🏦" },
   ];
+
+  if (!isAuthenticated) {
+    return (
+      <div style={{ padding: 20, borderRadius: 20, border: "1px solid #f1d99a", background: "#fff8e8", textAlign: "center" }}>
+        <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#7a5a00" }}>Login required for payment</p>
+        <p style={{ margin: "8px 0 0", fontSize: 12, color: "#8a6d3b" }}>Please sign in before using UPI, card, or net banking.</p>
+      </div>
+    );
+  }
 
   const styles = {
     overlay: {

@@ -149,6 +149,10 @@ export default function Providers({ children }) {
 
   // ── placeOrder — saves to backend AND local state ─────────────────────────
   const placeOrder = async (address, items, paymentMethod, paymentReference = "") => {
+    if (!authState.isAuthenticated || !authState.token) {
+      throw new Error("Authentication required to place order.");
+    }
+
     const subtotal       = items.reduce((s,i) => s + i.price*i.qty, 0);
     const shippingCharge = getShippingCharge(subtotal);
     const total          = subtotal + shippingCharge;
