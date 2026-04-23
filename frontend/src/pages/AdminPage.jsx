@@ -927,41 +927,86 @@ export default function AdminPage({ setPage }) {
               </select>
             </div>
             <div style={{ background:THEME.bgCard, border:`1px solid ${THEME.border}`, borderRadius:"14px", overflow:"hidden" }}>
-              <div style={{ overflowX:"auto" }}>
-                <table style={{ width:"100%", borderCollapse:"collapse" }}>
-                  <thead>
-                    <tr style={{ background:THEME.bgDark }}>
-                      {["Order ID","Customer","Email","Amount","Status","Date","Actions"].map((h) => (
-                        <th key={h} style={{ padding:"11px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"9px", letterSpacing:"2px", textTransform:"uppercase", color:THEME.textLight, textAlign:"left", borderBottom:`1px solid ${THEME.border}`, whiteSpace:"nowrap" }}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {visibleOrders.map((o, idx) => (
-                      <tr key={`${o._id || o.createdAt || "order-row"}-${idx}`} style={{ background:idx%2===0?"transparent":THEME.bg, transition:"background 0.15s", cursor:"pointer" }}
-                        onClick={()=>setSelectedOrder(o)}
-                        onMouseEnter={e=>e.currentTarget.style.background=`${THEME.crimson}06`}
-                        onMouseLeave={e=>e.currentTarget.style.background=idx%2===0?"transparent":THEME.bg}>
-                        <td style={{ padding:"12px 14px" }}>
-                          <button onClick={(e)=>{ e.stopPropagation(); setSelectedOrder(o); }} style={{ background:"none", border:"none", cursor:"pointer", color:THEME.crimson, fontFamily:"'Poppins',sans-serif", fontSize:"12px", fontWeight:700, textDecoration:"underline" }}>{(o._id||"").slice(-10)}</button>
-                        </td>
-                        <td style={{ padding:"12px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.text, whiteSpace:"nowrap" }}>{getOrderCustomer(o)}</td>
-                        <td style={{ padding:"12px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textMuted, whiteSpace:"nowrap" }}>{getOrderEmail(o)}</td>
-                        <td style={{ padding:"12px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"13px", fontWeight:700, color:THEME.text, whiteSpace:"nowrap" }}>₹{getOrderAmount(o).toLocaleString("en-IN")}</td>
-                        <td style={{ padding:"12px 14px" }}><StatusBadge status={getOrderStage(o)} /></td>
-                        <td style={{ padding:"12px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"11px", color:THEME.textLight, whiteSpace:"nowrap" }}>{getOrderDate(o)}</td>
-                        <td style={{ padding:"12px 14px" }}>
-                          <div style={{ display:"flex", gap:"5px", flexWrap:"wrap" }}>
-                            <button onClick={(e)=>{ e.stopPropagation(); setSelectedOrder(o); }} style={{ background:`${THEME.gold}15`, border:`1px solid ${THEME.gold}40`, color:THEME.goldDark, padding:"5px 10px", borderRadius:"6px", cursor:"pointer", fontSize:"11px", fontFamily:"'Poppins',sans-serif" }}>View</button>
-                            <button onClick={(e)=>{ e.stopPropagation(); handleDeleteOrder(o._id); }} style={{ background:`${THEME.crimson}10`, border:`1px solid ${THEME.crimson}30`, color:THEME.crimson, padding:"5px 10px", borderRadius:"6px", cursor:"pointer", fontSize:"11px", fontFamily:"'Poppins',sans-serif" }}>Del</button>
-                          </div>
-                        </td>
+              {isMobile ? (
+                <div style={{ padding:"12px" }}>
+                  {visibleOrders.map((o, idx) => (
+                    <div
+                      key={`${o._id || o.createdAt || "order-card"}-${idx}`}
+                      onClick={()=>setSelectedOrder(o)}
+                      style={{
+                        background: idx % 2 === 0 ? THEME.bg : "#fff",
+                        border: `1px solid ${THEME.border}`,
+                        borderRadius: "14px",
+                        padding: "14px",
+                        marginBottom: "12px",
+                        cursor: "pointer",
+                        boxShadow: "0 4px 18px rgba(0,0,0,0.03)",
+                      }}
+                    >
+                      <div style={{ display:"flex", justifyContent:"space-between", gap:"12px", alignItems:"flex-start", marginBottom:"10px" }}>
+                        <div style={{ minWidth:0 }}>
+                          <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"2px", color:THEME.textLight, textTransform:"uppercase", marginBottom:"4px" }}>Order</p>
+                          <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"13px", fontWeight:700, color:THEME.crimson, wordBreak:"break-all" }}>{(o._id||"").slice(-10) || "Pending"}</p>
+                          <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.text, marginTop:"4px", wordBreak:"break-word" }}>{getOrderCustomer(o)}</p>
+                        </div>
+                        <StatusBadge status={getOrderStage(o)} />
+                      </div>
+                      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"10px", marginBottom:"10px" }}>
+                        <div style={{ background:THEME.bgCard, border:`1px solid ${THEME.border}`, borderRadius:"10px", padding:"10px 12px" }}>
+                          <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"9px", letterSpacing:"2px", color:THEME.textLight, marginBottom:"3px" }}>AMOUNT</p>
+                          <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"13px", fontWeight:700, color:THEME.text }}>₹{getOrderAmount(o).toLocaleString("en-IN")}</p>
+                        </div>
+                        <div style={{ background:THEME.bgCard, border:`1px solid ${THEME.border}`, borderRadius:"10px", padding:"10px 12px" }}>
+                          <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"9px", letterSpacing:"2px", color:THEME.textLight, marginBottom:"3px" }}>DATE</p>
+                          <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"12px", fontWeight:600, color:THEME.text }}>{getOrderDate(o)}</p>
+                        </div>
+                      </div>
+                      <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textMuted, marginBottom:"10px", wordBreak:"break-word" }}>{getOrderEmail(o)}</p>
+                      <div style={{ display:"flex", gap:"8px" }}>
+                        <button onClick={(e)=>{ e.stopPropagation(); setSelectedOrder(o); }} style={{ flex:1, background:`${THEME.gold}15`, border:`1px solid ${THEME.gold}40`, color:THEME.goldDark, padding:"8px 10px", borderRadius:"8px", cursor:"pointer", fontSize:"12px", fontFamily:"'Poppins',sans-serif", fontWeight:600 }}>View</button>
+                        <button onClick={(e)=>{ e.stopPropagation(); handleDeleteOrder(o._id); }} style={{ flex:1, background:`${THEME.crimson}10`, border:`1px solid ${THEME.crimson}30`, color:THEME.crimson, padding:"8px 10px", borderRadius:"8px", cursor:"pointer", fontSize:"12px", fontFamily:"'Poppins',sans-serif", fontWeight:600 }}>Del</button>
+                      </div>
+                    </div>
+                  ))}
+                  {visibleOrders.length===0 && <div style={{ textAlign:"center", padding:"36px 12px", color:THEME.textLight, fontFamily:"'Poppins',sans-serif" }}>{loadingData?"Loading orders...":"No orders found"}</div>}
+                </div>
+              ) : (
+                <div style={{ overflowX:"auto" }}>
+                  <table style={{ width:"100%", borderCollapse:"collapse" }}>
+                    <thead>
+                      <tr style={{ background:THEME.bgDark }}>
+                        {["Order ID","Customer","Email","Amount","Status","Date","Actions"].map((h) => (
+                          <th key={h} style={{ padding:"11px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"9px", letterSpacing:"2px", textTransform:"uppercase", color:THEME.textLight, textAlign:"left", borderBottom:`1px solid ${THEME.border}`, whiteSpace:"nowrap" }}>{h}</th>
+                        ))}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {visibleOrders.length===0 && <div style={{ textAlign:"center", padding:"48px", color:THEME.textLight, fontFamily:"'Poppins',sans-serif" }}>{loadingData?"Loading orders...":"No orders found"}</div>}
-              </div>
+                    </thead>
+                    <tbody>
+                      {visibleOrders.map((o, idx) => (
+                        <tr key={`${o._id || o.createdAt || "order-row"}-${idx}`} style={{ background:idx%2===0?"transparent":THEME.bg, transition:"background 0.15s", cursor:"pointer" }}
+                          onClick={()=>setSelectedOrder(o)}
+                          onMouseEnter={e=>e.currentTarget.style.background=`${THEME.crimson}06`}
+                          onMouseLeave={e=>e.currentTarget.style.background=idx%2===0?"transparent":THEME.bg}>
+                          <td style={{ padding:"12px 14px" }}>
+                            <button onClick={(e)=>{ e.stopPropagation(); setSelectedOrder(o); }} style={{ background:"none", border:"none", cursor:"pointer", color:THEME.crimson, fontFamily:"'Poppins',sans-serif", fontSize:"12px", fontWeight:700, textDecoration:"underline" }}>{(o._id||"").slice(-10)}</button>
+                          </td>
+                          <td style={{ padding:"12px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.text, whiteSpace:"nowrap" }}>{getOrderCustomer(o)}</td>
+                          <td style={{ padding:"12px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textMuted, whiteSpace:"nowrap" }}>{getOrderEmail(o)}</td>
+                          <td style={{ padding:"12px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"13px", fontWeight:700, color:THEME.text, whiteSpace:"nowrap" }}>₹{getOrderAmount(o).toLocaleString("en-IN")}</td>
+                          <td style={{ padding:"12px 14px" }}><StatusBadge status={getOrderStage(o)} /></td>
+                          <td style={{ padding:"12px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"11px", color:THEME.textLight, whiteSpace:"nowrap" }}>{getOrderDate(o)}</td>
+                          <td style={{ padding:"12px 14px" }}>
+                            <div style={{ display:"flex", gap:"5px", flexWrap:"wrap" }}>
+                              <button onClick={(e)=>{ e.stopPropagation(); setSelectedOrder(o); }} style={{ background:`${THEME.gold}15`, border:`1px solid ${THEME.gold}40`, color:THEME.goldDark, padding:"5px 10px", borderRadius:"6px", cursor:"pointer", fontSize:"11px", fontFamily:"'Poppins',sans-serif" }}>View</button>
+                              <button onClick={(e)=>{ e.stopPropagation(); handleDeleteOrder(o._id); }} style={{ background:`${THEME.crimson}10`, border:`1px solid ${THEME.crimson}30`, color:THEME.crimson, padding:"5px 10px", borderRadius:"6px", cursor:"pointer", fontSize:"11px", fontFamily:"'Poppins',sans-serif" }}>Del</button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {visibleOrders.length===0 && <div style={{ textAlign:"center", padding:"48px", color:THEME.textLight, fontFamily:"'Poppins',sans-serif" }}>{loadingData?"Loading orders...":"No orders found"}</div>}
+                </div>
+              )}
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:"12px", padding:"14px 16px", borderTop:`1px solid ${THEME.border}`, flexWrap:"wrap" }}>
                 <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"11px", color:THEME.textLight }}>
                   Page {orderPage} of {orderPageCount}
