@@ -79,7 +79,7 @@ export default function ContactPage({ setPage }) {
         </div>
       </div>
 
-      <div style={{ maxWidth:"1100px", margin:"0 auto", padding:"60px 40px" }}>
+      <div style={{ maxWidth:"1100px", margin:"0 auto", padding:"60px clamp(16px, 4vw, 40px)" }}>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1.6fr", gap:"60px", alignItems:"start" }} className="grid-2col">
 
           {/* Contact Info */}
@@ -115,7 +115,7 @@ export default function ContactPage({ setPage }) {
           </div>
 
           {/* Contact Form */}
-          <div style={{ background:THEME.bgCard, border:`1px solid ${THEME.border}`, borderRadius:"16px", padding:"40px" }}>
+          <div style={{ background:THEME.bgCard, border:`1px solid ${THEME.border}`, borderRadius:"16px", padding:"clamp(24px, 4vw, 40px)" }}>
 
             {/* ── SUCCESS STATE ── */}
             {status === "sent" ? (
@@ -146,7 +146,7 @@ export default function ContactPage({ setPage }) {
                 )}
 
                 {/* Name + Email */}
-                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"16px", marginBottom:"16px" }}>
+                <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(220px, 1fr))", gap:"16px", marginBottom:"16px" }}>
                   {[["name","Full Name *","text"],["email","Email Address *","email"]].map(([key,label,type]) => (
                     <div key={key}>
                       <label style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"2px", color:THEME.crimson, display:"block", marginBottom:"8px", fontWeight:600 }}>

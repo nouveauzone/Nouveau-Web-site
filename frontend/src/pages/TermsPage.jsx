@@ -40,7 +40,7 @@ export default function TermsPage({ setPage }) {
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"12px" }}>
             {[
               ["✅","Cash on Delivery (COD)","Available across India"],
-              ["✅","UPI","Google Pay, PhonePe, Paytm"],
+              ["✅","Direct UPI Intent","PhonePe, Google Pay, Paytm, BHIM"],
               ["✅","Credit / Debit Cards","All major cards accepted"],
               ["✅","Net Banking","All major banks"],
             ].map(([icon, method, desc]) => (

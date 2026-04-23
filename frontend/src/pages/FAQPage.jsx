@@ -10,7 +10,7 @@ const FAQS = [
   { q:"How long does delivery take?", a:"Standard delivery takes 5–7 business days. Express delivery (2–3 days) is available at ₹500. Same-day delivery is available in select cities for orders placed before 12 PM." },
   { q:"Are your products authentic?", a:"Absolutely. All our fabrics are sourced directly from weavers across India — from Chanderi silk to Rajasthani block prints. We work with artisan communities to ensure authenticity and fair trade." },
   { q:"Can I get custom sizing?", a:"Yes! Lehengas and select ethnic wear are available in custom sizing. Please WhatsApp us at +91 98765 43210 with your measurements for a made-to-measure quote." },
-  { q:"What payment methods do you accept?", a:"We currently accept UPI / QR Code payments and Cash on Delivery (COD)." },
+  { q:"What payment methods do you accept?", a:"We currently accept direct UPI intent payments (PhonePe, Google Pay, Paytm, BHIM) and Cash on Delivery (COD)." },
   { q:"How do I track my order?", a:"Once shipped, you'll receive a tracking link via SMS and WhatsApp. You can also use our Track Order page with your Order ID." },
   { q:"Do you ship internationally?", a:"Currently we ship to select international destinations. Please WhatsApp us for availability and shipping rates to your country." },
   { q:"What is the Aura Circle?", a:"The Aura Circle is our loyalty programme. Subscribe to our newsletter for early access to new collections, exclusive discount codes, and invitations to private sale events." },

@@ -118,8 +118,30 @@ export default function CheckoutPage({ setPage }) {
 
   return (
     <div style={{ background: THEME.bg, minHeight: "100vh", color: THEME.text }}>
+<<<<<<< HEAD
       <div className="resp-container" style={{ maxWidth: "1200px", margin: "0 auto", padding: "60px var(--container-padding)" }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: "clamp(30px, 5vw, 60px)" }} className="cart-sidebar">
+=======
+      <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "60px clamp(16px, 4vw, 40px)" }}>
+        <h1 style={{ fontFamily: "'Playfair Display',serif", fontSize: "42px", marginBottom: "8px", color: THEME.text }}>Checkout</h1>
+        <p style={{ fontFamily: "'Poppins',sans-serif", fontSize: "12px", color: THEME.textMuted, marginBottom: "40px" }}>Secure checkout — powered by Nouveau™</p>
+
+        <div style={{ display: "flex", alignItems: "center", marginBottom: "48px", flexWrap: "wrap", gap: "8px" }}>
+          {["Address", "Payment", "Review"].map((label, index) => (
+            <div key={label} style={{ display: "flex", alignItems: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", cursor: step > index + 1 ? "pointer" : "default" }} onClick={() => step > index + 1 && setStep(index + 1)}>
+                <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: step > index + 1 ? `linear-gradient(135deg,${CRIMSON},${GOLD})` : step === index + 1 ? GOLD : THEME.bgCard, border: step === index + 1 ? "none" : `1px solid ${THEME.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: 700, color: step >= index + 1 ? "#fff" : THEME.textLight, transition: "all 0.3s", fontFamily: "'Poppins',sans-serif" }}>
+                  {step > index + 1 ? "✓" : index + 1}
+                </div>
+                <span style={{ fontSize: "10px", letterSpacing: "2px", color: step >= index + 1 ? THEME.text : THEME.textLight, fontFamily: "'Poppins',sans-serif", fontWeight: step >= index + 1 ? 600 : 400, textTransform: "uppercase" }}>{label}</span>
+              </div>
+              {index < 2 && <div style={{ width: "48px", height: "1.5px", background: step > index + 1 ? GOLD : THEME.border, margin: "0 12px", transition: "all 0.3s" }} />}
+            </div>
+          ))}
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: "40px" }} className="cart-sidebar">
+>>>>>>> 8864255 (Improve mobile checkout and contact layouts)
           <div>
             {step === 1 && (
               <div>
@@ -127,14 +149,14 @@ export default function CheckoutPage({ setPage }) {
                 <div
                   style={{
                     display: "grid",
-                    gridTemplateColumns: "repeat(2, 1fr)",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
                     columnGap: "20px",
                     rowGap: "16px",
                   }}
                   className="checkout-address-grid"
                 >
                   {ADDRESS_FIELDS.map(({ key, label, type, fullRow }) => (
-                    <div key={key} style={{ gridColumn: fullRow ? "1 / span 2" : "auto", width: "100%" }}>
+                    <div key={key} style={{ gridColumn: fullRow ? "1 / -1" : "auto", width: "100%", minWidth: 0 }}>
                       <label style={{ fontFamily: "'Poppins',sans-serif", fontSize: "9px", letterSpacing: "2px", color: errors[key] ? CRIMSON : THEME.textMuted, display: "block", marginBottom: "6px", fontWeight: 600, textTransform: "uppercase" }}>
                         {label}{errors[key] && <span style={{ color: CRIMSON, marginLeft: "6px" }}>*</span>}
                       </label>
