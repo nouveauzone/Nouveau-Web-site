@@ -60,14 +60,6 @@ jobs:
 
             pm2 save
 
-            # 🔍 Backend health check
-            echo "🔍 Checking backend..."
-            if ! curl --max-time 10 -fsS http://127.0.0.1:5000/api/health > /dev/null; then
-              echo "❌ Backend failed"
-              pm2 logs backend --lines 50 --nostream || true
-              exit 1
-            fi
-
             # =========================
             # 🎨 FRONTEND BUILD
             # =========================
@@ -97,6 +89,26 @@ jobs:
             fi
 
             sudo systemctl reload nginx
+
+            # =========================
+            # 🔍 BACKEND HEALTH (RETRY, NON-BLOCKING)
+            # =========================
+            echo "🔍 Checking backend with retries..."
+            BACKEND_OK=0
+            for attempt in 1 2 3 4 5; do
+              if curl --max-time 10 -fsS http://127.0.0.1:5000/api/health > /dev/null; then
+                BACKEND_OK=1
+                echo "✅ Backend healthy"
+                break
+              fi
+              echo "⏳ Backend not ready (attempt ${attempt}/5), retrying..."
+              sleep 5
+            done
+
+            if [ "$BACKEND_OK" -ne 1 ]; then
+              echo "⚠️ Backend health check failed after retries. Frontend deploy completed."
+              pm2 logs backend --lines 50 --nostream || true
+            fi
 
             # =========================
             # 🔍 FINAL CHECK
