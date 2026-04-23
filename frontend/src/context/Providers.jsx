@@ -224,6 +224,10 @@ export default function Providers({ children }) {
         total,
       });
       setAllOrders(prev => [enriched, ...prev]);
+
+      // Keep the cart in sync with a completed purchase, regardless of which
+      // checkout flow triggered the order creation.
+      cartDispatch({ type: "CLEAR" });
     } catch (err) {
       // Never create local-only orders for paid checkouts; backend must confirm order creation.
       throw err;
