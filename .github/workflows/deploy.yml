@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 concurrency:
   group: deploy-ec2
@@ -28,18 +29,41 @@ jobs:
           command_timeout: 15m
 
           script: |
-            set -e
+            set -euo pipefail
 
             echo "🚀 Starting Deployment..."
 
+            export HOME="/home/ubuntu"
+            export NVM_DIR="$HOME/.nvm"
+            if [ -s "$NVM_DIR/nvm.sh" ]; then
+              . "$NVM_DIR/nvm.sh"
+              nvm use --lts >/dev/null 2>&1 || true
+            fi
+
+            echo "🔎 Runtime diagnostics"
+            echo "User: $(whoami)"
+            echo "Host: $(hostname)"
+            command -v node >/dev/null 2>&1 && node -v || echo "⚠️ node not found"
+            command -v npm >/dev/null 2>&1 && npm -v || echo "⚠️ npm not found"
+            command -v pm2 >/dev/null 2>&1 && pm2 -v || echo "⚠️ pm2 not found"
+            command -v nginx >/dev/null 2>&1 && nginx -v || echo "⚠️ nginx not found"
+
+            APP_DIR="/home/ubuntu/Nouveau-Web-site"
+
+            if [ ! -d "$APP_DIR/.git" ]; then
+              echo "📦 Project directory missing, cloning fresh copy..."
+              rm -rf "$APP_DIR"
+              git clone --depth 1 https://github.com/nouveauzone/Nouveau-Web-site.git "$APP_DIR"
+            fi
+
             # 📁 Go to project folder
-            cd /home/ubuntu/Nouveau-Web-site || exit 1
+            cd "$APP_DIR" || exit 1
 
             # 🔧 Fix permissions
-            sudo chown -R ubuntu:ubuntu /home/ubuntu/Nouveau-Web-site
+            sudo chown -R ubuntu:ubuntu "$APP_DIR"
 
             # 🔐 Fix git safe directory
-            git config --global --add safe.directory /home/ubuntu/Nouveau-Web-site
+            git config --global --add safe.directory "$APP_DIR"
 
             # 🔄 Pull latest code
             git fetch origin
@@ -52,7 +76,11 @@ jobs:
             cd backend
             export NODE_ENV=production
 
-            npm install
+            if [ -f package-lock.json ]; then
+              npm ci --omit=dev --no-audit --no-fund || npm install --no-audit --no-fund
+            else
+              npm install --no-audit --no-fund
+            fi
 
             pm2 describe backend > /dev/null \
               && pm2 restart backend \
@@ -65,7 +93,11 @@ jobs:
             # =========================
             cd ../frontend
 
-            npm install
+            if [ -f package-lock.json ]; then
+              npm ci --no-audit --no-fund || npm install --no-audit --no-fund
+            else
+              npm install --no-audit --no-fund
+            fi
             npm run build
 
             if [ ! -f build/index.html ]; then
@@ -76,6 +108,12 @@ jobs:
             # =========================
             # 🌐 DEPLOY TO NGINX
             # =========================
+            if ! command -v rsync >/dev/null 2>&1; then
+              echo "📦 rsync missing, installing..."
+              sudo apt-get update -y
+              sudo apt-get install -y rsync
+            fi
+
             sudo mkdir -p /var/www/html
             sudo rsync -a --delete build/ /var/www/html/
 
