@@ -207,9 +207,9 @@ export default function ProductPage({ product, setPage }) {
               {isOutOfStock && <span style={{ background:"#f8d7da", color:"#721c24", padding:"6px 12px", borderRadius:"99px", fontSize:"11px", fontFamily:"'Poppins',sans-serif", fontWeight:700, letterSpacing:"1px", textTransform:"uppercase" }}>Out of Stock</span>}
               <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"3px", color:THEME.crimson, fontWeight:700 }}>QTY</p>
               <div style={{ display:"flex", alignItems:"center", border:`1px solid ${THEME.border}`, borderRadius:"10px", overflow:"hidden" }}>
-                <button onClick={() => setQty(q => Math.max(1, q-1))} style={{ background:"none", border:"none", color:THEME.text, padding:"10px 16px", cursor:"pointer", fontSize:"18px" }}>−</button>
+                <button onClick={() => setQty(q => Math.max(1, q-1))} disabled={qty <= 1} style={{ background:"none", border:"none", color:THEME.text, padding:"10px 16px", cursor: qty <= 1 ? "not-allowed" : "pointer", fontSize:"18px", opacity: qty <= 1 ? 0.4 : 1 }}>−</button>
                 <span style={{ padding:"10px 20px", borderLeft:`1px solid ${THEME.border}`, borderRight:`1px solid ${THEME.border}`, fontFamily:"'Poppins',sans-serif", fontWeight:600 }}>{qty}</span>
-                <button onClick={() => setQty(q => q+1)} style={{ background:"none", border:"none", color:THEME.text, padding:"10px 16px", cursor:"pointer", fontSize:"18px" }}>+</button>
+                <button onClick={() => setQty(q => Math.min(safeStock, q+1))} disabled={qty >= safeStock} style={{ background:"none", border:"none", color:THEME.text, padding:"10px 16px", cursor: qty >= safeStock ? "not-allowed" : "pointer", fontSize:"18px", opacity: qty >= safeStock ? 0.4 : 1 }}>+</button>
               </div>
               <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textLight }}>
                 {safeStock > 0 ? `${safeStock} in stock` : "Out of stock"}
