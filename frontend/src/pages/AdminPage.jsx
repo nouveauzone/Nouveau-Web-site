@@ -11,6 +11,10 @@ import { resolveImageUrl } from "../utils/imageUrl";
 
 const ORDER_STATUSES = ["Awaiting Payment Verification","Placed","Processing","Shipped","Out for Delivery","Delivered","Cancelled"];
 const STATUS_COLORS = {
+  pending: { bg:"#fff7e6", text:"#d97706" },
+  shipped: { bg:"#d4edda", text:"#155724" },
+  delivered: { bg:"#d1ecf1", text:"#0c5460" },
+  cancelled: { bg:"#f8d7da", text:"#721c24" },
   "Awaiting Payment Verification": { bg:"#fff7e6", text:"#d97706" },
   Placed:{bg:"#fff3cd",text:"#856404"},
   Processing:{bg:"#cce5ff",text:"#004085"},
@@ -20,7 +24,8 @@ const STATUS_COLORS = {
   Cancelled:{bg:"#f8d7da",text:"#721c24"}
 };
 function StatusBadge({ status }) {
-  const c = STATUS_COLORS[status]||{bg:"#eee",text:"#333"};
+  const key = String(status || "").trim();
+  const c = STATUS_COLORS[key] || STATUS_COLORS[key.toLowerCase()] || { bg:"#eee", text:"#333" };
   return <span style={{ background:c.bg, color:c.text, padding:"4px 12px", borderRadius:"99px", fontSize:"10px", fontFamily:"'Poppins',sans-serif", fontWeight:700, letterSpacing:"1px", textTransform:"uppercase", whiteSpace:"nowrap" }}>{status}</span>;
 }
 
@@ -142,6 +147,73 @@ const normalizeProduct = (product) => {
   };
 };
 
+const ADMIN_ORDER_PAGE_SIZE = 10;
+const ADMIN_USER_PAGE_SIZE = 10;
+const ADMIN_ORDER_FILTERS = ["all", "pending", "shipped", "delivered"];
+
+const getOrderTimestamp = (order) => {
+  const value = order?.dateRaw || order?.date || order?.createdAt;
+  const time = value ? new Date(value).getTime() : NaN;
+  return Number.isNaN(time) ? 0 : time;
+};
+
+const getSimpleOrderStatus = (order) => {
+  const raw = String(order?.orderStatus || order?.status || "pending").toLowerCase();
+  if (["awaiting payment verification", "placed", "processing", "pending"].includes(raw)) return "pending";
+  if (["shipped", "out for delivery"].includes(raw)) return "shipped";
+  if (raw === "delivered") return "delivered";
+  if (raw === "cancelled" || raw === "canceled") return "cancelled";
+  return raw || "pending";
+};
+
+const getOrderCustomerName = (order) => order?.customer || order?.shippingAddress?.name || order?.user?.name || "—";
+const getOrderCustomerEmail = (order) => order?.email || order?.shippingAddress?.email || order?.user?.email || "—";
+const getOrderAmount = (order) => Number(order?.total || order?.price || 0);
+const getOrderDateLabel = (order) => {
+  const timestamp = getOrderTimestamp(order);
+  return timestamp ? new Date(timestamp).toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric" }) : "—";
+};
+
+const buildUserOrderSummary = (user, orders = []) => {
+  const userId = String(user?._id || user?.id || "");
+  const email = String(user?.email || "").toLowerCase();
+  const name = String(user?.name || "").toLowerCase();
+
+  const matchedOrders = orders.filter((order) => {
+    const orderUserId = String(order?.user?._id || order?.user || order?.userId || "");
+    const orderEmail = String(order?.email || order?.shippingAddress?.email || order?.user?.email || "").toLowerCase();
+    const orderName = String(order?.customer || order?.shippingAddress?.name || order?.user?.name || "").toLowerCase();
+    return (
+      (userId && orderUserId === userId) ||
+      (email && orderEmail === email) ||
+      (name && orderName === name)
+    );
+  });
+
+  const totalSpend = matchedOrders.reduce((sum, order) => sum + getOrderAmount(order), 0);
+  const lastOrder = matchedOrders[0] || null;
+
+  return {
+    totalOrders: matchedOrders.length,
+    totalSpend,
+    lastOrderDate: lastOrder ? getOrderDateLabel(lastOrder) : "—",
+    lastOrderRaw: lastOrder?.createdAt || lastOrder?.dateRaw || null,
+    orders: matchedOrders,
+  };
+};
+
+const mergeById = (primary = [], secondary = []) => {
+  const seen = new Set();
+  const merged = [];
+  [...primary, ...secondary].forEach((item) => {
+    const id = String(item?._id || item?.id || "");
+    if (!id || seen.has(id)) return;
+    seen.add(id);
+    merged.push(item);
+  });
+  return merged;
+};
+
 export default function AdminPage({ setPage }) {
   const { dispatch: authDispatch, isAuthenticated, user } = useContext(AuthContext);
   const { allOrders:ctxAllOrders = [], updateOrderStatus:ctxUpdateStatus, deleteOrderLocal, localUsers:ctxLocalUsers=[] } = useContext(AppDataContext)||{};
@@ -178,6 +250,12 @@ export default function AdminPage({ setPage }) {
   const [orders, setOrders]               = useState([]);
   const [users, setUsers]                 = useState([]);
   const [loadingData, setLoadingData]     = useState(false);
+  const [orderPage, setOrderPage]         = useState(1);
+  const [userPage, setUserPage]           = useState(1);
+  const [selectedUserDetail, setSelectedUserDetail] = useState(null);
+  const [selectedUserOrders, setSelectedUserOrders] = useState([]);
+  const [selectedUserStats, setSelectedUserStats] = useState(null);
+  const [selectedUserLoading, setSelectedUserLoading] = useState(false);
 
   const [showAddForm, setShowAddForm]     = useState(false);
   const [editingId, setEditingId]         = useState(null);
@@ -195,27 +273,39 @@ export default function AdminPage({ setPage }) {
   // ── Load real data from backend ──────────────────────────────────────────
   const loadData = async () => {
     setLoadingData(true);
-    // Always show local context orders immediately (works without backend)
-    setOrders(ctxAllOrders || []);
-
-    // Also try to load from backend (if available)
     try {
-      const [ordRes, usrRes, prodRes] = await Promise.allSettled([
-        API.getAllOrders({ limit:100 }),
-        API.getAllUsers({ limit:100 }),
+      const fetchAllPages = async (loader, key) => {
+        const limit = 200;
+        let page = 1;
+        let total = Infinity;
+        const collected = [];
+
+        while (collected.length < total) {
+          const response = await loader({ page, limit });
+          const items = Array.isArray(response?.[key]) ? response[key] : [];
+          collected.push(...items);
+          total = Number(response?.total || collected.length);
+          if (items.length < limit) break;
+          page += 1;
+        }
+
+        return collected;
+      };
+
+      const [backendOrders, backendUsers, prodRes] = await Promise.allSettled([
+        fetchAllPages(API.getAllOrders, "orders"),
+        fetchAllPages(API.getAllUsers, "users"),
         API.getProducts({ limit:100 }),
       ]);
-      if (ordRes.status==="fulfilled" && ordRes.value?.orders?.length) {
-        const backendOrders = ordRes.value.orders;
-        const backendIds = new Set(backendOrders.map(o=>o._id));
-        const localOnly = (ctxAllOrders||[]).filter(o=>!backendIds.has(o._id));
-        setOrders([...backendOrders, ...localOnly]);
-      }
-      if (usrRes.status==="fulfilled" && usrRes.value?.users?.length) {
-        setUsers(usrRes.value.users);
-      } else {
-        setUsers([]);
-      }
+
+      const backendOrderList = backendOrders.status === "fulfilled" ? backendOrders.value : [];
+      const localOrderList = Array.isArray(ctxAllOrders) ? ctxAllOrders : [];
+      setOrders(mergeById(backendOrderList, localOrderList));
+
+      const backendUserList = backendUsers.status === "fulfilled" ? backendUsers.value : [];
+      const localUserList = Array.isArray(ctxLocalUsers) ? ctxLocalUsers : [];
+      setUsers(mergeById(backendUserList, localUserList));
+
       if (prodRes.status==="fulfilled" && prodRes.value?.products?.length) {
         setProducts(prodRes.value.products.map(normalizeProduct));
       }
@@ -298,22 +388,79 @@ export default function AdminPage({ setPage }) {
     </div>
   );
 
-  // ── Computed stats ────────────────────────────────────────────────────────
-  // Merge: local state orders + context orders (avoid duplicates)
+  // ── Computed data ─────────────────────────────────────────────────────────
   const allOrders = (() => {
-    const base = orders.length ? orders : [];
-    const baseIds = new Set(base.map(o=>o._id));
-    const extra = (ctxAllOrders||[]).filter(o=>!baseIds.has(o._id));
-    return [...base, ...extra];
+    const combined = mergeById(orders, ctxAllOrders);
+    return combined.sort((left, right) => getOrderTimestamp(right) - getOrderTimestamp(left));
   })();
-  const totalRevenue = allOrders.reduce((s,o)=>s+(o.price||o.total||0),0);
-  const filteredOrders = allOrders.filter(o => {
-    const q = orderSearch.toLowerCase();
-    const matchQ = !q || (o._id||"").toLowerCase().includes(q) || (o.trackingId||"").toLowerCase().includes(q) || (o.customer||o.user?.name||"").toLowerCase().includes(q) || (o.city||o.shippingAddress?.city||"").toLowerCase().includes(q);
-    return matchQ && (orderFilter==="all" || (o.orderStatus||o.status)===orderFilter);
+
+  const totalRevenue = allOrders.reduce((sum, order) => sum + getOrderAmount(order), 0);
+
+  const filteredOrders = allOrders.filter((order) => {
+    const q = orderSearch.toLowerCase().trim();
+    const matchQ = !q || [
+      order._id,
+      order.trackingId,
+      getOrderCustomerName(order),
+      getOrderCustomerEmail(order),
+      order.shippingAddress?.city,
+      order.city,
+    ].some((value) => String(value || "").toLowerCase().includes(q));
+
+    const status = getOrderStage(order);
+    const matchStatus = orderFilter === "all" || status === orderFilter;
+    return matchQ && matchStatus;
   });
-  const filteredProducts = products.filter(p => !productSearch || p.title.toLowerCase().includes(productSearch.toLowerCase()) || p.category.toLowerCase().includes(productSearch.toLowerCase()));
-  const filteredUsers = users.filter(u => !userSearch || u.name?.toLowerCase().includes(userSearch.toLowerCase()) || u.email?.toLowerCase().includes(userSearch.toLowerCase()));
+
+  const filteredProducts = products.filter((product) => !productSearch || product.title.toLowerCase().includes(productSearch.toLowerCase()) || product.category.toLowerCase().includes(productSearch.toLowerCase()));
+  const filteredUsers = users.filter((userItem) => !userSearch || userItem.name?.toLowerCase().includes(userSearch.toLowerCase()) || userItem.email?.toLowerCase().includes(userSearch.toLowerCase()));
+
+  const orderPageCount = Math.max(1, Math.ceil(filteredOrders.length / ADMIN_ORDER_PAGE_SIZE));
+  const userPageCount = Math.max(1, Math.ceil(filteredUsers.length / ADMIN_USER_PAGE_SIZE));
+  const visibleOrders = filteredOrders.slice((orderPage - 1) * ADMIN_ORDER_PAGE_SIZE, orderPage * ADMIN_ORDER_PAGE_SIZE);
+  const visibleUsers = filteredUsers.slice((userPage - 1) * ADMIN_USER_PAGE_SIZE, userPage * ADMIN_USER_PAGE_SIZE);
+  const selectedUserComputed = selectedUser ? buildUserOrderSummary(selectedUser, allOrders) : null;
+
+  useEffect(() => {
+    setOrderPage(1);
+  }, [orderSearch, orderFilter]);
+
+  useEffect(() => {
+    setUserPage(1);
+  }, [userSearch]);
+
+  useEffect(() => {
+    if (!selectedUser) {
+      setSelectedUserDetail(null);
+      setSelectedUserOrders([]);
+      setSelectedUserStats(null);
+      setSelectedUserLoading(false);
+    }
+  }, [selectedUser]);
+
+  const handleSelectUser = async (userItem) => {
+    setSelectedUser(userItem);
+    setSelectedUserDetail(userItem);
+    setSelectedUserOrders([]);
+    setSelectedUserStats(null);
+    setSelectedUserLoading(true);
+    try {
+      const response = await API.getUserDetail(userItem._id);
+      if (response?.user) setSelectedUserDetail(response.user);
+      if (Array.isArray(response?.orders)) setSelectedUserOrders(response.orders);
+      if (response?.stats) setSelectedUserStats(response.stats);
+    } catch {
+      const computed = buildUserOrderSummary(userItem, allOrders);
+      setSelectedUserOrders(computed.orders);
+      setSelectedUserStats({
+        totalOrders: computed.totalOrders,
+        totalSpend: computed.totalSpend,
+        lastOrderDate: computed.lastOrderRaw,
+      });
+    } finally {
+      setSelectedUserLoading(false);
+    }
+  };
 
   // ── Product helpers ───────────────────────────────────────────────────────
   const openEdit = (p) => { const safe = normalizeProduct(p); setProductForm({...safe, price:String(safe.price), originalPrice:String(safe.originalPrice), stock:String(safe.stock), discount:String(safe.discount||0), sizes:safe.sizes||["S","M","L","XL"]}); setEditingId(p._id); setShowAddForm(true); };
@@ -414,6 +561,7 @@ export default function AdminPage({ setPage }) {
     if (!window.confirm("Kya aap is user ko remove karna chahte hain?")) return;
     setUsers(prev => prev.filter(u => u._id !== id));
     if (selectedUser?._id===id) setSelectedUser(null);
+    if (selectedUserDetail?._id===id) setSelectedUserDetail(null);
     toast("User remove ho gaya");
     try { await API.deleteUser(id); } catch { /* backend not connected */ }
   };
@@ -426,15 +574,13 @@ export default function AdminPage({ setPage }) {
   const dashboardSplit = isMobile ? "1fr" : "2fr 1fr";
   const fourCol = isMobile ? "1fr" : "repeat(4, 1fr)";
 
-  const getOrderCustomer = (o) => o.customer || o.user?.name || o.shippingAddress?.name || "—";
-  const getOrderCity = (o) => o.city || o.shippingAddress?.city || "—";
-  const getOrderStatus = (o) => o.orderStatus || o.status || "Placed";
-  const getOrderAmount = (o) => (o.price || o.total || 0).toLocaleString("en-IN");
-  const getOrderDate = (o) => {
-    const d = o.dateRaw || o.date || o.createdAt;
-    if (!d) return "—";
-    return new Date(d).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"});
-  };
+  const getOrderCustomer = (order) => getOrderCustomerName(order);
+  const getOrderEmail = (order) => getOrderCustomerEmail(order);
+  const getOrderStatus = (order) => order?.orderStatus || order?.status || "Placed";
+  const getOrderStage = (order) => getSimpleOrderStatus(order);
+  const getOrderCity = (order) => order?.city || order?.shippingAddress?.city || "—";
+  const getOrderAmountLabel = (order) => `₹${getOrderAmount(order).toLocaleString("en-IN")}`;
+  const getOrderDate = (order) => getOrderDateLabel(order);
 
   return (
     <div style={{ background:THEME.bgDark, minHeight:"100vh", display:"flex", flexDirection:isMobile?"column":"row" }}>
@@ -752,15 +898,23 @@ export default function AdminPage({ setPage }) {
                 </div>
               </div>
             )}
-            <div style={{ marginBottom:"20px" }}>
-              <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:"30px", marginBottom:"2px" }}>Orders</h1>
-              <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textLight }}>{filteredOrders.length} orders</p>
+            <div style={{ marginBottom:"20px", display:"flex", justifyContent:"space-between", alignItems:isMobile?"flex-start":"center", gap:"12px", flexWrap:"wrap" }}>
+              <div>
+                <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:"30px", marginBottom:"2px" }}>Orders</h1>
+                <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textLight }}>{filteredOrders.length} orders found</p>
+              </div>
+              <div style={{ display:"flex", gap:"10px", flexWrap:"wrap" }}>
+                <span style={{ background:`${THEME.crimson}10`, color:THEME.crimson, border:`1px solid ${THEME.crimson}20`, borderRadius:"99px", padding:"8px 12px", fontFamily:"'Poppins',sans-serif", fontSize:"11px", fontWeight:700 }}>Total: {allOrders.length}</span>
+                <span style={{ background:`${THEME.gold}15`, color:THEME.goldDark, border:`1px solid ${THEME.gold}25`, borderRadius:"99px", padding:"8px 12px", fontFamily:"'Poppins',sans-serif", fontSize:"11px", fontWeight:700 }}>Revenue: ₹{totalRevenue.toLocaleString("en-IN")}</span>
+              </div>
             </div>
             <div style={{ display:"flex", gap:"10px", marginBottom:"18px", flexWrap:"wrap", flexDirection:isMobile?"column":"row" }}>
-              <input placeholder="🔍 Search order ID, customer, city…" value={orderSearch} onChange={e=>setOrderSearch(e.target.value)} style={{ ...iStyle, flex:1, minWidth:isMobile?"0":"200px", fontSize:"16px" }} />
-              <select value={orderFilter} onChange={e=>setOrderFilter(e.target.value)} style={{ ...iStyle, width:isMobile?"100%":"auto" }}>
-                <option value="all">All Statuses</option>
-                {ORDER_STATUSES.map(s=><option key={s} value={s}>{s.charAt(0).toUpperCase()+s.slice(1)}</option>)}
+              <input placeholder="🔍 Search order ID or customer…" value={orderSearch} onChange={e=>setOrderSearch(e.target.value)} style={{ ...iStyle, flex:1, minWidth:isMobile?"0":"220px", fontSize:"16px" }} />
+              <select value={orderFilter} onChange={e=>setOrderFilter(e.target.value)} style={{ ...iStyle, width:isMobile?"100%":"180px" }}>
+                <option value="all">All</option>
+                <option value="pending">Pending</option>
+                <option value="shipped">Shipped</option>
+                <option value="delivered">Delivered</option>
               </select>
             </div>
             <div style={{ background:THEME.bgCard, border:`1px solid ${THEME.border}`, borderRadius:"14px", overflow:"hidden" }}>
@@ -768,36 +922,45 @@ export default function AdminPage({ setPage }) {
                 <table style={{ width:"100%", borderCollapse:"collapse" }}>
                   <thead>
                     <tr style={{ background:THEME.bgDark }}>
-                      {["Order ID","Customer","Product","City","Amount","Date","Status","Actions"].map(h=>(
+                      {["Order ID","Customer","Email","Amount","Status","Date","Actions"].map((h) => (
                         <th key={h} style={{ padding:"11px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"9px", letterSpacing:"2px", textTransform:"uppercase", color:THEME.textLight, textAlign:"left", borderBottom:`1px solid ${THEME.border}`, whiteSpace:"nowrap" }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredOrders.map((o,idx) => (
+                    {visibleOrders.map((o, idx) => (
                       <tr key={`${o._id || o.createdAt || "order-row"}-${idx}`} style={{ background:idx%2===0?"transparent":THEME.bg, transition:"background 0.15s", cursor:"pointer" }}
+                        onClick={()=>setSelectedOrder(o)}
                         onMouseEnter={e=>e.currentTarget.style.background=`${THEME.crimson}06`}
                         onMouseLeave={e=>e.currentTarget.style.background=idx%2===0?"transparent":THEME.bg}>
                         <td style={{ padding:"12px 14px" }}>
-                          <button onClick={()=>setSelectedOrder(o)} style={{ background:"none", border:"none", cursor:"pointer", color:THEME.crimson, fontFamily:"'Poppins',sans-serif", fontSize:"12px", fontWeight:700, textDecoration:"underline" }}>{(o._id||"").slice(-10)}</button>
+                          <button onClick={(e)=>{ e.stopPropagation(); setSelectedOrder(o); }} style={{ background:"none", border:"none", cursor:"pointer", color:THEME.crimson, fontFamily:"'Poppins',sans-serif", fontSize:"12px", fontWeight:700, textDecoration:"underline" }}>{(o._id||"").slice(-10)}</button>
                         </td>
                         <td style={{ padding:"12px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.text, whiteSpace:"nowrap" }}>{getOrderCustomer(o)}</td>
-                        <td style={{ padding:"12px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textMuted, maxWidth:"160px", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{o.product||o.items?.[0]?.title||"—"}</td>
-                        <td style={{ padding:"12px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textMuted, whiteSpace:"nowrap" }}>📍{getOrderCity(o)}</td>
-                        <td style={{ padding:"12px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"13px", fontWeight:700, color:THEME.text, whiteSpace:"nowrap" }}>₹{getOrderAmount(o)}</td>
+                        <td style={{ padding:"12px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textMuted, whiteSpace:"nowrap" }}>{getOrderEmail(o)}</td>
+                        <td style={{ padding:"12px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"13px", fontWeight:700, color:THEME.text, whiteSpace:"nowrap" }}>₹{getOrderAmount(o).toLocaleString("en-IN")}</td>
+                        <td style={{ padding:"12px 14px" }}><StatusBadge status={getOrderStage(o)} /></td>
                         <td style={{ padding:"12px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"11px", color:THEME.textLight, whiteSpace:"nowrap" }}>{getOrderDate(o)}</td>
-                        <td style={{ padding:"12px 14px" }}><StatusBadge status={getOrderStatus(o)} /></td>
                         <td style={{ padding:"12px 14px" }}>
-                          <div style={{ display:"flex", gap:"5px" }}>
-                            <button onClick={()=>setSelectedOrder(o)} style={{ background:`${THEME.gold}15`, border:`1px solid ${THEME.gold}40`, color:THEME.goldDark, padding:"5px 10px", borderRadius:"6px", cursor:"pointer", fontSize:"11px", fontFamily:"'Poppins',sans-serif" }}>View</button>
-                            <button onClick={()=>handleDeleteOrder(o._id)} style={{ background:`${THEME.crimson}10`, border:`1px solid ${THEME.crimson}30`, color:THEME.crimson, padding:"5px 10px", borderRadius:"6px", cursor:"pointer", fontSize:"11px", fontFamily:"'Poppins',sans-serif" }}>Del</button>
+                          <div style={{ display:"flex", gap:"5px", flexWrap:"wrap" }}>
+                            <button onClick={(e)=>{ e.stopPropagation(); setSelectedOrder(o); }} style={{ background:`${THEME.gold}15`, border:`1px solid ${THEME.gold}40`, color:THEME.goldDark, padding:"5px 10px", borderRadius:"6px", cursor:"pointer", fontSize:"11px", fontFamily:"'Poppins',sans-serif" }}>View</button>
+                            <button onClick={(e)=>{ e.stopPropagation(); handleDeleteOrder(o._id); }} style={{ background:`${THEME.crimson}10`, border:`1px solid ${THEME.crimson}30`, color:THEME.crimson, padding:"5px 10px", borderRadius:"6px", cursor:"pointer", fontSize:"11px", fontFamily:"'Poppins',sans-serif" }}>Del</button>
                           </div>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-                {filteredOrders.length===0 && <div style={{ textAlign:"center", padding:"48px", color:THEME.textLight, fontFamily:"'Poppins',sans-serif" }}>No orders found</div>}
+                {visibleOrders.length===0 && <div style={{ textAlign:"center", padding:"48px", color:THEME.textLight, fontFamily:"'Poppins',sans-serif" }}>{loadingData?"Loading orders...":"No orders found"}</div>}
+              </div>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:"12px", padding:"14px 16px", borderTop:`1px solid ${THEME.border}`, flexWrap:"wrap" }}>
+                <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"11px", color:THEME.textLight }}>
+                  Page {orderPage} of {orderPageCount}
+                </p>
+                <div style={{ display:"flex", gap:"8px", flexWrap:"wrap" }}>
+                  <button onClick={()=>setOrderPage(p=>Math.max(1, p-1))} disabled={orderPage===1} style={{ background:orderPage===1?THEME.bgDark:THEME.bg, border:`1px solid ${THEME.border}`, color:THEME.text, padding:"8px 12px", borderRadius:"8px", cursor:orderPage===1?"not-allowed":"pointer", fontFamily:"'Poppins',sans-serif", fontSize:"11px" }}>Prev</button>
+                  <button onClick={()=>setOrderPage(p=>Math.min(orderPageCount, p+1))} disabled={orderPage===orderPageCount} style={{ background:orderPage===orderPageCount?THEME.bgDark:THEME.bg, border:`1px solid ${THEME.border}`, color:THEME.text, padding:"8px 12px", borderRadius:"8px", cursor:orderPage===orderPageCount?"not-allowed":"pointer", fontFamily:"'Poppins',sans-serif", fontSize:"11px" }}>Next</button>
+                </div>
               </div>
             </div>
           </div>
@@ -808,39 +971,65 @@ export default function AdminPage({ setPage }) {
           <div>
             {selectedUser && (
               <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.5)", zIndex:200, display:"flex", alignItems:isMobile?"flex-end":"center", justifyContent:"center", padding:isMobile?"0":"20px" }}>
-                <div style={{ background:"#fff", borderRadius:isMobile?"20px 20px 0 0":"20px", padding:isMobile?"22px 18px 24px":"32px", maxWidth:isMobile?"100%":"460px", width:"100%", position:"relative", maxHeight:isMobile?"90vh":"auto", overflowY:"auto" }}>
+                <div style={{ background:"#fff", borderRadius:isMobile?"20px 20px 0 0":"20px", padding:isMobile?"22px 18px 24px":"32px", maxWidth:isMobile?"100%":"680px", width:"100%", position:"relative", maxHeight:isMobile?"90vh":"85vh", overflowY:"auto" }}>
                   <button onClick={()=>setSelectedUser(null)} style={{ position:"absolute", top:"18px", right:"18px", background:"none", border:"none", cursor:"pointer", fontSize:"22px", color:THEME.textLight }}>×</button>
                   <div style={{ display:"flex", alignItems:"center", gap:"14px", marginBottom:"20px" }}>
-                    <div style={{ width:"52px", height:"52px", borderRadius:"50%", background:`linear-gradient(135deg,${THEME.crimson},${THEME.gold})`, display:"flex", alignItems:"center", justifyContent:"center", color:"#fff", fontSize:"20px", fontWeight:700, fontFamily:"'Playfair Display',serif", flexShrink:0 }}>{selectedUser.name?.charAt(0)}</div>
+                    <div style={{ width:"52px", height:"52px", borderRadius:"50%", background:`linear-gradient(135deg,${THEME.crimson},${THEME.gold})`, display:"flex", alignItems:"center", justifyContent:"center", color:"#fff", fontSize:"20px", fontWeight:700, fontFamily:"'Playfair Display',serif", flexShrink:0 }}>{(selectedUserDetail?.name || selectedUser.name || "?").charAt(0)}</div>
                     <div>
-                      <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:"20px", marginBottom:"2px" }}>{selectedUser.name}</h2>
-                      <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"11px", color:THEME.textLight }}>{selectedUser._id}</p>
+                      <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:"20px", marginBottom:"2px" }}>{selectedUserDetail?.name || selectedUser.name}</h2>
+                      <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"11px", color:THEME.textLight }}>{selectedUserDetail?._id || selectedUser._id}</p>
                     </div>
                   </div>
-                  <div style={{ display:"grid", gridTemplateColumns:isMobile?"1fr":"1fr 1fr", gap:"10px" }}>
+                  <div style={{ display:"grid", gridTemplateColumns:isMobile?"1fr":"repeat(2, minmax(0, 1fr))", gap:"10px", marginBottom:"14px" }}>
                     {[
-                      { label: "Email", value: selectedUser.email },
-                      { label: "Phone", value: selectedUser.phone || "—" },
-                      { label: "City", value: selectedUser.addresses?.[0]?.city || selectedUser.city || "—" },
-                      { label: "State", value: selectedUser.addresses?.[0]?.state || selectedUser.state || "—" },
-                      { label: "Member Since", value: selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString("en-IN",{month:"short",year:"numeric"}) : selectedUser.joined || "—" },
-                      { label: "Role", value: selectedUser.role?.toUpperCase() || "USER" },
+                      { label: "Email", value: selectedUserDetail?.email || selectedUser.email },
+                      { label: "Phone", value: selectedUserDetail?.phone || selectedUser.phone || "—" },
+                      { label: "City", value: selectedUserDetail?.addresses?.[0]?.city || selectedUser.addresses?.[0]?.city || "—" },
+                      { label: "State", value: selectedUserDetail?.addresses?.[0]?.state || selectedUser.addresses?.[0]?.state || "—" },
+                      { label: "Member Since", value: selectedUserDetail?.createdAt ? new Date(selectedUserDetail.createdAt).toLocaleDateString("en-IN",{month:"short",year:"numeric"}) : selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString("en-IN",{month:"short",year:"numeric"}) : "—" },
+                      { label: "Role", value: (selectedUserDetail?.role || selectedUser.role || "user").toUpperCase() },
                     ].map((item) => (
                       <div key={item.label} style={{ background:THEME.bg, borderRadius:"8px", padding:"12px 14px" }}>
                         <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"9px", letterSpacing:"2px", color:THEME.textLight, marginBottom:"3px" }}>{item.label.toUpperCase()}</p>
                         <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"13px", color:THEME.text, fontWeight:600, wordBreak:"break-all" }}>{item.value}</p>
                       </div>
                     ))}
-                    {selectedUser.addresses?.length > 0 && (
-                      <div style={{ gridColumn:"1/-1", background:THEME.bg, borderRadius:"8px", padding:"12px 14px" }}>
-                        <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"9px", letterSpacing:"2px", color:THEME.textLight, marginBottom:"3px" }}>DEFAULT ADDRESS</p>
-                        <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"13px", color:THEME.text, fontWeight:600 }}>
-                          📍 {selectedUser.addresses[0].street}, {selectedUser.addresses[0].city}, {selectedUser.addresses[0].state} – {selectedUser.addresses[0].pincode}
-                        </p>
+                  </div>
+
+                  <div style={{ display:"grid", gridTemplateColumns:isMobile?"1fr":"repeat(3, minmax(0, 1fr))", gap:"10px", marginBottom:"14px" }}>
+                    {[
+                      { label:"Total Orders", value: selectedUserStats?.totalOrders ?? selectedUserComputed?.totalOrders ?? 0 },
+                      { label:"Last Order", value: selectedUserStats?.lastOrderDate ? new Date(selectedUserStats.lastOrderDate).toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric" }) : selectedUserComputed?.lastOrderDate || "—" },
+                      { label:"Total Spend", value: `₹${Number(selectedUserStats?.totalSpend ?? selectedUserComputed?.totalSpend ?? 0).toLocaleString("en-IN")}` },
+                    ].map((item) => (
+                      <div key={item.label} style={{ background:`${THEME.gold}10`, border:`1px solid ${THEME.gold}20`, borderRadius:"10px", padding:"12px 14px" }}>
+                        <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"9px", letterSpacing:"2px", color:THEME.textLight, marginBottom:"3px" }}>{item.label.toUpperCase()}</p>
+                        <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"13px", color:THEME.text, fontWeight:700 }}>{item.value}</p>
                       </div>
+                    ))}
+                  </div>
+
+                  <div style={{ background:THEME.bg, borderRadius:"12px", padding:"14px", marginBottom:"14px" }}>
+                    <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"2px", color:THEME.textLight, marginBottom:"10px", fontWeight:700 }}>ORDER HISTORY</p>
+                    {selectedUserLoading && <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"13px", color:THEME.textLight }}>Loading history…</p>}
+                    {!selectedUserLoading && (selectedUserOrders.length > 0 ? selectedUserOrders : (selectedUserComputed?.orders || [])).map((order) => (
+                      <div key={order._id} style={{ display:"flex", justifyContent:"space-between", gap:"10px", padding:"10px 0", borderBottom:`1px solid ${THEME.border}` }}>
+                        <div style={{ minWidth:0 }}>
+                          <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.crimson, fontWeight:700 }}>{(order.trackingId || order._id || "").slice(-10)}</p>
+                          <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"11px", color:THEME.textLight }}>{getOrderDate(order)}</p>
+                        </div>
+                        <div style={{ textAlign:"right" }}>
+                          <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.text, fontWeight:700 }}>₹{getOrderAmount(order).toLocaleString("en-IN")}</p>
+                          <StatusBadge status={getOrderStage(order)} />
+                        </div>
+                      </div>
+                    ))}
+                    {!selectedUserLoading && !(selectedUserOrders.length > 0 || (selectedUserComputed?.orders || []).length > 0) && (
+                      <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"13px", color:THEME.textLight }}>No order history found for this user.</p>
                     )}
                   </div>
-                  <button onClick={()=>handleDeleteUser(selectedUser._id)} style={{ marginTop:"16px", width:"100%", background:`${THEME.crimson}10`, border:`1px solid ${THEME.crimson}40`, color:THEME.crimson, padding:"11px", borderRadius:"10px", cursor:"pointer", fontFamily:"'Poppins',sans-serif", fontSize:"12px", fontWeight:700 }}>🗑️ Remove User</button>
+
+                  <button onClick={()=>handleDeleteUser(selectedUser._id)} style={{ marginTop:"4px", width:"100%", background:`${THEME.crimson}10`, border:`1px solid ${THEME.crimson}40`, color:THEME.crimson, padding:"11px", borderRadius:"10px", cursor:"pointer", fontFamily:"'Poppins',sans-serif", fontSize:"12px", fontWeight:700 }}>🗑️ Remove User</button>
                 </div>
               </div>
             )}
@@ -848,20 +1037,23 @@ export default function AdminPage({ setPage }) {
               <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:"30px", marginBottom:"2px" }}>Users</h1>
               <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textLight }}>{filteredUsers.length} registered customers</p>
             </div>
-            <input placeholder="🔍 Search by name, email…" value={userSearch} onChange={e=>setUserSearch(e.target.value)} style={{ ...iStyle, marginBottom:"18px", padding:"12px 16px", fontSize:"16px" }} />
+            <input placeholder="🔍 Search by name or email…" value={userSearch} onChange={e=>setUserSearch(e.target.value)} style={{ ...iStyle, marginBottom:"18px", padding:"12px 16px", fontSize:"16px" }} />
             <div style={{ background:THEME.bgCard, border:`1px solid ${THEME.border}`, borderRadius:"14px", overflow:"hidden" }}>
               <div style={{ overflowX:"auto" }}>
                 <table style={{ width:"100%", borderCollapse:"collapse" }}>
                   <thead>
                     <tr style={{ background:THEME.bgDark }}>
-                      {["Customer","Email","Phone","Location","Last Login","Logins","Role","Actions"].map(h=>(
+                      {["Customer","Email","Orders","Last Order","Total Spend","Phone","Role","Actions"].map(h=>(
                         <th key={h} style={{ padding:"11px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"9px", letterSpacing:"2px", textTransform:"uppercase", color:THEME.textLight, textAlign:"left", borderBottom:`1px solid ${THEME.border}`, whiteSpace:"nowrap" }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredUsers.map((u,idx) => (
-                      <tr key={`${u._id || u.email || "user-row"}-${idx}`} style={{ background:idx%2===0?"transparent":THEME.bg }}
+                    {visibleUsers.map((u,idx) => {
+                      const summary = buildUserOrderSummary(u, allOrders);
+                      return (
+                      <tr key={`${u._id || u.email || "user-row"}-${idx}`} style={{ background:idx%2===0?"transparent":THEME.bg, cursor:"pointer" }}
+                        onClick={()=>handleSelectUser(u)}
                         onMouseEnter={e=>e.currentTarget.style.background=`${THEME.crimson}06`}
                         onMouseLeave={e=>e.currentTarget.style.background=idx%2===0?"transparent":THEME.bg}>
                         <td style={{ padding:"13px 14px" }}>
@@ -871,22 +1063,31 @@ export default function AdminPage({ setPage }) {
                           </div>
                         </td>
                         <td style={{ padding:"13px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textMuted }}>{u.email}</td>
+                        <td style={{ padding:"13px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textMuted, whiteSpace:"nowrap", fontWeight:700 }}>{summary.totalOrders}</td>
+                        <td style={{ padding:"13px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textMuted, whiteSpace:"nowrap" }}>{summary.lastOrderDate}</td>
+                        <td style={{ padding:"13px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textMuted, whiteSpace:"nowrap", fontWeight:700 }}>₹{summary.totalSpend.toLocaleString("en-IN")}</td>
                         <td style={{ padding:"13px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textMuted, whiteSpace:"nowrap" }}>{u.phone||"—"}</td>
-                        <td style={{ padding:"13px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textMuted, whiteSpace:"nowrap" }}>📍{u.addresses?.[0]?.city||u.city||"—"}, {u.addresses?.[0]?.state||u.state||"—"}</td>
-                        <td style={{ padding:"13px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"11px", color:THEME.textLight, whiteSpace:"nowrap" }}>{u.lastLogin?new Date(u.lastLogin).toLocaleString("en-IN",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}):"Never"}</td>
-                        <td style={{ padding:"13px 14px", fontFamily:"'Poppins',sans-serif", fontSize:"11px", color:THEME.textLight, whiteSpace:"nowrap" }}>{Number(u.loginCount||0)}</td>
                         <td style={{ padding:"13px 14px" }}><span style={{ background:u.role==="admin"?`${THEME.crimson}15`:`${THEME.gold}15`, color:u.role==="admin"?THEME.crimson:THEME.goldDark, padding:"3px 10px", borderRadius:"99px", fontSize:"10px", fontFamily:"'Poppins',sans-serif", fontWeight:700 }}>{u.role?.toUpperCase()||"USER"}</span></td>
                         <td style={{ padding:"13px 14px" }}>
                           <div style={{ display:"flex", gap:"5px" }}>
-                            <button onClick={()=>setSelectedUser(u)} style={{ background:`${THEME.gold}15`, border:`1px solid ${THEME.gold}40`, color:THEME.goldDark, padding:"5px 10px", borderRadius:"6px", cursor:"pointer", fontSize:"11px", fontFamily:"'Poppins',sans-serif" }}>View</button>
-                            <button onClick={()=>handleDeleteUser(u._id)} style={{ background:`${THEME.crimson}10`, border:`1px solid ${THEME.crimson}30`, color:THEME.crimson, padding:"5px 10px", borderRadius:"6px", cursor:"pointer", fontSize:"11px", fontFamily:"'Poppins',sans-serif" }}>Del</button>
+                            <button onClick={(e)=>{ e.stopPropagation(); handleSelectUser(u); }} style={{ background:`${THEME.gold}15`, border:`1px solid ${THEME.gold}40`, color:THEME.goldDark, padding:"5px 10px", borderRadius:"6px", cursor:"pointer", fontSize:"11px", fontFamily:"'Poppins',sans-serif" }}>View</button>
+                            <button onClick={(e)=>{ e.stopPropagation(); handleDeleteUser(u._id); }} style={{ background:`${THEME.crimson}10`, border:`1px solid ${THEME.crimson}30`, color:THEME.crimson, padding:"5px 10px", borderRadius:"6px", cursor:"pointer", fontSize:"11px", fontFamily:"'Poppins',sans-serif" }}>Del</button>
                           </div>
                         </td>
                       </tr>
-                    ))}
+                    );})}
                   </tbody>
                 </table>
-                {filteredUsers.length===0 && <div style={{ textAlign:"center", padding:"48px", color:THEME.textLight, fontFamily:"'Poppins',sans-serif" }}>{loadingData?"Loading...":"No users found"}</div>}
+                {visibleUsers.length===0 && <div style={{ textAlign:"center", padding:"48px", color:THEME.textLight, fontFamily:"'Poppins',sans-serif" }}>{loadingData?"Loading...":"No users found"}</div>}
+              </div>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:"12px", padding:"14px 16px", borderTop:`1px solid ${THEME.border}`, flexWrap:"wrap" }}>
+                <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"11px", color:THEME.textLight }}>
+                  Page {userPage} of {userPageCount}
+                </p>
+                <div style={{ display:"flex", gap:"8px", flexWrap:"wrap" }}>
+                  <button onClick={()=>setUserPage(p=>Math.max(1, p-1))} disabled={userPage===1} style={{ background:userPage===1?THEME.bgDark:THEME.bg, border:`1px solid ${THEME.border}`, color:THEME.text, padding:"8px 12px", borderRadius:"8px", cursor:userPage===1?"not-allowed":"pointer", fontFamily:"'Poppins',sans-serif", fontSize:"11px" }}>Prev</button>
+                  <button onClick={()=>setUserPage(p=>Math.min(userPageCount, p+1))} disabled={userPage===userPageCount} style={{ background:userPage===userPageCount?THEME.bgDark:THEME.bg, border:`1px solid ${THEME.border}`, color:THEME.text, padding:"8px 12px", borderRadius:"8px", cursor:userPage===userPageCount?"not-allowed":"pointer", fontFamily:"'Poppins',sans-serif", fontSize:"11px" }}>Next</button>
+                </div>
               </div>
             </div>
           </div>

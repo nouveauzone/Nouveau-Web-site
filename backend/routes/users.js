@@ -1,6 +1,7 @@
 const express = require("express");
 const { param, query } = require("express-validator");
 const User    = require("../models/User");
+const Order   = require("../models/Order");
 const { protect, admin } = require("../middleware/auth");
 const asyncHandler = require("../utils/asyncHandler");
 const validate = require("../middleware/validate");
@@ -23,6 +24,36 @@ router.get(
     const users = await User.find(q).select("-password").sort({ createdAt:-1 }).skip((page-1)*+limit).limit(+limit);
     const total = await User.countDocuments(q);
     res.json({ users, total });
+  })
+);
+
+// GET /api/users/:id/detail — admin: single user profile + order history
+router.get(
+  "/:id/detail",
+  protect,
+  admin,
+  [param("id").isMongoId().withMessage("Invalid user id"), validate],
+  asyncHandler(async (req, res) => {
+    const user = await User.findById(req.params.id).select("-password");
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const orders = await Order.find({ user: user._id })
+      .sort({ createdAt: -1 })
+      .populate("items.product", "title images")
+      .populate("user", "name email");
+
+    const orderTotal = orders.reduce((sum, order) => sum + Number(order.total || 0), 0);
+    const lastOrder = orders[0] || null;
+
+    res.json({
+      user,
+      orders,
+      stats: {
+        totalOrders: orders.length,
+        totalSpend: orderTotal,
+        lastOrderDate: lastOrder?.createdAt || null,
+      },
+    });
   })
 );
 

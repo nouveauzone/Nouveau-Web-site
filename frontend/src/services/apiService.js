@@ -147,6 +147,7 @@ const apiService = {
   deleteOrder: (id) => request({ url: `/orders/${id}`, method: "DELETE" }),
 
   getAllUsers: (params = {}) => request({ url: "/users", method: "GET", params }),
+  getUserDetail: (id) => request({ url: `/users/${id}/detail`, method: "GET" }),
   deleteUser: (id) => request({ url: `/users/${id}`, method: "DELETE" }),
 
   updateProfile: (data) => request({ url: "/auth/profile", method: "PUT", data }),
