@@ -828,6 +828,7 @@ export default function AdminPage({ setPage }) {
                       { label: "Customer", value: getOrderCustomer(selectedOrder) },
                       { label: "Amount", value: "₹" + getOrderAmount(selectedOrder) },
                       { label: "Payment", value: selectedOrder.paymentMethod || "—" },
+                      { label: "Pay ID / UTR", value: selectedOrder.paymentId || "—" },
                       { label: "Items", value: selectedOrder.items?.length || selectedOrder.qty || "—" },
                       { label: "City", value: getOrderCity(selectedOrder) },
                       { label: "Status", value: getOrderStatus(selectedOrder) },
