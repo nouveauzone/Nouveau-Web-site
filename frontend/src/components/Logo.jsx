@@ -1,3 +1,5 @@
+import { fixImageUrl } from "../utils/imageUrl";
+
 export default function NouveauLogo({ size = 44, bg = false }) {
   return (
     <div style={{
@@ -9,7 +11,7 @@ export default function NouveauLogo({ size = 44, bg = false }) {
       flexShrink: 0,
     }}>
       <img
-        src="/nouveau-logo.png"
+        src={fixImageUrl("/nouveau-logo.png")}
         alt="Nouveau™ Logo"
         style={{
           width: "100%",

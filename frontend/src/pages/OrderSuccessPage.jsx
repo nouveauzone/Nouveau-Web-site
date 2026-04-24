@@ -3,6 +3,7 @@ import { AppDataContext } from "../context/Providers";
 import { THEME } from "../styles/theme";
 import { BtnOutline, BtnPrimary } from "../components/Buttons";
 import Footer from "../components/Footer";
+import { fixImageUrl } from "../utils/imageUrl";
 
 const GOLD    = "#C9A227";
 const CRIMSON = "#B71C1C";
@@ -39,7 +40,7 @@ export default function OrderSuccessPage({ setPage }) {
 
           {/* Logo */}
           <div style={{width:"50px",height:"64px",background:"#fff",borderRadius:"12px",padding:"5px",display:"inline-flex",alignItems:"center",justifyContent:"center",marginBottom:"20px",boxShadow:`0 4px 16px ${GOLD}25`}}>
-            <img src="/nouveau-logo.png" alt="Nouveau" style={{width:"100%",height:"100%",objectFit:"contain"}} />
+            <img src={fixImageUrl("/nouveau-logo.png")} alt="Nouveau" style={{width:"100%",height:"100%",objectFit:"contain"}} />
           </div>
 
           <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(28px,5vw,42px)",fontWeight:700,color:THEME.text,marginBottom:"12px",lineHeight:1.2}}>

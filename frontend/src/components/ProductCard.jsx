@@ -4,7 +4,7 @@ import { CartContext } from "../context/CartContext";
 import { CurrencyContext } from "../context/CurrencyContext";
 import Icons from "./Icons";
 import StarRating from "./StarRating";
-import { getImageUrl } from "../utils/imageUrl";
+import { fixImageUrl } from "../utils/imageUrl";
 
 const BAD_TEXT_RE = /(\/static\/media|\.(jpeg|jpg|png|webp|svg)$|\.[a-f0-9]{8,}$|^https?:\/\/|\\)/i;
 
@@ -29,7 +29,7 @@ function ProductCard({ product, setPage, setSelectedProduct }) {
     const nextTitle = safeText(product.title, "Nouveau Signature Piece");
     const nextSubtitle = safeText(product.subcategory, "Womenswear");
     const nextCategory = safeText(product.category, "Nouveau Collection");
-    const nextImage = getImageUrl(product.images?.[0], "/ethnic1.jpeg");
+    const nextImage = fixImageUrl(product.images?.[0]);
     const nextPrice = Number(product.price) || 0;
     const nextOriginalPrice = Number(product.originalPrice) || nextPrice;
     const nextRating = Number(product.rating) || 0;

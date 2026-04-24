@@ -3,6 +3,7 @@ import { CartContext } from "../context/CartContext";
 import { WishlistContext } from "../context/WishlistContext";
 import { AuthContext } from "../context/AuthContext";
 import Icons from "./Icons";
+import { fixImageUrl } from "../utils/imageUrl";
 
 export default function Navbar({ page, setPage }) {
   const { cart } = useContext(CartContext);
@@ -35,7 +36,7 @@ export default function Navbar({ page, setPage }) {
       <nav className="sf-navbar" aria-label="Main navigation">
         <div className="sf-container sf-navbar-inner">
           <button type="button" className="sf-logo" onClick={() => setPage("Home")}>
-            <img src="/nouveau-logo.png" alt="Nouveau" className="sf-logo-mark" />
+            <img src={fixImageUrl("/nouveau-logo.png")} alt="Nouveau" className="sf-logo-mark" />
             <span
               className="sf-logo-word"
               style={{

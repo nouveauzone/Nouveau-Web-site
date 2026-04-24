@@ -3,6 +3,7 @@ import { AuthContext } from "../context/AuthContext";
 import { THEME } from "../styles/theme";
 import API from "../services/apiService";
 import Footer from "../components/Footer";
+import { fixImageUrl } from "../utils/imageUrl";
 
 const GOLD    = "#C9A227";
 const CRIMSON = "#B71C1C";
@@ -106,7 +107,7 @@ export default function AuthPage({ setPage }) {
           {/* Logo */}
           <div style={{textAlign:"center",marginBottom:"36px"}}>
             <div style={{width:"60px",height:"78px",background:"#fff",borderRadius:"14px",padding:"6px",display:"inline-flex",alignItems:"center",justifyContent:"center",boxShadow:`0 4px 20px ${GOLD}30`,marginBottom:"16px"}}>
-              <img src="/nouveau-logo.png" alt="Nouveau" style={{width:"100%",height:"100%",objectFit:"contain"}} />
+              <img src={fixImageUrl("/nouveau-logo.png")} alt="Nouveau" style={{width:"100%",height:"100%",objectFit:"contain"}} />
             </div>
             <div style={{fontFamily:"'Playfair Display',serif",fontSize:"28px",color:GOLD,fontWeight:700,letterSpacing:"3px",lineHeight:1}}>nouveau™</div>
             <p style={{fontFamily:"'Poppins',sans-serif",fontSize:"11px",color:THEME.textMuted,marginTop:"8px",letterSpacing:"1px"}}>

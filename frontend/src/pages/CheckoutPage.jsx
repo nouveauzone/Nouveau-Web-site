@@ -7,7 +7,7 @@ import { AuthContext } from "../context/AuthContext";
 import { CurrencyContext } from "../context/CurrencyContext";
 import { THEME } from "../styles/theme";
 import { BtnOutline, BtnPrimary } from "../components/Buttons";
-import { getImageUrl } from "../utils/imageUrl";
+import { fixImageUrl } from "../utils/imageUrl";
 import { getShippingCharge } from "../data/constants";
 
 const GOLD = "#C9A227";
@@ -195,7 +195,7 @@ export default function CheckoutPage({ setPage }) {
                   <div key={index} style={{ display: "flex", gap: "12px", marginBottom: "14px", paddingBottom: "14px", borderBottom: index < cart.length - 1 ? `1px solid ${THEME.border}` : "none" }}>
                     <div style={{ width: "54px", height: "68px", borderRadius: "8px", overflow: "hidden", flexShrink: 0, background: THEME.bgDark }}>
                       <img
-                        src={getImageUrl(item.images?.[0], "/ethnic1.jpeg")}
+                        src={fixImageUrl(item.images?.[0])}
                         alt={item.title || item.name || "Product"}
                         style={{ width: "100%", height: "100%", objectFit: "cover" }}
                         onError={(event) => { event.target.src = "/ethnic1.jpeg"; }}

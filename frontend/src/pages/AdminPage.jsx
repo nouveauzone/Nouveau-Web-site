@@ -7,8 +7,7 @@ import { normalizeCategory } from "../data/constants";
 import NouveauLogo from "../components/Logo";
 import { BtnPrimary } from "../components/Buttons";
 import API from "../services/apiService";
-import { getImageUrl } from "../utils/imageUrl";
-
+import { fixImageUrl } from "../utils/imageUrl";
 const ORDER_STATUSES = ["Awaiting Payment Verification","Placed","Processing","Shipped","Out for Delivery","Delivered","Cancelled"];
 const STATUS_COLORS = {
   pending: { bg:"#fff7e6", text:"#d97706" },
@@ -723,7 +722,7 @@ export default function AdminPage({ setPage }) {
                 <div style={{ marginBottom:"18px" }}>
                   <label style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"2px", color:THEME.crimson, display:"block", marginBottom:"8px", fontWeight:700 }}>PRODUCT IMAGE</label>
                   <div style={{ display:"flex", alignItems:"center", gap:"12px" }}>
-                    <img src={getImageUrl(productForm.images?.[0], "/product1.jpeg")} alt="" style={{ width:"64px", height:"80px", objectFit:"cover", borderRadius:"8px", border:`1px solid ${THEME.border}` }} onError={e=>e.target.src="/product1.jpeg"} />
+                    <img src={fixImageUrl(productForm.images?.[0])} alt="" style={{ width:"64px", height:"80px", objectFit:"cover", borderRadius:"8px", border:`1px solid ${THEME.border}` }} onError={e=>e.target.src="/product1.jpeg"} />
                     <div>
                       <input ref={imgInputRef} type="file" accept="image/*" onChange={handleImageUpload} style={{ display:"none" }} />
                       <button onClick={()=>imgInputRef.current?.click()}
@@ -783,7 +782,7 @@ export default function AdminPage({ setPage }) {
 
             {filteredProducts.map((p, idx) => (
               <div key={`${p._id || p.title || "product"}-${idx}`} style={{ display:"flex", gap:"14px", background:THEME.bgCard, padding:isMobile?"14px":"14px 18px", marginBottom:"10px", alignItems:isMobile?"flex-start":"center", border:`1px solid ${THEME.border}`, borderRadius:"12px", flexWrap:"wrap", flexDirection:isMobile?"column":"row" }}>
-                <img src={getImageUrl(p.images?.[0], "/product1.jpeg")} alt={p.title} style={{ width:"60px", height:"76px", objectFit:"cover", borderRadius:"8px", flexShrink:0 }} onError={e=>e.target.src="/product1.jpeg"} />
+                <img src={fixImageUrl(p.images?.[0])} alt={p.title} style={{ width:"60px", height:"76px", objectFit:"cover", borderRadius:"8px", flexShrink:0 }} onError={e=>e.target.src="/product1.jpeg"} />
                 <div style={{ flex:1, minWidth:"140px" }}>
                   <div style={{ display:"flex", alignItems:"center", gap:"8px", flexWrap:"wrap" }}>
                     <p style={{ fontFamily:"'Playfair Display',serif", fontSize:"15px", fontWeight:700, color:THEME.text }}>{p.title}</p>

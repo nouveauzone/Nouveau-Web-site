@@ -5,6 +5,7 @@ import ProductCard from "../components/ProductCard";
 import Footer from "../components/Footer";
 import API from "../services/apiService";
 import { SHIPPING_FREE_THRESHOLD, normalizeCategory } from "../data/constants";
+import { fixImageUrl } from "../utils/imageUrl";
 
 const CATS = ["All", "Indian Ethnic Wear", "Indian Western Wear"];
 
@@ -122,7 +123,7 @@ export default function ShopPage({ setPage, setSelectedProduct, initialCategory 
       {/* ── HEADER ─────────────────────────────────────────────────────────── */}
       <div style={{ background: `linear-gradient(135deg,${THEME.crimson},${THEME.crimsonDark})`, padding: "clamp(40px, 8vw, 80px) var(--container-padding)", position: "relative", overflow: "hidden" }}>
         <div style={{ position:"absolute", right:0, bottom:"-30px", opacity:0.06 }}>
-          <img src="/nouveau-logo.png" alt="" style={{ width:"200px", height:"260px", objectFit:"contain", filter:"brightness(10)" }}/>
+          <img src={fixImageUrl("/nouveau-logo.png")} alt="" style={{ width:"200px", height:"260px", objectFit:"contain", filter:"brightness(10)" }}/>
         </div>
         <div style={{ maxWidth:"1400px", margin:"0 auto", position:"relative", zIndex:1 }}>
           <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"6px", color:THEME.gold, marginBottom:"8px", textTransform:"uppercase" }}>Nouveau™ Store</p>

@@ -1,6 +1,7 @@
 import heroImg from "../assets/images/banner.png";
 import { THEME } from "../styles/theme";
 import NouveauLogo from "./Logo";
+import { fixImageUrl } from "../utils/imageUrl";
 
 export default function Hero({ setPage }) {
   return (
@@ -329,7 +330,7 @@ export default function Hero({ setPage }) {
       `}</style>
 
       <div className="hero-bg-container" aria-hidden="true">
-        <img className="hero-bg-image" src={heroImg} alt="Hero background" />
+        <img className="hero-bg-image" src={fixImageUrl(heroImg)} alt="Hero background" />
       </div>
 
       <div className="hero-main">
