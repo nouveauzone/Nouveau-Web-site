@@ -4,239 +4,395 @@ import NouveauLogo from "./Logo";
 
 export default function Hero({ setPage }) {
   return (
-    <section className="hero-shell">
+    <section className="hero-wrapper">
       <style>{`
-        .hero-shell {
-          width: 100%;
-          padding: clamp(28px, 6vw, 60px) clamp(16px, 5vw, 40px);
-          background: linear-gradient(180deg, #fffdfa 0%, #f7f3ee 100%);
-        }
-
-        .hero {
-          max-width: 1400px;
-          margin: 0 auto;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: clamp(18px, 3vw, 36px);
-        }
-
-        .hero-text {
-          flex: 1;
-          min-width: 0;
-          max-width: 720px;
-        }
-
-        .hero-card {
+        .hero-wrapper {
           position: relative;
-          background: rgba(255, 255, 255, 0.64);
-          border: 1px solid ${THEME.border};
-          border-radius: 22px;
-          padding: clamp(20px, 3.2vw, 40px);
-          box-shadow: 0 18px 44px rgba(26, 26, 26, 0.10);
-          backdrop-filter: blur(20px);
+          width: 100%;
+          min-height: auto;
+          background: #fdfaf7;
+          display: flex;
+          align-items: stretch;
           overflow: hidden;
         }
 
-        .hero-logo-center {
+        .hero-bg-container {
           position: absolute;
           inset: 0;
+          z-index: 0;
+          pointer-events: none;
+        }
+
+        .hero-bg-image {
+          position: absolute;
+          top: 0;
+          right: 0;
+          height: 100%;
+          width: 60%;
+          object-fit: cover;
+          object-position: center 20%;
+          mask-image: linear-gradient(to right, transparent 0%, black 25%);
+          -webkit-mask-image: linear-gradient(to right, transparent 0%, black 25%);
+        }
+
+        .hero-main {
+          position: relative;
+          z-index: 1;
+          width: 100%;
+          max-width: 1400px;
+          margin: 0 auto;
+          padding: clamp(24px, 4vw, 60px) clamp(24px, 5vw, 80px);
+          display: flex;
+          flex-direction: column;
+          pointer-events: none;
+        }
+        
+        .hero-main > * {
+          pointer-events: auto;
+        }
+
+        .logo-top-left {
           display: flex;
           align-items: center;
-          justify-content: center;
-          pointer-events: none;
-          z-index: 0;
-          opacity: 0.1;
-          filter: saturate(1.15) contrast(1.05);
+          gap: 6px;
+          margin-bottom: auto;
         }
 
-        .hero-title-wrap {
-          position: relative;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          isolation: isolate;
-          padding: clamp(8px, 1.2vw, 14px) 0;
-          z-index: 1;
-        }
-
-        .hero-line {
-          position: relative;
-          z-index: 1;
-          width: 86px;
-          height: 3px;
-          border-radius: 999px;
-          background: linear-gradient(to right, ${THEME.crimson}, ${THEME.gold});
-          margin-bottom: 16px;
-        }
-
-        .hero-title {
-          position: relative;
-          z-index: 1;
+        .logo-text {
           font-family: 'Playfair Display', serif;
-          font-size: clamp(28px, 5vw, 56px);
-          line-height: 1.08;
-          font-weight: 700;
-          letter-spacing: -0.4px;
-          background: linear-gradient(to right, ${THEME.crimsonDark}, ${THEME.goldDark});
+          font-size: 26px;
+          color: #222;
+          font-weight: 500;
+        }
+        
+        .tm {
+          font-family: sans-serif;
+          font-size: 11px;
+          vertical-align: super;
+          color: #c89d53;
+          margin-left: 2px;
+          font-weight: 600;
+        }
+
+        .hero-content {
+          margin-top: clamp(60px, 12vh, 140px);
+          margin-bottom: clamp(60px, 10vh, 120px);
+          max-width: 620px;
+        }
+
+        .golden-ornament {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          margin-bottom: 24px;
+          color: #c89d53;
+        }
+        
+        .golden-ornament .line {
+          height: 1px;
+          width: 48px;
+          background: #c89d53;
+        }
+
+        .main-title {
+          font-family: 'Playfair Display', serif;
+          font-size: clamp(48px, 6vw, 86px);
+          line-height: 1.05;
+          font-weight: 600;
+          letter-spacing: -0.5px;
+          margin: 0 0 24px 0;
+          background: linear-gradient(to right, #ac4a5b 0%, #c47671 30%, #c89d53 100%);
           -webkit-background-clip: text;
           background-clip: text;
           color: transparent;
         }
 
-        .hero-buttons {
-          position: relative;
-          z-index: 1;
-          margin-top: 28px;
+        .subtitle {
+          font-family: 'Inter', 'Poppins', sans-serif;
+          font-size: clamp(12px, 1.2vw, 15px);
+          font-weight: 500;
+          letter-spacing: 4px;
+          color: #ac4a5b;
+          margin: 0 0 24px 0;
+          text-transform: uppercase;
           display: flex;
-          gap: 12px;
+          align-items: center;
+          flex-wrap: wrap;
+        }
+        
+        .star-icon {
+          margin-left: 10px;
+          color: #d4a353;
+          font-size: 16px;
+        }
+
+        .description {
+          font-family: 'Inter', 'Poppins', sans-serif;
+          font-size: clamp(16px, 1.5vw, 19px);
+          line-height: 1.6;
+          color: #555555;
+          margin: 0 0 44px 0;
+          max-width: 500px;
+        }
+
+        .desktop-only {
+          display: inline;
+        }
+
+        .hero-actions {
+          display: flex;
+          gap: 16px;
+          margin-bottom: clamp(60px, 10vh, 100px);
           flex-wrap: wrap;
         }
 
-        .hero-media {
-          flex: 1;
-          min-width: 0;
-          display: flex;
-          justify-content: flex-end;
+        .btn-shop {
+          padding: 0 40px;
+          height: 52px;
+          background: #bb864c;
+          color: #ffffff;
+          font-family: 'Inter', 'Poppins', sans-serif;
+          font-size: 15px;
+          font-weight: 500;
+          border: none;
+          border-radius: 999px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          box-shadow: 0 8px 24px rgba(187, 134, 76, 0.25);
+        }
+        
+        .btn-shop:hover {
+          background: #a46d2f;
+          transform: translateY(-2px);
+          box-shadow: 0 12px 32px rgba(187, 134, 76, 0.35);
         }
 
-        .hero-image {
-          width: min(100%, 620px);
-          border-radius: 24px;
-          border: 1px solid ${THEME.border};
-          box-shadow: 0 16px 36px rgba(26, 26, 26, 0.12);
-          object-fit: cover;
-          aspect-ratio: 16 / 11;
+        .btn-explore {
+          padding: 0 40px;
+          height: 52px;
+          background: transparent;
+          color: #1a1a1a;
+          font-family: 'Inter', 'Poppins', sans-serif;
+          font-size: 15px;
+          font-weight: 500;
+          border: 1px solid #d4c1b9;
+          border-radius: 999px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+        
+        .btn-explore:hover {
+          background: rgba(0,0,0,0.03);
+          transform: translateY(-2px);
+        }
+
+        .features-row {
+          display: flex;
+          gap: clamp(24px, 4vw, 48px);
+          flex-wrap: wrap;
+        }
+
+        .feature {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+        }
+
+        .feature-icon {
+          width: 52px;
+          height: 52px;
+          border-radius: 50%;
+          background: #ffffff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+          color: #bb864c;
+        }
+
+        .feature-text {
+          font-family: 'Inter', 'Poppins', sans-serif;
+          font-size: 11px;
+          line-height: 1.4;
+          letter-spacing: 1.5px;
+          color: #222;
+          font-weight: 600;
+          text-transform: uppercase;
+        }
+
+        @media (max-width: 1024px) {
+          .hero-bg-image {
+            width: 50%;
+            mask-image: linear-gradient(to right, transparent 0%, black 40%);
+            -webkit-mask-image: linear-gradient(to right, transparent 0%, black 40%);
+          }
         }
 
         @media (max-width: 768px) {
-          .hero {
+          .hero-wrapper {
             flex-direction: column;
-            gap: 18px;
+            min-height: auto;
+            position: relative;
           }
-
-          .hero-media {
+          
+          .desktop-only { display: none; }
+          
+          .hero-bg-container {
+            position: relative;
             width: 100%;
-            order: 1;
-          }
-
-          .hero-image {
-            width: 100%;
-            border-radius: 18px;
-            aspect-ratio: 16 / 10;
-          }
-
-          .hero-text {
-            width: 100%;
-            max-width: 100%;
+            height: 55vh;
+            min-height: 350px;
             order: 2;
           }
-
-          .hero-card {
-            backdrop-filter: blur(8px);
-            padding: 20px;
+          
+          .hero-bg-image {
+            width: 100%;
+            height: 100%;
+            mask-image: linear-gradient(to bottom, transparent 0%, black 25%);
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 25%);
+          }
+          
+          .hero-main {
+            padding-top: 32px;
+            padding-bottom: 0px;
+            order: 1;
+            align-items: center;
             text-align: center;
           }
-
-          .hero-line {
-            margin: 0 auto 14px auto;
+          
+          .logo-top-left {
+            margin-bottom: 40px;
           }
-
-          .hero-title {
-            font-size: clamp(28px, 8.8vw, 42px);
-            line-height: 1.2;
-          }
-
-          .hero-logo-center {
-            opacity: 0.09;
-          }
-
-          .hero-buttons {
+          
+          .hero-content {
+            margin-top: 0;
+            margin-bottom: 40px;
+            display: flex;
             flex-direction: column;
-            gap: 10px;
-            margin-top: 20px;
+            align-items: center;
           }
-
-          .hero-buttons button {
+          
+          .subtitle {
+            justify-content: center;
+            letter-spacing: 2px;
+            font-size: 11px;
+          }
+          
+          .description {
+            font-size: 15px;
+            margin-bottom: 32px;
+          }
+          
+          .golden-ornament .line {
+            width: 32px;
+          }
+          
+          .hero-actions {
+            flex-direction: column;
             width: 100%;
+            margin-bottom: 60px;
+          }
+          
+          .btn-shop, .btn-explore {
+            width: 100%;
+            max-width: 320px;
+          }
+          
+          .features-row {
+            flex-direction: row;
+            justify-content: center;
+            gap: 20px;
+          }
+          
+          .feature {
+            flex-direction: column;
+            text-align: center;
+            gap: 8px;
+            width: 100px;
+          }
+          
+          .feature-icon {
+            width: 44px;
+            height: 44px;
+          }
+          
+          .feature-text {
+            font-size: 9px;
+            letter-spacing: 1px;
           }
         }
       `}</style>
 
-      <div className="hero">
-        <div className="hero-text">
-          <div className="hero-card">
-            <div className="hero-logo-center" aria-hidden="true">
-              <NouveauLogo size={170} />
-            </div>
-            <div className="hero-line" />
-            <div className="hero-title-wrap">
-              <h1 className="hero-title">Wear Your Aura</h1>
-            </div>
+      <div className="hero-bg-container" aria-hidden="true">
+        <img className="hero-bg-image" src={heroImg} alt="Hero background" />
+      </div>
 
-            <div className="hero-buttons">
-            <button
-              onClick={() => setPage("Shop")}
-              style={{
-                padding: "clamp(10px, 2vw, 12px) clamp(18px, 3vw, 26px)",
-                background: `linear-gradient(135deg, ${THEME.gold}, ${THEME.goldDark})`,
-                color: "#fff",
-                fontWeight: 600,
-                border: "none",
-                borderRadius: "999px",
-                transition: "all 0.3s ease",
-                boxShadow: "0 10px 22px rgba(212,175,55,0.28)",
-                fontFamily: "'Poppins', sans-serif",
-                minHeight: "44px",
-                cursor: "pointer",
-                fontSize: "clamp(10px, 1.5vw, 12px)",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-2px)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-              }}
-            >
-              Shop Now
-            </button>
-
-            <button
-              onClick={() => setPage("Shop")}
-              style={{
-                padding: "clamp(10px, 2vw, 12px) clamp(18px, 3vw, 26px)",
-                border: "1px solid #b76e79",
-                background: "transparent",
-                color: "#1a1a1a",
-                borderRadius: "999px",
-                transition: "all 0.3s ease",
-                fontFamily: "'Poppins', sans-serif",
-                minHeight: "44px",
-                cursor: "pointer",
-                fontSize: "clamp(10px, 1.5vw, 12px)",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-2px)";
-                e.currentTarget.style.background = "#b76e79";
-                e.currentTarget.style.color = "#fff";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.background = "transparent";
-                e.currentTarget.style.color = "#1a1a1a";
-              }}
-            >
-              Explore Collection
-            </button>
-            </div>
-          </div>
+      <div className="hero-main">
+        <div className="logo-top-left">
+          <NouveauLogo size={28} />
+          <span className="logo-text">nouveau<span className="tm">™</span></span>
         </div>
 
-        <div className="hero-media">
-          <picture style={{ width: "100%", display: "block" }}>
-            <source media="(max-width: 768px)" srcSet={heroImg} />
-            <img className="hero-image" src={heroImg} alt="Nouveau hero" loading="eager" decoding="async" />
-          </picture>
+        <div className="hero-content">
+          <div className="golden-ornament">
+            <div className="line" />
+            <NouveauLogo size={22} />
+            <div className="line" />
+          </div>
+
+          <h1 className="main-title">Wear Your Aura</h1>
+          
+          <p className="subtitle">
+            INDIAN ETHNIC WEAR, REDEFINED <span className="star-icon">✦</span>
+          </p>
+
+          <p className="description">
+            Timeless designs that celebrate tradition<br className="desktop-only"/>
+            with a modern soul.
+          </p>
+
+          <div className="hero-actions">
+            <button className="btn-shop" onClick={() => setPage("Shop")}>
+              Shop Now
+            </button>
+            <button className="btn-explore" onClick={() => setPage("Shop")}>
+              Explore Collection
+            </button>
+          </div>
+
+          <div className="features-row">
+            <div className="feature">
+              <div className="feature-icon">
+                <NouveauLogo size={20} />
+              </div>
+              <div className="feature-text">
+                PREMIUM<br/>QUALITY
+              </div>
+            </div>
+            
+            <div className="feature">
+              <div className="feature-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 1 8.3C19.2 15.6 15.5 20 11 20z"/>
+                  <path d="M11 20c2-3 2-6-1-9"/>
+                </svg>
+              </div>
+              <div className="feature-text">
+                TIMELESS<br/>DESIGNS
+              </div>
+            </div>
+
+            <div className="feature">
+              <div className="feature-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20.8 4.6a5.5 5.5 0 0 0-7.7 0l-1.1 1-1.1-1a5.5 5.5 0 0 0-7.7 7.7l1 1.1L12 21l7.8-7.7 1-1a5.5 5.5 0 0 0 0-7.7z"/>
+                </svg>
+              </div>
+              <div className="feature-text">
+                MADE FOR<br/>YOU
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
