@@ -205,19 +205,32 @@ export default function Hero({ setPage }) {
         @media (max-width: 768px) {
           .hero-wrapper {
             flex-direction: column;
-            min-height: auto;
+            min-height: 85vh;
             position: relative;
             padding-top: 0;
+            justify-content: flex-end;
           }
           
           .desktop-only { display: none; }
           
           .hero-bg-container {
-            position: relative;
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
-            height: 55vh;
-            min-height: 400px;
-            order: 1; /* Force Image to load ABOVE text block on Mobile */
+            height: 100%;
+            min-height: auto;
+            order: unset;
+            z-index: 0;
+          }
+
+          .hero-bg-container::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, #fdfaf7 12%, rgba(253,250,247,0.85) 35%, transparent 75%);
+            z-index: 1;
+            pointer-events: none;
           }
           
           .hero-bg-image {
@@ -225,15 +238,15 @@ export default function Hero({ setPage }) {
             height: 100%;
             object-fit: cover;
             object-position: center; /* Center photo precisely horizontally & vertically */
-            mask-image: linear-gradient(to top, transparent 0%, black 25%);
-            -webkit-mask-image: linear-gradient(to top, transparent 0%, black 25%);
+            mask-image: none;
+            -webkit-mask-image: none;
           }
           
           .hero-main {
-            padding-top: 0;
+            padding-top: 20px;
             padding-bottom: 40px;
-            order: 2; /* Force Text block to load BELOW image on Mobile */
-            margin-top: -60px; /* Pull text block up into the transparent gradient fade */
+            order: 2;
+            margin-top: auto;
             align-items: center;
             text-align: center;
             z-index: 10;
