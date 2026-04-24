@@ -205,30 +205,31 @@ export default function Hero({ setPage }) {
         @media (max-width: 768px) {
           .hero-wrapper {
             flex-direction: column;
-            min-height: 85vh;
+            min-height: auto;
             position: relative;
             padding-top: 0;
-            justify-content: flex-end;
+            background: #fdfaf7;
           }
           
           .desktop-only { display: none; }
           
           .hero-bg-container {
-            position: absolute;
-            top: 0;
-            left: 0;
+            position: relative;
             width: 100%;
-            height: 100%;
-            min-height: auto;
-            order: unset;
+            height: 55vh;
+            min-height: 380px;
+            order: 1;
             z-index: 0;
           }
 
           .hero-bg-container::after {
             content: '';
             position: absolute;
-            inset: 0;
-            background: linear-gradient(to top, #fdfaf7 12%, rgba(253,250,247,0.85) 35%, transparent 75%);
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 120px;
+            background: linear-gradient(to top, #fdfaf7 5%, transparent 100%);
             z-index: 1;
             pointer-events: none;
           }
@@ -237,16 +238,16 @@ export default function Hero({ setPage }) {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            object-position: center; /* Center photo precisely horizontally & vertically */
+            object-position: center;
             mask-image: none;
             -webkit-mask-image: none;
           }
           
           .hero-main {
-            padding-top: 20px;
+            padding-top: 10px;
             padding-bottom: 40px;
             order: 2;
-            margin-top: auto;
+            margin-top: -50px;
             align-items: center;
             text-align: center;
             z-index: 10;
