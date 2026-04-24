@@ -12,6 +12,7 @@ const {
 const { protect, admin } = require("../middleware/auth");
 const validate = require("../middleware/validate");
 const router = express.Router();
+const { sendOrderConfirmation } = require("../utils/whatsapp");
 
 // ── IMPORTANT: Specific routes BEFORE /:id wildcard ──────────────────────────
 
@@ -52,6 +53,15 @@ const orderCreateValidation = [
 router.post("/", protect, orderCreateValidation, createOrder);
 router.post("/create", protect, orderCreateValidation, createOrder);
 router.get("/my", protect, getMyOrders);
+
+router.post("/test-whatsapp", protect, async (req, res) => {
+  try {
+    await sendOrderConfirmation("7733881577", "Test User", "TEST123", "30 Apr 2026");
+    res.json({ success: true, message: "WhatsApp test sent!" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // ADMIN — specific routes before wildcard
 router.get(
