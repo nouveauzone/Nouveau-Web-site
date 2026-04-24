@@ -3,7 +3,7 @@ import { AuthContext } from "../context/AuthContext";
 import { THEME } from "../styles/theme";
 import Footer from "../components/Footer";
 import API from "../config/api";
-import { resolveImageUrl } from "../utils/imageUrl";
+import { getImageUrl } from "../utils/imageUrl";
 
 // Use same API base as rest of app - no axios needed
 const API_BASE = API;
@@ -181,7 +181,7 @@ function OrderCard({ order }) {
           <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"9px", letterSpacing:"1px", color:THEME.textLight, marginBottom:"12px" }}>🛍️ ITEMS</p>
           {order.items.map((item, i) => (
             <div key={i} style={{ display:"flex", alignItems:"center", gap:"12px", padding:"10px 0", borderBottom: i<order.items.length-1?`1px solid ${THEME.border}`:"none" }}>
-              {item.image && <img src={resolveImageUrl(item.image, "")} alt={item.title} style={{ width:"48px", height:"48px", objectFit:"cover", borderRadius:"8px" }} onError={e=>e.target.style.display="none"} />}
+              {item.image && <img src={getImageUrl(item.image, "")} alt={item.title} style={{ width:"48px", height:"48px", objectFit:"cover", borderRadius:"8px" }} onError={e=>e.target.style.display="none"} />}
               <div style={{ flex:1 }}>
                 <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"13px", fontWeight:600, color:THEME.text }}>{item.title||"Product"}</p>
                 <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"11px", color:THEME.textMuted }}>Qty: {item.qty}{item.size?` · Size: ${item.size}`:""}</p>

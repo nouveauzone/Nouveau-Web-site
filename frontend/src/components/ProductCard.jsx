@@ -4,7 +4,7 @@ import { CartContext } from "../context/CartContext";
 import { CurrencyContext } from "../context/CurrencyContext";
 import Icons from "./Icons";
 import StarRating from "./StarRating";
-import { resolveImageUrl } from "../utils/imageUrl";
+import { getImageUrl } from "../utils/imageUrl";
 
 const BAD_TEXT_RE = /(\/static\/media|\.(jpeg|jpg|png|webp|svg)$|\.[a-f0-9]{8,}$|^https?:\/\/|\\)/i;
 
@@ -20,14 +20,16 @@ function ProductCard({ product, setPage, setSelectedProduct }) {
   const { formatPrice } = useContext(CurrencyContext);
 
   const wished = wishlist.some((item) => item._id === product._id);
-  const safeStock = Number(product.stock) || 0;
-  const isOutOfStock = safeStock <= 0;
+  // If stock is null/undefined (not sent by backend), treat as unlimited (in stock).
+  // Only mark out-of-stock when stock is explicitly 0 or negative.
+  const safeStock = product.stock != null ? Number(product.stock) : Infinity;
+  const isOutOfStock = Number.isFinite(safeStock) && safeStock <= 0;
 
   const { title, subtitle, category, image, price, originalPrice, rating, reviewCount, hasDiscount } = useMemo(() => {
     const nextTitle = safeText(product.title, "Nouveau Signature Piece");
     const nextSubtitle = safeText(product.subcategory, "Womenswear");
     const nextCategory = safeText(product.category, "Nouveau Collection");
-    const nextImage = resolveImageUrl(product.images?.[0], "/ethnic1.jpeg");
+    const nextImage = getImageUrl(product.images?.[0], "/ethnic1.jpeg");
     const nextPrice = Number(product.price) || 0;
     const nextOriginalPrice = Number(product.originalPrice) || nextPrice;
     const nextRating = Number(product.rating) || 0;

@@ -11,7 +11,7 @@ import StarRating from "../components/StarRating";
 import OrnamentDivider from "../components/OrnamentDivider";
 import { BtnOutline, BtnPrimary } from "../components/Buttons";
 import API from "../services/apiService";
-import { resolveImageUrl } from "../utils/imageUrl";
+import { getImageUrl } from "../utils/imageUrl";
 import { SHIPPING_FREE_THRESHOLD, normalizeCategory } from "../data/constants";
 
 const BAD_TEXT_RE = /(\/static\/media|\.(jpeg|jpg|png|webp|svg)$|\.[a-f0-9]{8,}$|^https?:\/\/|\\)/i;
@@ -77,7 +77,7 @@ export default function ProductPage({ product, setPage }) {
     product.description,
     "Elegant premium womenswear crafted with attention to detail and all-day comfort."
   );
-  const safeImages = cleanImages(product.images).map((img) => resolveImageUrl(img, "/ethnic1.jpeg"));
+  const safeImages = cleanImages(product.images).map((img) => getImageUrl(img, "/ethnic1.jpeg"));
   const safeSizes = Array.isArray(product.sizes) && product.sizes.length ? product.sizes : ["M"];
   const safePrice = Number(product.price) || 0;
   const safeOriginalPrice = Number(product.originalPrice) || safePrice;

@@ -55,15 +55,21 @@ const toLocalImagePath = (urlValue) => {
 
 const toHttps = (url) => url.replace(/^http:\/\//i, "https://");
 
-export function resolveImageUrl(src, fallback = "/ethnic1.jpeg") {
+export function getImageUrl(src, fallback = "/ethnic1.jpeg") {
   if (!src || typeof src !== "string") return fallback;
   let value = src.trim().replace(/\\/g, "/");
   if (!value) return fallback;
   if (value.startsWith("data:") || value.startsWith("blob:")) return value;
 
-  // Handle values like "localhost:5000/uploads/file.jpg" that are missing protocol.
+  // Handle values missing protocol such as host/uploads/file.jpg.
   if (HOST_WITHOUT_PROTOCOL_RE.test(value)) {
     value = `http://${value}`;
+  }
+
+  if (value.startsWith("http://localhost:5000") || value.startsWith("https://localhost:5000")) {
+    if (BASE_URL) {
+      value = value.replace(/^https?:\/\/localhost:5000/i, BASE_URL);
+    }
   }
 
   if (value.startsWith("/uploads/")) return normalizeUploadsPath(value, fallback);
@@ -116,3 +122,5 @@ export function resolveImageUrl(src, fallback = "/ethnic1.jpeg") {
   if (value.startsWith("/")) return value;
   return fallback;
 }
+
+export const resolveImageUrl = getImageUrl;

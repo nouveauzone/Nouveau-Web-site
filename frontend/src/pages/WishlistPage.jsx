@@ -7,7 +7,7 @@ import NouveauLogo from "../components/Logo";
 import Icons from "../components/Icons";
 import StarRating from "../components/StarRating";
 import { BtnPrimary } from "../components/Buttons";
-import { resolveImageUrl } from "../utils/imageUrl";
+import { getImageUrl } from "../utils/imageUrl";
 
 export default function WishlistPage({ setPage, setSelectedProduct }) {
   const { wishlist, toggleWishlist } = useContext(WishlistContext);
@@ -34,7 +34,7 @@ export default function WishlistPage({ setPage, setSelectedProduct }) {
             {wishlist.map((p) => (
               <div key={p._id} style={{ background:THEME.bgCard, position:"relative", border:`1px solid ${THEME.border}` }}>
                 <img
-                  src={resolveImageUrl(p.images?.[0], "/product1.jpeg")}
+                  src={getImageUrl(p.images?.[0], "/product1.jpeg")}
                   alt={p.title}
                   style={{ width:"100%", aspectRatio:"3/4", objectFit:"cover", display:"block" }}
                   onError={(e) => {

@@ -4,7 +4,7 @@ import { CurrencyContext } from "../context/CurrencyContext";
 import { THEME } from "../styles/theme";
 import { BtnOutline, BtnPrimary } from "../components/Buttons";
 import Footer from "../components/Footer";
-import { resolveImageUrl } from "../utils/imageUrl";
+import { getImageUrl } from "../utils/imageUrl";
 import { getShippingCharge, SHIPPING_FREE_THRESHOLD } from "../data/constants";
 
 const GOLD = "#C9A227";
@@ -51,7 +51,7 @@ export default function CartPage({ setPage }) {
               return (
                 <div key={`${item._id}-${item.size}`} className="cart-item-mobile" style={{ display: "flex", gap: "24px", padding: "32px 0", borderBottom: `1px solid ${THEME.border}` }}>
                   <div className="cart-item-img" style={{ width: "120px", height: "160px", borderRadius: "16px", overflow: "hidden", background: THEME.bgDark, flexShrink: 0, border: `1px solid ${THEME.border}`, boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
-                    <img src={resolveImageUrl(item.images?.[0], "/ethnic1.jpeg")} alt={item.title} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s ease" }} />
+                    <img src={getImageUrl(item.images?.[0], "/ethnic1.jpeg")} alt={item.title} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s ease" }} />
                   </div>
 
                   <div style={{ flex: 1 }}>

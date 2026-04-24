@@ -7,7 +7,7 @@ import { normalizeCategory } from "../data/constants";
 import NouveauLogo from "../components/Logo";
 import { BtnPrimary } from "../components/Buttons";
 import API from "../services/apiService";
-import { resolveImageUrl } from "../utils/imageUrl";
+import { getImageUrl } from "../utils/imageUrl";
 
 const ORDER_STATUSES = ["Awaiting Payment Verification","Placed","Processing","Shipped","Out for Delivery","Delivered","Cancelled"];
 const STATUS_COLORS = {
@@ -723,7 +723,7 @@ export default function AdminPage({ setPage }) {
                 <div style={{ marginBottom:"18px" }}>
                   <label style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"2px", color:THEME.crimson, display:"block", marginBottom:"8px", fontWeight:700 }}>PRODUCT IMAGE</label>
                   <div style={{ display:"flex", alignItems:"center", gap:"12px" }}>
-                    <img src={resolveImageUrl(productForm.images?.[0], "/product1.jpeg")} alt="" style={{ width:"64px", height:"80px", objectFit:"cover", borderRadius:"8px", border:`1px solid ${THEME.border}` }} onError={e=>e.target.src="/product1.jpeg"} />
+                    <img src={getImageUrl(productForm.images?.[0], "/product1.jpeg")} alt="" style={{ width:"64px", height:"80px", objectFit:"cover", borderRadius:"8px", border:`1px solid ${THEME.border}` }} onError={e=>e.target.src="/product1.jpeg"} />
                     <div>
                       <input ref={imgInputRef} type="file" accept="image/*" onChange={handleImageUpload} style={{ display:"none" }} />
                       <button onClick={()=>imgInputRef.current?.click()}
@@ -783,7 +783,7 @@ export default function AdminPage({ setPage }) {
 
             {filteredProducts.map((p, idx) => (
               <div key={`${p._id || p.title || "product"}-${idx}`} style={{ display:"flex", gap:"14px", background:THEME.bgCard, padding:isMobile?"14px":"14px 18px", marginBottom:"10px", alignItems:isMobile?"flex-start":"center", border:`1px solid ${THEME.border}`, borderRadius:"12px", flexWrap:"wrap", flexDirection:isMobile?"column":"row" }}>
-                <img src={resolveImageUrl(p.images?.[0], "/product1.jpeg")} alt={p.title} style={{ width:"60px", height:"76px", objectFit:"cover", borderRadius:"8px", flexShrink:0 }} onError={e=>e.target.src="/product1.jpeg"} />
+                <img src={getImageUrl(p.images?.[0], "/product1.jpeg")} alt={p.title} style={{ width:"60px", height:"76px", objectFit:"cover", borderRadius:"8px", flexShrink:0 }} onError={e=>e.target.src="/product1.jpeg"} />
                 <div style={{ flex:1, minWidth:"140px" }}>
                   <div style={{ display:"flex", alignItems:"center", gap:"8px", flexWrap:"wrap" }}>
                     <p style={{ fontFamily:"'Playfair Display',serif", fontSize:"15px", fontWeight:700, color:THEME.text }}>{p.title}</p>
@@ -853,7 +853,7 @@ export default function AdminPage({ setPage }) {
                       <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"2px", color:THEME.crimson, fontWeight:700, marginBottom:"10px" }}>ORDER ITEMS</p>
                       {selectedOrder.items.map((item,i) => (
                         <div key={i} style={{ display:"flex", gap:"10px", alignItems:"center", padding:"8px 0", borderBottom:`1px solid ${THEME.border}` }}>
-                          <img src={resolveImageUrl(item.image, "/product1.jpeg")} alt={item.title} style={{ width:"44px", height:"56px", objectFit:"cover", borderRadius:"6px" }} onError={e=>e.target.src="/product1.jpeg"} />
+                          <img src={getImageUrl(item.image, "/product1.jpeg")} alt={item.title} style={{ width:"44px", height:"56px", objectFit:"cover", borderRadius:"6px" }} onError={e=>e.target.src="/product1.jpeg"} />
                           <div style={{ flex:1 }}>
                             <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"13px", color:THEME.text, fontWeight:600 }}>{item.title}</p>
                             <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"11px", color:THEME.textLight }}>Size: {item.size} · ×{item.qty}</p>
