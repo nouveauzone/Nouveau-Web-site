@@ -852,7 +852,7 @@ export default function AdminPage({ setPage }) {
                       <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"2px", color:THEME.crimson, fontWeight:700, marginBottom:"10px" }}>ORDER ITEMS</p>
                       {selectedOrder.items.map((item,i) => (
                         <div key={i} style={{ display:"flex", gap:"10px", alignItems:"center", padding:"8px 0", borderBottom:`1px solid ${THEME.border}` }}>
-                          <img src={getImageUrl(item.image, "/product1.jpeg")} alt={item.title} style={{ width:"44px", height:"56px", objectFit:"cover", borderRadius:"6px" }} onError={e=>e.target.src="/product1.jpeg"} />
+                          <img src={fixImageUrl(item.image)} alt={item.title} style={{ width:"44px", height:"56px", objectFit:"cover", borderRadius:"6px" }} onError={e=>e.target.src="/product1.jpeg"} />
                           <div style={{ flex:1 }}>
                             <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"13px", color:THEME.text, fontWeight:600 }}>{item.title}</p>
                             <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"11px", color:THEME.textLight }}>Size: {item.size} · ×{item.qty}</p>
