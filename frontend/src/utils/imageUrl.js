@@ -1,7 +1,19 @@
-const BASE_URL = String(
-  process.env.REACT_APP_BASE_URL || process.env.VITE_BASE_URL || "https://nouveauz.com"
-).replace(/\/+$/, "");
+const deriveBaseUrl = () => {
+  const configured = String(process.env.REACT_APP_BASE_URL || process.env.VITE_BASE_URL || "").trim();
+  if (configured) return configured.replace(/\/+$/, "");
+
+  const fromApi = String(process.env.REACT_APP_API_URL || process.env.VITE_API_URL || "")
+    .trim()
+    .replace(/\/+$/, "")
+    .replace(/\/api$/i, "");
+
+  return fromApi;
+};
+
+const BASE_URL = deriveBaseUrl();
 const LOCALHOST_RE = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i;
+const HOST_WITHOUT_PROTOCOL_RE = /^(localhost|127\.0\.0\.1)(:\d+)?\//i;
+const FILE_NAME_RE = /^[a-z0-9][a-z0-9._-]*\.(png|jpe?g|webp|gif|svg)$/i;
 
 const CATALOG_IMAGE_RE = /^(ethnic\d+|western\d+|product\d+|nouveau-logo|payment-qr)\.(png|jpe?g|webp|gif|svg)$/i;
 
@@ -10,6 +22,7 @@ const toFileName = (pathValue = "") => String(pathValue).split("/").filter(Boole
 const toUploadsAbsoluteUrl = (pathValue = "") => {
   const fileName = toFileName(pathValue);
   if (!fileName) return "";
+  if (!BASE_URL) return `/uploads/${fileName}`;
   return `${BASE_URL}/uploads/${fileName}`;
 };
 
@@ -44,12 +57,22 @@ const toHttps = (url) => url.replace(/^http:\/\//i, "https://");
 
 export function resolveImageUrl(src, fallback = "/ethnic1.jpeg") {
   if (!src || typeof src !== "string") return fallback;
-  const value = src.trim();
+  let value = src.trim().replace(/\\/g, "/");
   if (!value) return fallback;
   if (value.startsWith("data:") || value.startsWith("blob:")) return value;
 
+  // Handle values like "localhost:5000/uploads/file.jpg" that are missing protocol.
+  if (HOST_WITHOUT_PROTOCOL_RE.test(value)) {
+    value = `http://${value}`;
+  }
+
   if (value.startsWith("/uploads/")) return normalizeUploadsPath(value, fallback);
   if (value.startsWith("uploads/")) return normalizeUploadsPath(`/${value}`, fallback);
+
+  // Handle bare filenames from DB values, e.g. "abc123.jpg".
+  if (FILE_NAME_RE.test(value)) {
+    return normalizeUploadsPath(`/uploads/${value}`, fallback);
+  }
 
   if (value.startsWith("http://") || value.startsWith("https://")) {
     try {
@@ -90,5 +113,6 @@ export function resolveImageUrl(src, fallback = "/ethnic1.jpeg") {
       return fallback;
     }
   }
-  return value;
+  if (value.startsWith("/")) return value;
+  return fallback;
 }
