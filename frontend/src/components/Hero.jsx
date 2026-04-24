@@ -1,141 +1,377 @@
-import React, { useEffect, useState } from "react";
 import heroImg from "../assets/images/banner.png";
+import { THEME } from "../styles/theme";
 import NouveauLogo from "./Logo";
 
-const TruckIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 18H3c-.6 0-1-.4-1-1V7c0-.6.4-1 1-1h10c.6 0 1 .4 1 1v11"/><path d="M14 9h4l4 4v5c0 .6-.4 1-1 1h-2"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg>
-);
-
-const RefreshIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-);
-
-const StarIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-);
-
-const ShieldCheckIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
-);
-
 export default function Hero({ setPage }) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    // Add a tiny delay to ensure smooth entry
-    const timer = setTimeout(() => setMounted(true), 100);
-    return () => clearTimeout(timer);
-  }, []);
-
   return (
-    <section className="relative w-full min-h-[90vh] flex flex-col justify-center bg-[#fdfcfb] overflow-hidden font-sans text-neutral-900">
-      
-      {/* Background Section */}
-      <div className="absolute inset-0 z-0 flex justify-end pointer-events-none">
-        {/* Clean gradient overlay on the left masking the image */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#fdfcfb] via-[#fdfcfb]/80 to-transparent z-10 w-full md:w-[65%]"></div>
-        <img 
-          src={heroImg} 
-          alt="Premium ethnic wear collection" 
-          className="h-full w-full md:w-[60%] object-cover object-[center_30%] z-0" 
-        />
+    <section className="hero-wrapper">
+      <style>{`
+        .hero-wrapper {
+          position: relative;
+          width: 100%;
+          min-height: auto;
+          background: #fdfaf7;
+          display: flex;
+          align-items: stretch;
+          overflow: hidden;
+        }
+
+        .hero-bg-container {
+          position: absolute;
+          inset: 0;
+          z-index: 0;
+          pointer-events: none;
+        }
+
+        .hero-bg-image {
+          position: absolute;
+          top: 0;
+          right: 0;
+          height: 100%;
+          width: 60%;
+          object-fit: cover;
+          object-position: center 20%;
+          mask-image: linear-gradient(to right, transparent 0%, black 25%);
+          -webkit-mask-image: linear-gradient(to right, transparent 0%, black 25%);
+        }
+
+        .hero-main {
+          position: relative;
+          z-index: 1;
+          width: 100%;
+          max-width: 1400px;
+          margin: 0 auto;
+          padding: clamp(24px, 4vw, 60px) clamp(24px, 5vw, 80px);
+          display: flex;
+          flex-direction: column;
+          pointer-events: none;
+        }
+        
+        .hero-main > * {
+          pointer-events: auto;
+        }
+
+        .logo-top-left {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          margin-bottom: auto;
+        }
+
+        .logo-text {
+          font-family: 'Playfair Display', serif;
+          font-size: 26px;
+          color: #222;
+          font-weight: 500;
+        }
+        
+        .tm {
+          font-family: sans-serif;
+          font-size: 11px;
+          vertical-align: super;
+          color: #c89d53;
+          margin-left: 2px;
+          font-weight: 600;
+        }
+
+        .hero-content {
+          margin-top: clamp(60px, 12vh, 140px);
+          margin-bottom: clamp(60px, 10vh, 120px);
+          max-width: 620px;
+        }
+
+        .golden-ornament {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          margin-bottom: 24px;
+          color: #c89d53;
+        }
+        
+        .golden-ornament .line {
+          height: 1px;
+          width: 48px;
+          background: #c89d53;
+        }
+
+        .main-title {
+          font-family: 'Playfair Display', serif;
+          font-size: clamp(48px, 6vw, 86px);
+          line-height: 1.05;
+          font-weight: 600;
+          letter-spacing: -0.5px;
+          margin: 0 0 24px 0;
+          background: linear-gradient(to right, #ac4a5b 0%, #c47671 30%, #c89d53 100%);
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+        }
+
+        .subtitle {
+          font-family: 'Inter', 'Poppins', sans-serif;
+          font-size: clamp(12px, 1.2vw, 15px);
+          font-weight: 500;
+          letter-spacing: 4px;
+          color: #ac4a5b;
+          margin: 0 0 24px 0;
+          text-transform: uppercase;
+          display: flex;
+          align-items: center;
+          flex-wrap: wrap;
+        }
+        
+        .star-icon {
+          margin-left: 10px;
+          color: #d4a353;
+          font-size: 16px;
+        }
+
+        .description {
+          font-family: 'Inter', 'Poppins', sans-serif;
+          font-size: clamp(16px, 1.5vw, 19px);
+          line-height: 1.6;
+          color: #555555;
+          margin: 0 0 44px 0;
+          max-width: 500px;
+        }
+
+        .desktop-only {
+          display: inline;
+        }
+
+        .hero-actions {
+          display: flex;
+          gap: 16px;
+          margin-bottom: clamp(60px, 10vh, 100px);
+          flex-wrap: wrap;
+        }
+
+        .btn-shop {
+          padding: 0 40px;
+          height: 52px;
+          background: #bb864c;
+          color: #ffffff;
+          font-family: 'Inter', 'Poppins', sans-serif;
+          font-size: 15px;
+          font-weight: 500;
+          border: none;
+          border-radius: 999px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          box-shadow: 0 8px 24px rgba(187, 134, 76, 0.25);
+        }
+        
+        .btn-shop:hover {
+          background: #a46d2f;
+          transform: translateY(-2px);
+          box-shadow: 0 12px 32px rgba(187, 134, 76, 0.35);
+        }
+
+        .features-row {
+          display: flex;
+          gap: clamp(24px, 4vw, 48px);
+          flex-wrap: wrap;
+        }
+
+        .feature {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+        }
+
+        .feature-icon {
+          width: 52px;
+          height: 52px;
+          border-radius: 50%;
+          background: #ffffff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+          color: #bb864c;
+        }
+
+        .feature-text {
+          font-family: 'Inter', 'Poppins', sans-serif;
+          font-size: 11px;
+          line-height: 1.4;
+          letter-spacing: 1.5px;
+          color: #222;
+          font-weight: 600;
+          text-transform: uppercase;
+        }
+
+        @media (max-width: 1024px) {
+          .hero-bg-image {
+            width: 50%;
+            mask-image: linear-gradient(to right, transparent 0%, black 40%);
+            -webkit-mask-image: linear-gradient(to right, transparent 0%, black 40%);
+          }
+        }
+
+        @media (max-width: 768px) {
+          .hero-wrapper {
+            flex-direction: column;
+            min-height: auto;
+            position: relative;
+          }
+          
+          .desktop-only { display: none; }
+          
+          .hero-bg-container {
+            position: relative;
+            width: 100%;
+            height: 55vh;
+            min-height: 350px;
+            order: 2;
+          }
+          
+          .hero-bg-image {
+            width: 100%;
+            height: 100%;
+            mask-image: linear-gradient(to bottom, transparent 0%, black 25%);
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 25%);
+          }
+          
+          .hero-main {
+            padding-top: 32px;
+            padding-bottom: 0px;
+            order: 1;
+            align-items: center;
+            text-align: center;
+          }
+          
+          .logo-top-left {
+            margin-bottom: 40px;
+          }
+          
+          .hero-content {
+            margin-top: 0;
+            margin-bottom: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+          }
+          
+          .subtitle {
+            justify-content: center;
+            letter-spacing: 2px;
+            font-size: 11px;
+          }
+          
+          .description {
+            font-size: 15px;
+            margin-bottom: 32px;
+          }
+          
+          .golden-ornament .line {
+            width: 32px;
+          }
+          
+          .hero-actions {
+            flex-direction: column;
+            width: 100%;
+            margin-bottom: 60px;
+          }
+          
+          .btn-shop {
+            width: 100%;
+            max-width: 320px;
+          }
+          
+          .features-row {
+            flex-direction: row;
+            justify-content: center;
+            gap: 20px;
+          }
+          
+          .feature {
+            flex-direction: column;
+            text-align: center;
+            gap: 8px;
+            width: 100px;
+          }
+          
+          .feature-icon {
+            width: 44px;
+            height: 44px;
+          }
+          
+          .feature-text {
+            font-size: 9px;
+            letter-spacing: 1px;
+          }
+        }
+      `}</style>
+
+      <div className="hero-bg-container" aria-hidden="true">
+        <img className="hero-bg-image" src={heroImg} alt="Hero background" />
       </div>
 
-      {/* Main Content wrapper */}
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-12 lg:px-16 pt-32 pb-24 flex flex-col items-start min-h-[90vh]">
-        
-        {/* Animated Main Text Block */}
-        <div className={`transition-all duration-1000 ease-out flex flex-col items-start max-w-2xl ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+      <div className="hero-main">
+        <div className="logo-top-left">
+          <NouveauLogo size={28} />
+          <span className="logo-text">nouveau<span className="tm">™</span></span>
+        </div>
+
+        <div className="hero-content">
+          <div className="golden-ornament">
+            <div className="line" />
+            <NouveauLogo size={22} />
+            <div className="line" />
+          </div>
+
+          <h1 className="main-title">Wear Your Aura</h1>
           
-          <div className="flex items-center gap-2 mb-6 pointer-events-auto">
-            <NouveauLogo size={28} />
-            <span className="font-['Playfair_Display',serif] text-xl font-medium tracking-wider text-neutral-900">
-              nouveau<span className="text-xs text-amber-600 align-super ml-1">™</span>
-            </span>
+          <p className="subtitle">
+            INDIAN ETHNIC WEAR, REDEFINED <span className="star-icon">✦</span>
+          </p>
+
+          <p className="description">
+            Timeless designs that celebrate tradition<br className="desktop-only"/>
+            with a modern soul.
+          </p>
+
+          <div className="hero-actions">
+            <button className="btn-shop" onClick={() => setPage("Shop")}>
+              Shop Now
+            </button>
           </div>
 
-          <p className="text-amber-700 font-medium tracking-[0.2em] text-[11px] md:text-sm uppercase mb-3 flex items-center">
-            Indian Ethnic Wear, Redefined <span className="ml-3 text-amber-500">✦</span>
-          </p>
-
-          <h1 className="font-['Playfair_Display',serif] text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] leading-[1.1] text-neutral-900 mb-6 bg-clip-text text-transparent bg-gradient-to-r from-stone-900 via-stone-800 to-amber-900">
-            Wear Your Aura
-          </h1>
-
-          <p className="text-neutral-500 text-base md:text-lg lg:text-xl font-light mb-10 max-w-[420px] leading-relaxed">
-            Timeless designs that celebrate tradition with a modern soul.
-          </p>
-
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto mb-8 pointer-events-auto">
-            <button 
-              onClick={() => setPage("Shop")}
-              className="group relative flex items-center justify-center gap-2 px-9 py-4 bg-gradient-to-r from-[#C2964F] to-[#A36D33] text-white rounded-full font-medium shadow-[0_8px_20px_rgba(163,109,51,0.25)] transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_12px_24px_rgba(163,109,51,0.35)]"
-            >
-              Shop Now 
-              <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
-            </button>
+          <div className="features-row">
+            <div className="feature">
+              <div className="feature-icon">
+                <NouveauLogo size={20} />
+              </div>
+              <div className="feature-text">
+                PREMIUM<br/>QUALITY
+              </div>
+            </div>
             
-            <button 
-              onClick={() => setPage("Collections")}
-              className="flex items-center justify-center px-9 py-4 border border-stone-300 bg-transparent text-stone-800 rounded-full font-medium transition-all duration-300 hover:bg-stone-50 hover:border-stone-400"
-            >
-              View Collections
-            </button>
-          </div>
-
-          {/* Micro CTA */}
-          <button 
-            onClick={() => setPage("NewArrivals")}
-            className="group relative flex items-center text-sm font-medium text-amber-800 transition-colors mb-16 pointer-events-auto"
-          >
-            <span className="relative z-10 pb-0.5 after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-[1px] after:bottom-0 after:left-0 after:bg-amber-600 after:origin-bottom-left after:transition-transform after:duration-300 group-hover:after:scale-x-100">
-              ✨ New Arrivals — Just Dropped 
-            </span>
-            <span className="inline-block transition-transform duration-300 group-hover:translate-x-1 ml-2 text-amber-700">→</span>
-          </button>
-
-        </div>
-
-        {/* Animated Trust Badges Base Row */}
-        <div className={`transition-all duration-1000 delay-300 ease-out w-full grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-8 mt-auto pt-10 border-t border-stone-200 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-white shadow-sm flex flex-shrink-0 items-center justify-center text-[#9A6D3A]">
-              <TruckIcon />
+            <div className="feature">
+              <div className="feature-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 1 8.3C19.2 15.6 15.5 20 11 20z"/>
+                  <path d="M11 20c2-3 2-6-1-9"/>
+                </svg>
+              </div>
+              <div className="feature-text">
+                TIMELESS<br/>DESIGNS
+              </div>
             </div>
-            <span className="text-[10px] md:text-[11px] font-semibold tracking-wider text-stone-700 uppercase leading-snug">
-              Free Shipping<br className="hidden md:block"/> Across India
-            </span>
-          </div>
 
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-white shadow-sm flex flex-shrink-0 items-center justify-center text-[#9A6D3A]">
-              <RefreshIcon />
+            <div className="feature">
+              <div className="feature-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20.8 4.6a5.5 5.5 0 0 0-7.7 0l-1.1 1-1.1-1a5.5 5.5 0 0 0-7.7 7.7l1 1.1L12 21l7.8-7.7 1-1a5.5 5.5 0 0 0 0-7.7z"/>
+                </svg>
+              </div>
+              <div className="feature-text">
+                MADE FOR<br/>YOU
+              </div>
             </div>
-            <span className="text-[10px] md:text-[11px] font-semibold tracking-wider text-stone-700 uppercase leading-snug">
-              7-Day Easy<br className="hidden md:block"/> Returns
-            </span>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-white shadow-sm flex flex-shrink-0 items-center justify-center text-[#9A6D3A]">
-              <StarIcon />
-            </div>
-            <span className="text-[10px] md:text-[11px] font-semibold tracking-wider text-stone-700 uppercase leading-snug">
-              Premium Fabric<br className="hidden md:block"/> Guarantee
-            </span>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-white shadow-sm flex flex-shrink-0 items-center justify-center text-[#9A6D3A]">
-              <ShieldCheckIcon />
-            </div>
-            <span className="text-[10px] md:text-[11px] font-semibold tracking-wider text-stone-700 uppercase leading-snug">
-              Secure Payments<br className="hidden md:block"/> (UPI / Cards)
-            </span>
           </div>
         </div>
-
       </div>
     </section>
   );
