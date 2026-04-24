@@ -48,6 +48,7 @@ const orderCreateValidation = [
   validate,
 ];
 
+// createOrder handles MongoDB save + WhatsApp confirmation (non-blocking on failure)
 router.post("/", protect, orderCreateValidation, createOrder);
 router.post("/create", protect, orderCreateValidation, createOrder);
 router.get("/my", protect, getMyOrders);
