@@ -61,7 +61,9 @@ exports.createOrder = asyncHandler(async (req, res) => {
 
   const order = await Order.create({
     userId: req.user._id,
+    userName: shippingAddress?.name || req.user?.name || "",
     userEmail: req.user.email,
+    userPhone: shippingAddress?.phone || req.user?.phone || "",
     products: orderArray,
     shippingAddress,
     paymentMethod: normalizedPaymentMethod,
@@ -94,7 +96,7 @@ exports.createOrder = asyncHandler(async (req, res) => {
       });
     } catch (e) { console.log("Order email error:", e.message); }
 
-    const phone = shippingAddress?.phone || req.user?.phone;
+    const phone = order.userPhone || shippingAddress?.phone || req.user?.phone;
     if (phone) {
       try {
         const expectedDelivery = order.estimatedDelivery
@@ -103,12 +105,12 @@ exports.createOrder = asyncHandler(async (req, res) => {
 
         await sendOrderConfirmation(
           phone,
-          shippingAddress?.name || req.user?.name || "Customer",
+          order.userName || shippingAddress?.name || req.user?.name || "Customer",
           order._id,
           expectedDelivery
         );
       } catch (e) {
-        console.log("WhatsApp order confirm error:", e.message);
+        console.log("WhatsApp order confirm error:", e?.response?.data || e.message);
       }
 
       if (isRazorpayOrder) {
@@ -197,7 +199,7 @@ exports.updateOrderStatus = asyncHandler(async (req, res) => {
       });
     } catch (e) { console.log("Order confirm email error:", e.message); }
 
-    const phone = order.shippingAddress?.phone;
+    const phone = order.userPhone || order.shippingAddress?.phone;
     if (phone) {
       try {
         const expectedDelivery = order.estimatedDelivery
@@ -206,12 +208,12 @@ exports.updateOrderStatus = asyncHandler(async (req, res) => {
 
         await sendOrderConfirmation(
           phone,
-          order.shippingAddress?.name || "Customer",
+          order.userName || order.shippingAddress?.name || "Customer",
           order._id,
           expectedDelivery
         );
       } catch (e) {
-        console.log("WhatsApp order confirm error:", e.message);
+        console.log("WhatsApp order confirm error:", e?.response?.data || e.message);
       }
 
       sendPaymentSuccess({

@@ -50,7 +50,9 @@ const sendOrderConfirmation = async (phone, name, orderId, deliveryDate) => {
 
     console.log("WhatsApp message sent to", phoneNumber);
   } catch (error) {
-    console.error("WhatsApp error:", error?.response?.data || error.message);
+    const apiError = error?.response?.data || error?.response?.statusText || error.message;
+    console.error("WhatsApp error:", apiError);
+    return { success: false, error: apiError };
   }
 };
 
