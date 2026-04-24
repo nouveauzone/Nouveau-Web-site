@@ -235,12 +235,13 @@ export default function Hero({ setPage }) {
           }
           
           .hero-bg-image {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            object-position: center;
-            mask-image: none;
-            -webkit-mask-image: none;
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            object-position: center !important;
+            mask-image: none !important;
+            -webkit-mask-image: none !important;
+            left: 0 !important;
           }
           
           .hero-main {
