@@ -66,6 +66,19 @@ export function getImageUrl(src, fallback = "/ethnic1.jpeg") {
     value = `http://${value}`;
   }
 
+  // Extremely vigorous forced protection against mixed-content and backend leaking localhost URLs
+  if (typeof window !== "undefined" && window.location.protocol === "https:") {
+    if (/localhost|127\.0\.0\.1/i.test(value)) {
+      const fileName = toFileName(value);
+      if (fileName) {
+        if (CATALOG_IMAGE_RE.test(fileName)) return `/${fileName}`;
+        // If BASE_URL is accidentally compiled as localhost, fallback to window.location.origin
+        let safeBase = /localhost|127\.0\.0\.1/i.test(BASE_URL) ? window.location.origin : (BASE_URL || "https://nouveauz.com");
+        return `${safeBase}/uploads/${fileName}`;
+      }
+    }
+  }
+
   if (value.startsWith("http://localhost:5000") || value.startsWith("https://localhost:5000")) {
     if (BASE_URL) {
       value = value.replace(/^https?:\/\/localhost:5000/i, BASE_URL);
@@ -95,7 +108,13 @@ export function getImageUrl(src, fallback = "/ethnic1.jpeg") {
       }
 
       if (pathName.startsWith("/uploads/")) {
-        return normalizeUploadsPath(pathName, fallback);
+        // Double check not to return localhost when on HTTPS
+        let finalPath = normalizeUploadsPath(pathName, fallback);
+        if (typeof window !== "undefined" && window.location.protocol === "https:" && /localhost|127\.0\.0\.1/i.test(finalPath)) {
+            const fName = toFileName(pathName);
+            return `${window.location.origin}/uploads/${fName}`;
+        }
+        return finalPath;
       }
 
       const localPath = toLocalImagePath(value);
