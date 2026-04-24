@@ -1,6 +1,7 @@
 const Order   = require("../models/Order");
 const Product = require("../models/Product");
-const { sendOrderConfirmation, sendPaymentSuccess, sendStatusUpdate } = require("../services/whatsappService");
+const { sendPaymentSuccess, sendStatusUpdate } = require("../services/whatsappService");
+const { sendWhatsAppConfirmation } = require("../utils/whatsapp");
 const asyncHandler = require("../utils/asyncHandler");
 const { sendOrderEmail, orderConfirmHTML, shippedEmailHTML } = require("../utils/email");
 const { calculateOrderTotals } = require("../services/pricingService");
@@ -95,14 +96,17 @@ exports.createOrder = asyncHandler(async (req, res) => {
 
     const phone = shippingAddress?.phone || req.user?.phone;
     if (phone) {
-      sendOrderConfirmation({
-        phone,
-        customerName: shippingAddress?.name || req.user?.name || "Customer",
-        trackingId:   order.trackingId,
-        orderId:      order._id,
-        total:        order.totalAmount || order.total,
-        items:        order.products || order.items || [],
-      }).catch(e => console.log("WhatsApp order confirm error:", e.message));
+      try {
+        await sendWhatsAppConfirmation({
+          customerName: shippingAddress?.name || req.user?.name || "Customer",
+          phone,
+          orderId: order._id,
+          amount: order.totalAmount || order.total,
+          address: shippingAddress,
+        });
+      } catch (e) {
+        console.log("Interakt order confirm error:", e.message);
+      }
 
       if (isRazorpayOrder) {
         sendPaymentSuccess({
@@ -192,14 +196,17 @@ exports.updateOrderStatus = asyncHandler(async (req, res) => {
 
     const phone = order.shippingAddress?.phone;
     if (phone) {
-      sendOrderConfirmation({
-        phone,
-        customerName: order.shippingAddress?.name || "Customer",
-        trackingId:   order.trackingId,
-        orderId:      order._id,
-        total:        order.totalAmount,
-        items:        order.products || order.items || [],
-      }).catch(e => console.log("WhatsApp order confirm error:", e.message));
+      try {
+        await sendWhatsAppConfirmation({
+          customerName: order.shippingAddress?.name || "Customer",
+          phone,
+          orderId: order._id,
+          amount: order.totalAmount || order.total,
+          address: order.shippingAddress,
+        });
+      } catch (e) {
+        console.log("Interakt order confirm error:", e.message);
+      }
 
       sendPaymentSuccess({
         phone,
