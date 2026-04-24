@@ -238,7 +238,7 @@ export default function Hero({ setPage }) {
             width: 100% !important;
             height: 100% !important;
             object-fit: cover !important;
-            object-position: center !important;
+            object-position: 85% center !important;
             mask-image: none !important;
             -webkit-mask-image: none !important;
             left: 0 !important;
