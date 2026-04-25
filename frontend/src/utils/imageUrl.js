@@ -1,19 +1,28 @@
-const BASE = process.env.REACT_APP_BASE_URL || 'https://api.nouveauz.com';
+import API from '../config/api';
+
+const getApiBaseProxy = (base) => {
+  const normalized = String(base || "").replace(/\/+$/, "");
+  return normalized ? `${normalized}/api` : "/api";
+};
+
+// We dynamically rely on the active production API proxy rather than a broken SSL subdomain.
+const BASE_API = getApiBaseProxy(API);
 
 export const fixImageUrl = (url) => {
   if (!url) return '/placeholder.png';
   
-  // Correctly route local dev URLs to production base URL
-  if (url.startsWith('http://localhost')) {
-    return url.replace(/http:\/\/localhost:\d+/, BASE);
+  // If the path contains /uploads/, extract everything after it and pipe it through the proxy
+  if (url.includes('/uploads/')) {
+    const cleanPath = url.split('/uploads/')[1];
+    if (cleanPath) {
+      return `${BASE_API}/uploads/${cleanPath}`;
+    }
   }
-  
-  // Handle both absolute and relative backend upload paths
-  if (url.startsWith('/uploads')) {
-    return BASE + url;
-  }
+
+  // Catch relative edge cases like "uploads/..."
   if (url.startsWith('uploads/')) {
-    return BASE + '/' + url;
+    const cleanPath = url.replace(/^uploads\//, '');
+    return `${BASE_API}/uploads/${cleanPath}`;
   }
   
   return url;

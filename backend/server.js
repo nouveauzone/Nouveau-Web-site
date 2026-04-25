@@ -107,6 +107,7 @@ app.use(express.json({ limit:"10mb" }));
 app.use("/api/whatsapp/webhook", express.urlencoded({ extended: false }));
 app.use(express.urlencoded({ extended:true, limit:"10mb" }));
 app.use("/uploads", express.static("uploads"));
+app.use("/api/uploads", express.static("uploads"));
 
 // ── DB ──────────────────────────────────────────────────────────────────────
 mongoose.connect(process.env.MONGO_URI || "mongodb://localhost:27017/nouveau")
