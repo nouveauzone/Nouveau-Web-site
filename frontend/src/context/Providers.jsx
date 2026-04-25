@@ -1,4 +1,4 @@
-import { useReducer, useState, useEffect, createContext } from "react";
+import { useReducer, useState, useEffect, useCallback, createContext } from "react";
 import { AuthContext }     from "./AuthContext";
 import { CartContext }     from "./CartContext";
 import { WishlistContext } from "./WishlistContext";
@@ -92,6 +92,13 @@ export default function Providers({ children }) {
   const [cart,      cartDispatch] = useReducer(cartReducer, asArray(ls.get("nouveau_cart", [])));
   const [wishlist,  setWishlist]  = useState(() => asArray(ls.get("nouveau_wish", [])));
 
+  const dispatchAuth = useCallback((action) => {
+    if (action?.type === "LOGOUT") {
+      cartDispatch({ type: "CLEAR" });
+    }
+    authDispatch(action);
+  }, []);
+
   // ── ALL orders — shared between checkout, account, admin, track ────────────
   const [allOrders, setAllOrders] = useState(() => asArray(loadStoredOrders()));
 
@@ -128,12 +135,12 @@ export default function Providers({ children }) {
 
   useEffect(() => {
     const handleAuthExpired = () => {
-      authDispatch({ type:"LOGOUT" });
+      dispatchAuth({ type:"LOGOUT" });
     };
 
     window.addEventListener(AUTH_EXPIRED_EVENT, handleAuthExpired);
     return () => window.removeEventListener(AUTH_EXPIRED_EVENT, handleAuthExpired);
-  }, []);
+  }, [dispatchAuth]);
 
   // ── On login: try to load orders from backend, merge with local ───────────
   useEffect(() => {
@@ -269,7 +276,7 @@ export default function Providers({ children }) {
     );
   });
 
-  const refreshMyOrders = async () => {
+  const refreshMyOrders = useCallback(async () => {
     try {
       const API = (await import("../services/apiService")).default;
       const data = await API.getMyOrders();
@@ -281,8 +288,8 @@ export default function Providers({ children }) {
           return [...normalized, ...localOnly];
         });
       }
-    } catch {}
-  };
+    } catch { /* backend offline — keep local orders */ }
+  }, []);
 
   const appData = {
     allOrders,
@@ -296,7 +303,7 @@ export default function Providers({ children }) {
 
   return (
     <CurrencyProvider>
-    <AuthContext.Provider value={{ ...authState, dispatch:authDispatch }}>
+    <AuthContext.Provider value={{ ...authState, dispatch:dispatchAuth }}>
       <CartContext.Provider value={{ cart, dispatch:dispatchCart }}>
         <WishlistContext.Provider value={{ wishlist, toggleWishlist }}>
           <AppDataContext.Provider value={appData}>
