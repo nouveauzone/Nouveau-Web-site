@@ -109,6 +109,12 @@ app.use(express.urlencoded({ extended:true, limit:"10mb" }));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/api/uploads", express.static(path.join(__dirname, "uploads")));
 
+// Debugging: Catch 404 errors for missing static files
+app.use(["/uploads", "/api/uploads"], (req, res) => {
+  console.error(`[Static 404] Missing image requested: ${req.originalUrl}`);
+  res.status(404).send("Image not found");
+});
+
 // ── DB ──────────────────────────────────────────────────────────────────────
 mongoose.connect(process.env.MONGO_URI || "mongodb://localhost:27017/nouveau")
   .then(async () => {
