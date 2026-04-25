@@ -79,10 +79,46 @@ exports.createOrder = asyncHandler(async (req, res) => {
 
   // ── Auto Stock Management ──
   for (const item of orderArray) {
-    // If the schema ref is populated appropriately, 'item.product' holds the ID
-    const productId = item.product || item._id; 
-    if (productId) {
-      await Product.findByIdAndUpdate(productId, { $inc: { stock: -(item.qty || 1) } }).catch(e => console.log("Stock decrement error:", e.message));
+    const productId = item.product || item._id;
+    const selectedSize = String(item.size || "").trim();
+    const itemQty = Math.max(1, Number(item.qty) || 1);
+
+    if (!productId) continue;
+
+    let updated = null;
+
+    if (selectedSize) {
+      updated = await Product.updateOne(
+        {
+          _id: productId,
+          sizes: { $elemMatch: { size: selectedSize, quantity: { $gte: itemQty } } },
+        },
+        {
+          $inc: {
+            "sizes.$.quantity": -itemQty,
+            stock: -itemQty,
+          },
+        }
+      );
+    }
+
+    if (!updated || updated.modifiedCount === 0) {
+      updated = await Product.updateOne(
+        {
+          _id: productId,
+          stock: { $gte: itemQty },
+        },
+        {
+          $inc: { stock: -itemQty },
+        }
+      );
+    }
+
+    if (!updated || updated.modifiedCount === 0) {
+      await Order.findByIdAndDelete(order._id).catch(() => {});
+      return res.status(409).json({
+        message: `Sold Out or insufficient stock for ${item.title || "selected item"}${selectedSize ? ` (${selectedSize})` : ""}.`,
+      });
     }
   }
 

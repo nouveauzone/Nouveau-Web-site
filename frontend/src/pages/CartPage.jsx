@@ -63,7 +63,7 @@ export default function CartPage({ setPage }) {
                     <p style={{ fontSize: "13px", color: THEME.textMuted, marginBottom: "12px" }}>Size: {item.size}</p>
                     {hasStockInfo && (
                       <div style={{ marginBottom: "12px", display: "inline-flex", alignItems: "center", gap: "8px", padding: "6px 10px", borderRadius: "99px", background: outOfStock ? "#f8d7da" : lowStock ? "#fff3cd" : "#e8f5e9", color: outOfStock ? "#721c24" : lowStock ? "#856404" : "#1f6f43", fontSize: "11px", fontFamily: "'Poppins',sans-serif", fontWeight: 700 }}>
-                        {outOfStock ? "Out of Stock" : lowStock ? `Only ${stock} left` : `${stock} in stock`}
+                        {outOfStock ? "Sold Out" : lowStock ? `Only ${stock} left` : `${stock} in stock`}
                       </div>
                     )}
 

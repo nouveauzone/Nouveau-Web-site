@@ -9,6 +9,11 @@ const reviewSchema = new mongoose.Schema({
   date:    { type:Date, default:Date.now },
 }, { _id:true });
 
+const sizeStockSchema = new mongoose.Schema({
+  size:     { type:String, required:true, trim:true },
+  quantity: { type:Number, default:0, min:0 },
+}, { _id:false });
+
 const productSchema = new mongoose.Schema({
   title:         { type:String, required:true },
   description:   { type:String, required:true },
@@ -18,7 +23,7 @@ const productSchema = new mongoose.Schema({
   subcategory:   { type:String, default:"" },
   gender:        { type:String, enum:["Women","Men","Unisex"], default:"Women" },
   images:        [{ type:String, set: normalizeImagePathForStorage }],
-  sizes:         [{ type:String }],
+  sizes:         { type:[sizeStockSchema], default:[] },
   stock:         { type:Number, default:0 },
   isNew:         { type:Boolean, default:false },
   isFeatured:    { type:Boolean, default:false },
@@ -37,6 +42,23 @@ productSchema.virtual("avgRating").get(function() {
 });
 productSchema.virtual("numReviews").get(function() {
   return this.reviews.length;
+});
+
+productSchema.pre("validate", function(next) {
+  if (Array.isArray(this.sizes) && this.sizes.length) {
+    this.sizes = this.sizes
+      .map((entry) => ({
+        size: String(entry?.size || "").trim(),
+        quantity: Math.max(0, Number(entry?.quantity) || 0),
+      }))
+      .filter((entry) => entry.size);
+
+    this.stock = this.sizes.reduce((sum, entry) => sum + entry.quantity, 0);
+  } else {
+    this.stock = Math.max(0, Number(this.stock) || 0);
+  }
+
+  next();
 });
 
 module.exports = mongoose.model("Product", productSchema);

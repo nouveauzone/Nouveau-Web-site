@@ -61,18 +61,60 @@ const normalizeImageListForStorage = (images) => {
     .filter(Boolean);
 };
 
+const normalizeSizeInventory = (sizes, stock = 0) => {
+  const fallbackStock = Math.max(0, Number(stock) || 0);
+
+  if (!Array.isArray(sizes) || sizes.length === 0) {
+    return [];
+  }
+
+  const normalized = sizes
+    .map((entry) => {
+      if (typeof entry === "string") {
+        const size = entry.trim();
+        if (!size) return null;
+        return { size, quantity: fallbackStock };
+      }
+
+      const size = String(entry?.size || "").trim();
+      if (!size) return null;
+      return {
+        size,
+        quantity: Math.max(0, Number(entry?.quantity) || 0),
+      };
+    })
+    .filter(Boolean);
+
+  return normalized;
+};
+
 const normalizeProductInput = (payload = {}) => {
   if (!payload || typeof payload !== "object") return payload;
-  if (!Array.isArray(payload.images)) return payload;
+
+  const normalizedSizes = normalizeSizeInventory(payload.sizes, payload.stock);
+  const derivedStock = normalizedSizes.length
+    ? normalizedSizes.reduce((sum, entry) => sum + entry.quantity, 0)
+    : Math.max(0, Number(payload.stock) || 0);
 
   return {
     ...payload,
-    images: normalizeImageListForStorage(payload.images),
+    images: Array.isArray(payload.images)
+      ? normalizeImageListForStorage(payload.images)
+      : payload.images,
+    sizes: normalizedSizes.length || Array.isArray(payload.sizes)
+      ? normalizedSizes
+      : payload.sizes,
+    stock: derivedStock,
   };
 };
 
 const normalizeProductOutput = (product = {}) => {
   if (!product || typeof product !== "object") return product;
+
+  const normalizedSizes = normalizeSizeInventory(product.sizes, product.stock);
+  const derivedStock = normalizedSizes.length
+    ? normalizedSizes.reduce((sum, entry) => sum + entry.quantity, 0)
+    : Math.max(0, Number(product.stock) || 0);
 
   const images = Array.isArray(product.images)
     ? product.images.map((src) => toPublicImageUrl(src)).filter(Boolean)
@@ -81,6 +123,10 @@ const normalizeProductOutput = (product = {}) => {
   return {
     ...product,
     images,
+    sizes: normalizedSizes.length || Array.isArray(product.sizes)
+      ? normalizedSizes
+      : product.sizes,
+    stock: derivedStock,
   };
 };
 

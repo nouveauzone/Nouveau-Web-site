@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import Footer from "../components/Footer";
 import { CartContext } from "../context/CartContext";
 import { WishlistContext } from "../context/WishlistContext";
@@ -34,6 +34,30 @@ const cleanImages = (images) => {
   return filtered.length ? filtered : ["/ethnic1.jpeg"];
 };
 
+const normalizeSizeInventory = (sizes, stock = 0) => {
+  const fallbackStock = Math.max(0, Number(stock) || 0);
+
+  if (!Array.isArray(sizes) || !sizes.length) {
+    return [{ size: "M", quantity: fallbackStock }];
+  }
+
+  const normalized = sizes
+    .map((entry) => {
+      if (typeof entry === "string") {
+        const value = entry.trim();
+        if (!value) return null;
+        return { size: value, quantity: fallbackStock };
+      }
+
+      const value = String(entry?.size || "").trim();
+      if (!value) return null;
+      return { size: value, quantity: Math.max(0, Number(entry?.quantity) || 0) };
+    })
+    .filter(Boolean);
+
+  return normalized.length ? normalized : [{ size: "M", quantity: fallbackStock }];
+};
+
 function StarPicker({ value, onChange }) {
   const [hover, setHover] = useState(0);
   return (
@@ -52,7 +76,8 @@ function StarPicker({ value, onChange }) {
 }
 
 export default function ProductPage({ product, setPage }) {
-  const [selectedSize, setSelectedSize] = useState(product?.sizes?.[0] || "M");
+  const initialSizes = normalizeSizeInventory(product?.sizes, product?.stock);
+  const [selectedSize, setSelectedSize] = useState(initialSizes[0]?.size || "M");
   const [qty, setQty]           = useState(1);
   const [addedToCart, setAddedToCart] = useState(false);
   const [activeImg, setActiveImg]     = useState(0);
@@ -78,12 +103,29 @@ export default function ProductPage({ product, setPage }) {
     "Elegant premium womenswear crafted with attention to detail and all-day comfort."
   );
   const safeImages = cleanImages(product.images).map((img) => fixImageUrl(img));
-  const safeSizes = Array.isArray(product.sizes) && product.sizes.length ? product.sizes : ["M"];
+  const sizeInventory = normalizeSizeInventory(product.sizes, product.stock);
+  const safeSizes = sizeInventory.map((entry) => entry.size);
   const safePrice = Number(product.price) || 0;
   const safeOriginalPrice = Number(product.originalPrice) || safePrice;
   const safeDiscount = Number(product.discount) || 0;
-  const safeStock = Number(product.stock) || 0;
-  const isOutOfStock = safeStock <= 0;
+  const safeStock = sizeInventory.reduce((sum, entry) => sum + Number(entry.quantity || 0), 0);
+  const selectedSizeStock = sizeInventory.find((entry) => entry.size === selectedSize)?.quantity || 0;
+  const isSoldOut = safeStock <= 0;
+
+  useEffect(() => {
+    if (!safeSizes.includes(selectedSize)) {
+      setSelectedSize(safeSizes[0] || "M");
+      setQty(1);
+      return;
+    }
+
+    if (selectedSizeStock <= 0) {
+      setQty(1);
+      return;
+    }
+
+    setQty((current) => Math.min(Math.max(1, current), selectedSizeStock));
+  }, [safeSizes, selectedSize, selectedSizeStock]);
 
   const wished = wishlist.some(w => w._id === product._id);
   const avgRating = reviews.length
@@ -92,7 +134,19 @@ export default function ProductPage({ product, setPage }) {
   const alreadyReviewed = reviews.some(r => r.user?._id === user?._id || r.user === user?._id);
 
   const handleAddToCart = () => {
-    cartDispatch({ type:"ADD", item:{ ...product, size:selectedSize, qty } });
+    if (selectedSizeStock <= 0) return;
+
+    cartDispatch({
+      type:"ADD",
+      item:{
+        ...product,
+        sizes: sizeInventory,
+        stock: safeStock,
+        size: selectedSize,
+        stockQuantity: selectedSizeStock,
+        qty,
+      },
+    });
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2500);
   };
@@ -195,10 +249,11 @@ export default function ProductPage({ product, setPage }) {
             <div style={{ marginBottom:"20px" }}>
               <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"3px", color:THEME.crimson, marginBottom:"10px", fontWeight:700 }}>SELECT SIZE</p>
               <div style={{ display:"flex", gap:"8px", flexWrap:"wrap" }}>
-                {safeSizes.map(s => (
-                  <button key={s} onClick={() => setSelectedSize(s)}
-                    style={{ padding:"10px 18px", border: s===selectedSize ? `2px solid ${THEME.crimson}` : `1px solid ${THEME.border}`, background: s===selectedSize ? `${THEME.crimson}12` : "transparent", color: s===selectedSize ? THEME.crimson : THEME.textMuted, cursor:"pointer", fontSize:"13px", fontFamily:"'Poppins',sans-serif", borderRadius:"8px", fontWeight: s===selectedSize ? 700 : 400, transition:"all 0.2s" }}>
-                    {s}
+                {sizeInventory.map((sizeEntry) => (
+                  <button key={sizeEntry.size} onClick={() => setSelectedSize(sizeEntry.size)}
+                    style={{ padding:"10px 18px", border: sizeEntry.size===selectedSize ? `2px solid ${THEME.crimson}` : `1px solid ${THEME.border}`, background: sizeEntry.size===selectedSize ? `${THEME.crimson}12` : "transparent", color: sizeEntry.size===selectedSize ? THEME.crimson : THEME.textMuted, cursor:"pointer", fontSize:"13px", fontFamily:"'Poppins',sans-serif", borderRadius:"8px", fontWeight: sizeEntry.size===selectedSize ? 700 : 400, transition:"all 0.2s", opacity: sizeEntry.quantity <= 0 ? 0.55 : 1 }}>
+                    {sizeEntry.size}
+                    {sizeEntry.quantity <= 0 ? " (Sold Out)" : sizeEntry.quantity === 1 ? " (Only 1 left)" : ""}
                   </button>
                 ))}
               </div>
@@ -206,15 +261,15 @@ export default function ProductPage({ product, setPage }) {
 
             {/* Qty */}
             <div style={{ display:"flex", alignItems:"center", gap:"16px", marginBottom:"24px" }}>
-              {isOutOfStock && <span style={{ background:"#f8d7da", color:"#721c24", padding:"6px 12px", borderRadius:"99px", fontSize:"11px", fontFamily:"'Poppins',sans-serif", fontWeight:700, letterSpacing:"1px", textTransform:"uppercase" }}>Out of Stock</span>}
+              {isSoldOut && <span style={{ background:"#f8d7da", color:"#721c24", padding:"6px 12px", borderRadius:"99px", fontSize:"11px", fontFamily:"'Poppins',sans-serif", fontWeight:700, letterSpacing:"1px", textTransform:"uppercase" }}>Sold Out</span>}
               <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"10px", letterSpacing:"3px", color:THEME.crimson, fontWeight:700 }}>QTY</p>
               <div style={{ display:"flex", alignItems:"center", border:`1px solid ${THEME.border}`, borderRadius:"10px", overflow:"hidden" }}>
                 <button onClick={() => setQty(q => Math.max(1, q-1))} disabled={qty <= 1} style={{ background:"none", border:"none", color:THEME.text, padding:"10px 16px", cursor: qty <= 1 ? "not-allowed" : "pointer", fontSize:"18px", opacity: qty <= 1 ? 0.4 : 1 }}>−</button>
                 <span style={{ padding:"10px 20px", borderLeft:`1px solid ${THEME.border}`, borderRight:`1px solid ${THEME.border}`, fontFamily:"'Poppins',sans-serif", fontWeight:600 }}>{qty}</span>
-                <button onClick={() => setQty(q => Math.min(safeStock, q+1))} disabled={qty >= safeStock} style={{ background:"none", border:"none", color:THEME.text, padding:"10px 16px", cursor: qty >= safeStock ? "not-allowed" : "pointer", fontSize:"18px", opacity: qty >= safeStock ? 0.4 : 1 }}>+</button>
+                <button onClick={() => setQty(q => Math.min(selectedSizeStock, q+1))} disabled={qty >= selectedSizeStock || selectedSizeStock <= 0} style={{ background:"none", border:"none", color:THEME.text, padding:"10px 16px", cursor: qty >= selectedSizeStock || selectedSizeStock <= 0 ? "not-allowed" : "pointer", fontSize:"18px", opacity: qty >= selectedSizeStock || selectedSizeStock <= 0 ? 0.4 : 1 }}>+</button>
               </div>
               <p style={{ fontFamily:"'Poppins',sans-serif", fontSize:"12px", color:THEME.textLight }}>
-                {safeStock > 0 ? `${safeStock} in stock` : "Out of stock"}
+                {selectedSizeStock > 0 ? `${selectedSizeStock} left in ${selectedSize}` : `${selectedSize} Sold Out`}
               </p>
             </div>
 
@@ -222,14 +277,14 @@ export default function ProductPage({ product, setPage }) {
             <div style={{ display:"flex", gap:"10px", marginBottom:"12px" }}>
               <BtnPrimary
                 onClick={handleAddToCart}
-                disabled={isOutOfStock}
+                disabled={isSoldOut || selectedSizeStock <= 0}
                 style={{
                   flex:1,
                   justifyContent:"center",
                   borderRadius:"12px",
                   ...(addedToCart ? { background: THEME.crimsonDark } : {}),
                 }}>
-                {isOutOfStock ? "Out of Stock" : addedToCart ? "✓ Added to Cart!" : "Add to Cart 🛍️"}
+                {isSoldOut || selectedSizeStock <= 0 ? "Sold Out" : addedToCart ? "✓ Added to Cart!" : "Add to Cart 🛍️"}
               </BtnPrimary>
               <button onClick={() => { toggleWishlist(product); toast(wished ? "Removed from wishlist" : "Saved to wishlist ❤️"); }}
                 style={{
@@ -247,8 +302,8 @@ export default function ProductPage({ product, setPage }) {
                 <Icons.Heart filled={wished} />
               </button>
             </div>
-            <BtnOutline onClick={() => { if (!isOutOfStock) { handleAddToCart(); setPage("Checkout"); } }} color={THEME.gold} style={{ width:"100%", justifyContent:"center", borderRadius:"12px", opacity: isOutOfStock ? 0.55 : 1, pointerEvents: isOutOfStock ? "none" : "auto" }}>
-              {isOutOfStock ? "Out of Stock" : "Buy Now ⚡"}
+            <BtnOutline onClick={() => { if (!isSoldOut && selectedSizeStock > 0) { handleAddToCart(); setPage("Checkout"); } }} color={THEME.gold} style={{ width:"100%", justifyContent:"center", borderRadius:"12px", opacity: isSoldOut || selectedSizeStock <= 0 ? 0.55 : 1, pointerEvents: isSoldOut || selectedSizeStock <= 0 ? "none" : "auto" }}>
+              {isSoldOut || selectedSizeStock <= 0 ? "Sold Out" : "Buy Now ⚡"}
             </BtnOutline>
 
             {/* Trust badges */}

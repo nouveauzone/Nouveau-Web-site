@@ -71,7 +71,7 @@ function ProductCard({ product, setPage, setSelectedProduct }) {
           }}
         />
 
-        {isOutOfStock && <span className="sf-out-stock">Out of Stock</span>}
+        {isOutOfStock && <span className="sf-out-stock">Sold Out</span>}
         <button
           type="button"
           className="sf-wishlist-btn"
@@ -98,7 +98,7 @@ function ProductCard({ product, setPage, setSelectedProduct }) {
 
         <div className="sf-product-actions">
           <button type="button" className="sf-btn" onClick={goToProduct}>View</button>
-          <button type="button" className="sf-btn sf-btn-primary" onClick={addToCart} disabled={isOutOfStock} style={isOutOfStock ? { opacity: 0.55, cursor: "not-allowed" } : {}}>{isOutOfStock ? "Out of Stock" : "Quick Add"}</button>
+          <button type="button" className="sf-btn sf-btn-primary" onClick={addToCart} disabled={isOutOfStock} style={isOutOfStock ? { opacity: 0.55, cursor: "not-allowed" } : {}}>{isOutOfStock ? "Sold Out" : "Quick Add"}</button>
         </div>
       </div>
     </article>
