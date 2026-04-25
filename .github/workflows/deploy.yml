@@ -66,13 +66,11 @@ jobs:
         env:
           SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
           HOST: ${{ secrets.EC2_HOST }}
-          USER: ubuntu
         run: |
           mkdir -p ~/.ssh
           echo "$SSH_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts
-          rsync -avz --delete frontend/build/ $USER@$HOST:/home/ubuntu/frontend-build/
+          rsync -avz -e "ssh -o StrictHostKeyChecking=no" --delete frontend/build/ ubuntu@$HOST:/home/ubuntu/frontend-build/
 
       - name: 🚀 Deploy Backend & Sync Nginx via SSH
         uses: appleboy/ssh-action@v1.0.3
