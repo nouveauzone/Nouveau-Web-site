@@ -10,6 +10,7 @@ const CRIMSON = "#B71C1C";
 
 export default function AuthPage({ setPage }) {
   const { dispatch } = useContext(AuthContext);
+  const enableLocalAuthFallback = process.env.NODE_ENV !== "production" && process.env.REACT_APP_ENABLE_LOCAL_AUTH_FALLBACK === "true";
   const [isLogin, setIsLogin] = useState(true);
   const [form,    setForm]    = useState({ name:"", email:"", password:"", confirm:"", phone:"", city:"", state:"" });
   const [errors,  setErrors]  = useState({});
@@ -61,26 +62,35 @@ export default function AuthPage({ setPage }) {
         token: res.token,
         isAuthenticated: true,
       };
-      try { localStorage.setItem("nouveau_auth", JSON.stringify(authPayload)); } catch {}
+      try {
+        localStorage.setItem("nouveau_auth", JSON.stringify(authPayload));
+        localStorage.setItem("token", authPayload.token || "");
+      } catch {}
 
       dispatch({ type:"LOGIN", payload:authPayload.user, token:authPayload.token });
       goAfterAuth();
     } catch (err) {
-      // Try local demo login
-      try {
-        const users = JSON.parse(localStorage.getItem("nouveau_demo_users")||"[]");
-        if (isLogin) {
-          const u = users.find(u=>u.email===form.email&&u.password===form.password);
-          if (u) { dispatch({ type:"LOGIN", payload:u, token:"local_"+Date.now() }); goAfterAuth(); return; }
-          setApiErr("Invalid email or password");
-        } else {
-          if (users.find(u=>u.email===form.email)) { setApiErr("Email already registered"); return; }
-          const newUser = { _id:"u"+Date.now(), name:form.name, email:form.email, password:form.password, role:"user" };
-          localStorage.setItem("nouveau_demo_users", JSON.stringify([...users,newUser]));
-          dispatch({ type:"LOGIN", payload:newUser, token:"local_"+Date.now() });
-          goAfterAuth();
+      if (!enableLocalAuthFallback) {
+        setApiErr(err.message || "Authentication failed");
+      } else {
+        // Local demo auth fallback for explicit local/dev testing only.
+        try {
+          const users = JSON.parse(localStorage.getItem("nouveau_demo_users")||"[]");
+          if (isLogin) {
+            const u = users.find(u=>u.email===form.email&&u.password===form.password);
+            if (u) { dispatch({ type:"LOGIN", payload:u, token:"local_"+Date.now() }); goAfterAuth(); return; }
+            setApiErr("Invalid email or password");
+          } else {
+            if (users.find(u=>u.email===form.email)) { setApiErr("Email already registered"); return; }
+            const newUser = { _id:"u"+Date.now(), name:form.name, email:form.email, password:form.password, role:"user" };
+            localStorage.setItem("nouveau_demo_users", JSON.stringify([...users,newUser]));
+            dispatch({ type:"LOGIN", payload:newUser, token:"local_"+Date.now() });
+            goAfterAuth();
+          }
+        } catch {
+          setApiErr(err.message||"Something went wrong");
         }
-      } catch { setApiErr(err.message||"Something went wrong"); }
+      }
     } finally { setLoading(false); }
   };
 

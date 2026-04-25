@@ -33,8 +33,10 @@ router.post(
     validate,
   ],
   asyncHandler(async (req, res) => {
-    const { name, email, password, phone, city, state } = req.body;
-    if (!name || !email || !password) return res.status(400).json({ message:"All fields required" });
+    const { name, password, phone, city, state } = req.body;
+    const email = String(req.body.email || "").trim().toLowerCase();
+
+    if (!name || !email || !password) return res.status(400).json({ message:"name, email, password are required" });
     if (password.length < 6) return res.status(400).json({ message:"Password must be at least 6 characters" });
     if (await User.findOne({ email })) return res.status(400).json({ message:"Email already registered" });
     
@@ -43,7 +45,15 @@ router.post(
       addresses = [{ city: city || "", state: state || "", street: "Not provided", pincode: "000000", isDefault: true }];
     }
     
-    const user = await User.create({ name, email, password, phone:phone||"", addresses });
+    let user;
+    try {
+      user = await User.create({ name, email, password, phone:phone||"", addresses });
+    } catch (err) {
+      if (err?.code === 11000) {
+        return res.status(400).json({ message:"Email already registered" });
+      }
+      throw err;
+    }
     // Send welcome email
     try {
       await sendOrderEmail({
@@ -77,7 +87,8 @@ router.post(
     validate,
   ],
   asyncHandler(async (req, res) => {
-    const { email, password } = req.body;
+    const password = String(req.body.password || "");
+    const email = String(req.body.email || "").trim().toLowerCase();
     if (!email || !password) return res.status(400).json({ message:"Email and password required" });
     const user = await User.findOne({ email }).select("+password");
     let needsUserSave = false;

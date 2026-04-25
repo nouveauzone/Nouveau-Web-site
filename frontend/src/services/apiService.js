@@ -55,9 +55,20 @@ const getStoredAuth = () => {
   }
 };
 
+const getStoredToken = () => {
+  try {
+    const directToken = String(localStorage.getItem("token") || "").trim();
+    if (directToken) return directToken;
+  } catch {}
+
+  const nestedToken = String(getStoredAuth()?.token || "").trim();
+  return nestedToken;
+};
+
 const clearStoredAuth = () => {
   try {
     localStorage.removeItem("nouveau_auth");
+    localStorage.removeItem("token");
   } catch {}
 };
 
@@ -74,7 +85,7 @@ const createClient = (baseURL) => {
   });
 
   client.interceptors.request.use((config) => {
-    const token = getStoredAuth()?.token;
+    const token = getStoredToken();
     if (token) {
       config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${token}`;

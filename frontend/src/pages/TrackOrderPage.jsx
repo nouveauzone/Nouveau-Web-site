@@ -11,7 +11,8 @@ const API_BASE = API;
 const getAuthHeader = () => {
   try {
     const auth = JSON.parse(localStorage.getItem("nouveau_auth") || "{}");
-    return auth?.token ? { Authorization: `Bearer ${auth.token}` } : {};
+    const token = String(auth?.token || localStorage.getItem("token") || "").trim();
+    return token ? { Authorization: `Bearer ${token}` } : {};
   } catch { return {}; }
 };
 

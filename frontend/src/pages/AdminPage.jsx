@@ -366,7 +366,10 @@ export default function AdminPage({ setPage }) {
         token: res.token,
         isAuthenticated: true,
       };
-      try { localStorage.setItem("nouveau_auth", JSON.stringify(authPayload)); } catch {}
+      try {
+        localStorage.setItem("nouveau_auth", JSON.stringify(authPayload));
+        localStorage.setItem("token", authPayload.token || "");
+      } catch {}
 
       authDispatch({
         type: "LOGIN",
