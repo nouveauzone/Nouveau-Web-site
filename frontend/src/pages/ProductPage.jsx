@@ -93,26 +93,25 @@ export default function ProductPage({ product, setPage }) {
   const { formatPrice }              = useContext(CurrencyContext);
   const toast = useContext(ToastContext);
 
-  if (!product) return null;
-
-  const safeTitle = cleanText(product.title, "Nouveau Signature Piece");
-  const safeCategory = cleanCategory(product.category);
-  const safeSubcategory = cleanText(product.subcategory, "Women's Wear");
+  const safeTitle = cleanText(product?.title, "Nouveau Signature Piece");
+  const safeCategory = cleanCategory(product?.category);
+  const safeSubcategory = cleanText(product?.subcategory, "Women's Wear");
   const safeDescription = cleanText(
-    product.description,
+    product?.description,
     "Elegant premium womenswear crafted with attention to detail and all-day comfort."
   );
-  const safeImages = cleanImages(product.images).map((img) => fixImageUrl(img));
-  const sizeInventory = normalizeSizeInventory(product.sizes, product.stock);
+  const safeImages = cleanImages(product?.images).map((img) => fixImageUrl(img));
+  const sizeInventory = normalizeSizeInventory(product?.sizes, product?.stock);
   const safeSizes = sizeInventory.map((entry) => entry.size);
-  const safePrice = Number(product.price) || 0;
-  const safeOriginalPrice = Number(product.originalPrice) || safePrice;
-  const safeDiscount = Number(product.discount) || 0;
+  const safePrice = Number(product?.price) || 0;
+  const safeOriginalPrice = Number(product?.originalPrice) || safePrice;
+  const safeDiscount = Number(product?.discount) || 0;
   const safeStock = sizeInventory.reduce((sum, entry) => sum + Number(entry.quantity || 0), 0);
   const selectedSizeStock = sizeInventory.find((entry) => entry.size === selectedSize)?.quantity || 0;
   const isSoldOut = safeStock <= 0;
 
   useEffect(() => {
+    if (!product) return;
     if (!safeSizes.includes(selectedSize)) {
       setSelectedSize(safeSizes[0] || "M");
       setQty(1);
@@ -125,7 +124,9 @@ export default function ProductPage({ product, setPage }) {
     }
 
     setQty((current) => Math.min(Math.max(1, current), selectedSizeStock));
-  }, [safeSizes, selectedSize, selectedSizeStock]);
+  }, [product, safeSizes, selectedSize, selectedSizeStock]);
+
+  if (!product) return null;
 
   const wished = wishlist.some(w => w._id === product._id);
   const avgRating = reviews.length
