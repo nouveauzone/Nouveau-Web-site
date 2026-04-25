@@ -168,6 +168,96 @@
   align-items: center;
   gap: 2px;
 }
+.sf-profile-wrap {
+  position: relative;
+  margin-right: 2px;
+}
+.sf-profile-trigger {
+  border: 1px solid var(--sf-border);
+  background: #fff;
+  border-radius: 999px;
+  height: 40px;
+  padding: 0 10px 0 2px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.sf-profile-trigger:hover {
+  background: var(--sf-accent);
+}
+.sf-user-avatar {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #8b4513;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Poppins", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.03em;
+  flex-shrink: 0;
+}
+.sf-user-online-dot {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #22c55e;
+  border: 2px solid #fff;
+  right: -1px;
+  bottom: -1px;
+}
+.sf-user-name {
+  font-family: "Poppins", sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: #2d2d2d;
+  max-width: 88px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sf-profile-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  width: 188px;
+  background: #fff;
+  border: 1px solid var(--sf-border);
+  border-radius: 12px;
+  box-shadow: var(--sf-shadow-hover);
+  padding: 8px;
+  display: grid;
+  gap: 4px;
+  z-index: 180;
+}
+.sf-profile-item {
+  border: 0;
+  background: transparent;
+  color: #2d2d2d;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: "Poppins", sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.sf-profile-item:hover {
+  background: var(--sf-accent);
+}
+.sf-profile-item-danger {
+  color: var(--sf-primary);
+}
 
 .sf-icon-btn {
   position: relative;
@@ -222,6 +312,29 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+.sf-mobile-user-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--sf-accent);
+  border: 1px solid var(--sf-border);
+  border-radius: 12px;
+  padding: 10px;
+  margin-bottom: 6px;
+}
+.sf-mobile-user-name {
+  margin: 0;
+  font-family: "Poppins", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #222;
+}
+.sf-mobile-user-state {
+  margin: 2px 0 0;
+  font-family: "Poppins", sans-serif;
+  font-size: 11px;
+  color: #2d7a37;
 }
 
 .sf-mobile-top {
@@ -623,7 +736,16 @@
 }
 
 @media (min-width: 768px) {
+.sf-mobile-user-card {
+  display: none;
+}
   .sf-search-wrap {
+
+@media (max-width: 899px) {
+  .sf-profile-wrap {
+    display: none;
+  }
+}
     display: block;
   }
 

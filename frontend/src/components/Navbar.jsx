@@ -1,4 +1,4 @@
-import { useContext, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { CartContext } from "../context/CartContext";
 import { WishlistContext } from "../context/WishlistContext";
 import { AuthContext } from "../context/AuthContext";
@@ -8,15 +8,25 @@ import { fixImageUrl } from "../utils/imageUrl";
 export default function Navbar({ page, setPage }) {
   const { cart } = useContext(CartContext);
   const { wishlist } = useContext(WishlistContext);
-  const { isAuthenticated, user } = useContext(AuthContext);
+  const { isAuthenticated, user, dispatch } = useContext(AuthContext);
 
   const [menuOpen, setMenuOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const profileRef = useRef(null);
 
   const safeCart = Array.isArray(cart) ? cart : [];
   const safeWishlist = Array.isArray(wishlist) ? wishlist : [];
   const cartCount = useMemo(() => safeCart.reduce((sum, item) => sum + Number(item?.qty || 0), 0), [safeCart]);
   const isAdmin = isAuthenticated && user?.role === "admin";
+  const firstName = String(user?.name || "").trim().split(/\s+/)[0] || "User";
+  const initials = String(user?.name || "U")
+    .split(" ")
+    .map((part) => part.trim()[0])
+    .filter(Boolean)
+    .join("")
+    .toUpperCase()
+    .slice(0, 2) || "U";
 
   const desktopLinks = isAdmin
     ? ["Home", "Shop", "About", "Contact", "Admin"]
@@ -30,6 +40,23 @@ export default function Navbar({ page, setPage }) {
     setPage("Shop");
     setMenuOpen(false);
   };
+
+  const logout = () => {
+    dispatch({ type: "LOGOUT" });
+    setProfileOpen(false);
+    setMenuOpen(false);
+    setPage("Home");
+  };
+
+  useEffect(() => {
+    const handleDocClick = (event) => {
+      if (!profileRef.current?.contains(event.target)) {
+        setProfileOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleDocClick);
+    return () => document.removeEventListener("mousedown", handleDocClick);
+  }, []);
 
   return (
     <>
@@ -84,13 +111,45 @@ export default function Navbar({ page, setPage }) {
               <Icons.Search />
             </button>
 
-            <button
-              type="button"
-              className="sf-icon-btn"
-              onClick={() => setPage(isAuthenticated ? "Account" : "Auth")}
-              aria-label="Open account">
-              <Icons.User />
-            </button>
+            {isAuthenticated ? (
+              <div className="sf-profile-wrap" ref={profileRef}>
+                <button
+                  type="button"
+                  className="sf-profile-trigger"
+                  onClick={() => setProfileOpen((open) => !open)}
+                  aria-label="Open profile menu">
+                  <span className="sf-user-avatar" aria-hidden="true">
+                    {initials}
+                    <span className="sf-user-online-dot" />
+                  </span>
+                  <span className="sf-user-name">{firstName}</span>
+                </button>
+                {profileOpen && (
+                  <div className="sf-profile-menu" role="menu" aria-label="Profile menu">
+                    <button type="button" className="sf-profile-item" onClick={() => { setPage("Account"); setProfileOpen(false); }}>
+                      <Icons.User /> <span>My Profile</span>
+                    </button>
+                    <button type="button" className="sf-profile-item" onClick={() => { setPage("Account"); setProfileOpen(false); }}>
+                      <Icons.Package /> <span>My Orders</span>
+                    </button>
+                    <button type="button" className="sf-profile-item" onClick={() => { setPage("Wishlist"); setProfileOpen(false); }}>
+                      <Icons.Heart /> <span>Wishlist</span>
+                    </button>
+                    <button type="button" className="sf-profile-item sf-profile-item-danger" onClick={logout}>
+                      <Icons.Logout /> <span>Logout</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="sf-icon-btn"
+                onClick={() => setPage("Auth")}
+                aria-label="Open login">
+                <Icons.User />
+              </button>
+            )}
 
             <button type="button" className="sf-icon-btn" onClick={() => setPage("Wishlist")} aria-label="Open wishlist">
               <Icons.Heart />
@@ -119,6 +178,29 @@ export default function Navbar({ page, setPage }) {
               </button>
             </div>
 
+            {isAuthenticated ? (
+              <div className="sf-mobile-user-card">
+                <span className="sf-user-avatar" aria-hidden="true">
+                  {initials}
+                  <span className="sf-user-online-dot" />
+                </span>
+                <div>
+                  <p className="sf-mobile-user-name">{user?.name || "User"}</p>
+                  <p className="sf-mobile-user-state">Logged in</p>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="sf-mobile-nav-btn"
+                onClick={() => {
+                  setPage("Auth");
+                  setMenuOpen(false);
+                }}>
+                Login
+              </button>
+            )}
+
             {mobileLinks.map((label) => (
               <button
                 key={label}
@@ -131,6 +213,35 @@ export default function Navbar({ page, setPage }) {
                 {label}
               </button>
             ))}
+
+            {isAuthenticated && (
+              <>
+                <button
+                  type="button"
+                  className="sf-mobile-nav-btn"
+                  onClick={() => {
+                    setPage("Account");
+                    setMenuOpen(false);
+                  }}>
+                  My Profile
+                </button>
+                <button
+                  type="button"
+                  className="sf-mobile-nav-btn"
+                  onClick={() => {
+                    setPage("Account");
+                    setMenuOpen(false);
+                  }}>
+                  My Orders
+                </button>
+                <button
+                  type="button"
+                  className="sf-mobile-nav-btn"
+                  onClick={logout}>
+                  Logout
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}

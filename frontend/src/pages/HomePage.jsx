@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
+import { AuthContext } from "../context/AuthContext";
 import Hero from "../components/Hero";
 import { PRODUCTS as INITIAL_PRODUCTS } from "../data/products";
 import { THEME } from "../styles/theme";
@@ -12,6 +13,7 @@ import API from "../services/apiService";
 import { SHIPPING_FREE_THRESHOLD, normalizeCategory } from "../data/constants";
 
 export default function HomePage({ setPage, setSelectedProduct }) {
+  const { isAuthenticated, user } = useContext(AuthContext);
   const [PRODUCTS, setPRODUCTS] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
@@ -53,6 +55,26 @@ export default function HomePage({ setPage, setSelectedProduct }) {
   return (
     <div style={{ background:THEME.bg, minHeight:"100vh", color:THEME.text }}>
       <Hero setPage={setPage} />
+
+      {isAuthenticated && (
+        <div style={{ maxWidth:"1400px", margin:"0 auto", padding:"18px clamp(16px, 5vw, 40px) 0" }}>
+          <div
+            style={{
+              background: "linear-gradient(135deg, rgba(183,110,121,0.1), rgba(201,162,39,0.12))",
+              border: `1px solid ${THEME.border}`,
+              borderLeft: `4px solid ${THEME.crimson}`,
+              borderRadius: "14px",
+              padding: "14px 16px",
+            }}>
+            <p style={{ margin: 0, fontFamily: "'Poppins',sans-serif", fontSize: "12px", letterSpacing: "2px", color: THEME.crimson, textTransform: "uppercase", fontWeight: 700 }}>
+              Logged In
+            </p>
+            <p style={{ margin: "6px 0 0", fontFamily: "'Playfair Display',serif", fontSize: "22px", color: THEME.text }}>
+              Welcome back, {String(user?.name || "Nouveau Muse").split(" ")[0]}! 🌸
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Marquee */}
       <div style={{ overflow:"hidden", background:THEME.crimson, padding:"14px 0" }}>
