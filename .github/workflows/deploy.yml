@@ -26,7 +26,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           timeout: 60s
-          command_timeout: 15m
+          command_timeout: 30m
 
           script: |
             set -euo pipefail
@@ -92,6 +92,8 @@ jobs:
             # 🎨 FRONTEND BUILD
             # =========================
             cd ../frontend
+            export CI=false
+            export NODE_OPTIONS="--max-old-space-size=1024"
 
             if [ -f package-lock.json ]; then
               npm ci --no-audit --no-fund || npm install --no-audit --no-fund
